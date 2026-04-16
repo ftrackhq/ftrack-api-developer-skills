@@ -82,11 +82,17 @@ Use the Linear issue identifier (e.g., `F-1234`) in the PR body.
 
 ### Step 3: Push the branch
 
-If there are unpushed commits:
+If there are unpushed commits, ask the user before pushing:
+
+> There are unpushed commits on `<branch>`. Push to origin?
+
+Wait for the user's confirmation. If they approve:
 
 ```bash
 git push -u origin <branch>
 ```
+
+If they decline, stop the workflow — the PR cannot be created without a remote branch.
 
 ### Step 4: Fetch the org PR template
 
@@ -108,7 +114,7 @@ gh pr create --title "<title>" --body "<filled-in template>"
 
 - Keep under 70 characters
 - Use conventional commit prefix: `feat:`, `fix:`, `perf:`, `chore:`, `refactor:`, `docs:`, `test:`
-- Describe the **what**, not the how
+- Describe the **what**, not the how, keep short and to the point
 
 #### Filling in the template
 
@@ -138,5 +144,5 @@ Show the user:
 1. **Hardcoding the PR template** — The org template lives in `ftrackhq/.github` and may change. Always fetch it fresh via the GitHub API.
 2. **Skipping the Linear search** — Even if the branch name doesn't look like a ticket, search anyway. The user may have named it differently.
 3. **Creating a ticket without asking** — Always confirm with the user before creating a new Linear ticket. They may already have one elsewhere.
-4. **Forgetting to push** — The PR can't be created if the branch isn't on the remote.
+4. **Pushing without asking** — Always confirm with the user before pushing. They may want to review or amend commits first.
 5. **Not linking back to Linear** — The PR and ticket should reference each other for traceability.
