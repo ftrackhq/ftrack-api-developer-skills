@@ -1,22 +1,32 @@
 # ftrack Developer Skill
 
-Expert assistant for ftrack Python API development.
+Expert assistant for ftrack API development (Python and JavaScript).
 
 ## Overview
 
-This skill provides deep knowledge of the ftrack Python API, helping you build integrations, automate workflows, and optimize your ftrack usage.
+This skill provides deep knowledge of the ftrack API (both Python and JavaScript), helping you build integrations, automate workflows, and optimize your ftrack usage across different platforms and environments.
+
+**Optimized for minimal token usage**: The skill detects your language context (Python or JavaScript) and loads only relevant examples, reducing context consumption by ~89% compared to loading all documentation.
 
 ## Features
 
-- **Session Management**: Connection handling, context managers, and session lifecycle
-- **Query Optimization**: Projections, filtering, pagination, and performance tuning
-- **Event Handling**: Event subscriptions, handlers, and async processing
-- **Action Handlers**: Base and advanced action patterns with UI forms
-- **Custom Locations**: Storage location implementations
-- **Resource Transformers**: File path transformation and organization
-- **Performance Optimization**: Caching, batching, and monitoring
-- **Exception Handling**: Comprehensive error patterns and recovery
-- **Security**: Authentication, permissions, and input validation
+### Core Capabilities
+- **Dual Language Support**: Python and JavaScript (auto-detected or specified)
+- **Query Optimization**: Smart projections, filtering, and performance patterns
+- **Event Handling**: Real-time WebSocket event subscriptions
+- **Action Handlers**: UI forms, discovery, and launch patterns
+- **Batch Operations**: Efficient bulk creates/updates
+- **Error Handling**: Comprehensive exception patterns
+- **Performance**: Caching, pagination, and optimization strategies
+
+### Python-Specific
+- Context managers, `auto_populating()`, action handler framework
+- Custom locations (S3, disk), resource transformers
+- Thread-safe event processing, cache management
+
+### JavaScript-Specific
+- Browser & Node.js, async/await patterns, TypeScript support
+- File upload/download, CORS handling, event hub integration
 
 ## Installation
 
@@ -51,217 +61,103 @@ export FTRACK_API_USER=your-username
 "Show me how to create a custom action"
 ```
 
+### Language Detection
+
+The skill automatically detects your language context:
+- **Python**: `.py` files, `import ftrack_api`, mentions "Python"
+- **JavaScript**: `.js`/`.ts` files, `import ftrack`, mentions "JS"/"Node"/"browser"
+
+If context is unclear, it will ask which language you're using before loading language-specific examples.
+
 ### Common Use Cases
 
 ```
 "Create a script to query all shots in a sequence with their status"
 "Help me set up an event listener for task updates"
-"Show me how to implement a custom widget"
+"Show me how to implement a custom action handler"
 "Optimize this ftrack query for better performance"
-"Explain ftrack session management best practices"
+"Build a web dashboard to display project status"
+"Show me how to upload files from a web form"
+"Set up TypeScript types for my ftrack workspace"
 ```
 
-## Examples
+## Quick Examples
 
-### Query Optimization
+### Query with Projections (Both Languages)
 
+**Python:**
 ```python
-# Before optimization
-session.query('Task where project.name is "My Project"')
-
-# After optimization with skill guidance
-session.query('Task where project.id is {0}'.format(project_id))
+# ✓ Optimized
+session.query('select name, status.name from Task where project.id is "{0}"'.format(project_id))
 ```
 
-### Event Handling
-
-```python
-import ftrack_api
-
-class TaskUpdateHandler(object):
-    def __init__(self, session):
-        self.session = session
-        
-    def discover(self, event):
-        # Skill helps implement proper event discovery
-        pass
-        
-    def launch(self, event):
-        # Skill provides event handling patterns
-        pass
-
-def register(session):
-    # Skill shows proper registration pattern
-    session.event_hub.subscribe(
-        'topic=ftrack.update',
-        TaskUpdateHandler(session)
-    )
+**JavaScript:**
+```javascript
+// ✓ Optimized
+await session.query('select name, status.name from Task where project.id is "proj-id"');
 ```
 
-### Action Handlers
+### Action Handler Pattern (Python)
 
-The skill provides comprehensive coverage of both **Base** and **Advanced** action handlers:
-
-**Base Action Handler:**
 ```python
 from ftrack_action_handler.action import BaseAction
 
 class SimpleAction(BaseAction):
-    """Basic action with discovery and launch."""
-    
     label = 'Update Status'
     identifier = 'com.example.update_status'
     
-    def register(self):
-        """Register with event hub."""
-        self.session.event_hub.subscribe(
-            'topic=ftrack.action.discover and source.user.username={0}'.format(
-                self.session.api_user
-            ),
-            self.discover
-        )
-        
-        self.session.event_hub.subscribe(
-            'topic=ftrack.action.launch and data.actionIdentifier={0}'.format(
-                self.identifier
-            ),
-            self.launch
-        )
-    
     def discover(self, event):
-        """Control when action appears."""
         selection = event['data'].get('selection', [])
-        
-        # Show only for tasks
         if all(item.get('entityType') == 'task' for item in selection):
-            return {
-                'items': [{
-                    'label': self.label,
-                    'actionIdentifier': self.identifier
-                }]
-            }
+            return {'items': [{'label': self.label, 'actionIdentifier': self.identifier}]}
     
     def launch(self, event):
-        """Execute the action."""
-        selection = event['data'].get('selection', [])
-        
         try:
-            # Process entities
-            for item in selection:
-                entity = self.session.get('Task', item['entityId'])
-                entity['status'] = self.session.query(
-                    'Status where name is "Completed"'
-                ).one()
-            
+            # Process entities, commit changes
             self.session.commit()
-            
-            return {
-                'success': True,
-                'message': f'Updated {len(selection)} tasks'
-            }
+            return {'success': True, 'message': 'Done'}
         except Exception as e:
             self.session.rollback()
             return {'success': False, 'message': str(e)}
 ```
 
-**Advanced Action with UI Form:**
+### Event Handling (Both Languages)
+
+**Python:**
 ```python
-class AdvancedAction(BaseAction):
-    """Advanced action with custom UI."""
-    
-    def interface(self, session, entities, values):
-        """Return custom form."""
-        return [
-            {
-                'label': 'Task Name',
-                'name': 'task_name',
-                'type': 'text',
-                'value': values.get('task_name', '')
-            },
-            {
-                'label': 'Priority',
-                'name': 'priority',
-                'type': 'number',
-                'value': values.get('priority', 3)
-            },
-            {
-                'label': 'Status',
-                'name': 'status',
-                'type': 'enumerator',
-                'data': [
-                    {'label': 'Not Started', 'value': 'not_started'},
-                    {'label': 'In Progress', 'value': 'in_progress'}
-                ]
-            },
-            {
-                'label': 'Auto-assign',
-                'name': 'auto_assign',
-                'type': 'boolean',
-                'value': values.get('auto_assign', False)
-            }
-        ]
-    
-    def launch(self, event):
-        """Execute with form values."""
-        values = event['data'].get('values', {})
-        
-        # Show form if no values
-        if not values:
-            return {
-                'items': self.interface(self.session, [], values)
-            }
-        
-        # Process with form input
-        try:
-            task = self.session.create('Task', {
-                'name': values['task_name'],
-                'priority': int(values.get('priority', 3))
-            })
-            self.session.commit()
-            
-            return {
-                'success': True,
-                'message': f'Created task: {task["name"]}'
-            }
-        except Exception as e:
-            self.session.rollback()
-            return {'success': False, 'message': str(e)}
+session.event_hub.subscribe('topic=ftrack.update', handler)
 ```
 
-See `examples/action_handlers.py` for complete implementations including:
-- Simple status update actions
-- Advanced actions with UI forms
-- Batch processing with progress tracking
-- Context-aware actions that adapt to entity types
+**JavaScript:**
+```javascript
+session.eventHub.subscribe('topic=ftrack.update', handler);
+session.eventHub.connect();
+```
+
+For complete implementations, see `examples/` directory.
 
 ## Example Files
 
-The skill includes comprehensive example files:
+The skill includes comprehensive example files organized by language:
 
-- **`examples/action_handlers.py`**: Base and advanced action handlers
-  - Simple status update action
-  - Advanced action with UI forms
-  - Batch processing with progress tracking
-  - Context-aware actions
-  
-- **`examples/custom_location_s3.py`**: Custom storage locations
-  - S3 location implementation
-  - Local filesystem location
+### Python Examples (`examples/python/`)
 
-- **`examples/resource_transformers.py`**: File path transformers
-  - Project-based organization
-  - Versioned file naming
-  - Date-based archiving
+- **`action_handlers.py`**: Base and advanced action handlers with UI forms
+- **`custom_location_s3.py`**: Custom storage locations (S3, disk)
+- **`resource_transformers.py`**: File path transformers and organization
+- **`exception_handling.py`**: Error handling patterns and retry decorators
+- **`performance_optimization.py`**: Query optimization, caching, batch operations
 
-- **`examples/exception_handling.py`**: Error handling patterns
-  - Comprehensive exception handling
-  - Retry decorators
-  - Event handler error recovery
+### JavaScript Examples (`examples/javascript/`)
 
-- **`examples/performance_optimization.py`**: Performance patterns
-  - Query optimization
-  - Batch operations
-  - Caching strategies
+- **`session-management.js`**: Session initialization, connection handling, manager patterns
+- **`query-operations.js`**: Query patterns, pagination, optimization, query builder
+- **`crud-operations.js`**: Create, Read, Update, Delete operations with error handling
+- **`event-handling.js`**: Event subscriptions, real-time updates, event hub management
+- **`file-operations.js`**: File upload/download, component management, thumbnails
+- **`typescript-example.ts`**: Type-safe API usage, repositories, services
+
+Each subdirectory contains a detailed README with usage examples and best practices.
 
 ## Best Practices
 
@@ -275,9 +171,19 @@ The skill includes comprehensive example files:
 
 ## Resources
 
+### Official Documentation
 - [developer.ftrack.com](https://developer.ftrack.com/)
-- [ftrack-recipes](https://github.com/ftrackhq/ftrack-recipes)
-- [ftrack-action-handler](https://github.com/ftrackhq/ftrack-action-handler)
+- [Python API Documentation](https://developer.ftrack.com/api-clients/python/)
+- [JavaScript API Documentation](https://developer.ftrack.com/api-clients/javascript/)
+
+### Libraries & Tools
+- [ftrack-python-api](https://github.com/ftrackhq/ftrack-python-api) - Python client
+- [@ftrack/api](https://www.npmjs.com/package/@ftrack/api) - JavaScript/TypeScript client
+- [ftrack-action-handler](https://github.com/ftrackhq/ftrack-action-handler) - Python action framework
+- [@ftrack/ts-schema-generator](https://www.npmjs.com/package/@ftrack/ts-schema-generator) - TypeScript type generator
+
+### Examples
+- [ftrack-recipes](https://github.com/ftrackhq/ftrack-recipes) - Code examples and patterns
 
 ## Troubleshooting
 
