@@ -17,7 +17,7 @@ Agent skills for ftrack development workflows.
 ## Install
 
 ```bash
-npx skills add ftrackhq/skills
+npx skills add ftrackhq/skills -g
 ```
 
 ### Install from local source
@@ -25,13 +25,13 @@ npx skills add ftrackhq/skills
 For development, install from a local clone. Skills are symlinked by default, so edits are reflected immediately without reinstalling.
 
 ```bash
-npx skills add /path/to/skills
+npx skills add /path/to/skills -g
 ```
 
 ## Update
 
 ```bash
-npx skills update ftrackhq/skills
+npx skills update ftrackhq/skills -g
 ```
 
 ## Links
