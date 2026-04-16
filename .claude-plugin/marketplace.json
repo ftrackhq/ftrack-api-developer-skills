@@ -17,6 +17,15 @@
       "skills": [
         "./skills/ftrack-create-pull-request"
       ]
+    },
+    {
+      "name": "ftrack-api-developer",
+      "description": "ftrack API development expert - Python API, events, queries, and integrations",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/ftrack-api-developer"
+      ]
     }
   ]
 }
