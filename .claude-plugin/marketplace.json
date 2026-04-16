@@ -1,0 +1,22 @@
+{
+  "name": "ftrack-skills",
+  "owner": {
+    "name": "ftrack",
+    "email": "support@ftrack.com"
+  },
+  "metadata": {
+    "description": "Agent skills for ftrack development workflows",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ftrack-create-pull-request",
+      "description": "Create GitHub pull requests with the org PR template and linked Linear tickets",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/ftrack-create-pull-request"
+      ]
+    }
+  ]
+}
