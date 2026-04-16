@@ -40,18 +40,21 @@ The following tools must be available:
 - If the current branch is `main` — tell the user to create a feature branch first and stop.
 - If a PR already exists for this branch — show the URL and stop (unless user asks to update it).
 
+## Context
+
+- Current branch: !`git branch --show-current`
+- Commits on branch: !`git log main..HEAD --oneline`
+- Diff stat: !`git diff main --stat`
+- Unpushed commits: !`git log origin/$(git branch --show-current)..HEAD --oneline 2>/dev/null`
+
 ## Workflow
 
-### Step 1: Gather context
+### Step 1: Check for existing PR
 
-Run these commands to understand the current state:
+Run this command to check for an existing PR:
 
 ```bash
-git branch --show-current
-git log main..HEAD --oneline
-git diff main --stat
 gh pr list --head <branch> --json number,url,title
-git log origin/<branch>..HEAD --oneline 2>/dev/null
 ```
 
 Check the abort conditions before proceeding.
@@ -146,3 +149,4 @@ Show the user:
 3. **Creating a ticket without asking** — Always confirm with the user before creating a new Linear ticket. They may already have one elsewhere.
 4. **Pushing without asking** — Always confirm with the user before pushing. They may want to review or amend commits first.
 5. **Not linking back to Linear** — The PR and ticket should reference each other for traceability.
+6. **Only looking at the latest commit** — Always analyze ALL commits on the branch (`main..HEAD`), not just the most recent one. The PR description should reflect the full scope of changes.
