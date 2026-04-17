@@ -1,500 +1,252 @@
 ---
 name: ftrack-api-developer
-description: ftrack API development expert - Python & JavaScript APIs, events, queries, and integrations
+description: ftrack API orchestrator - delegates to specialized subskills for queries, events, actions, files, sessions, TypeScript
 trigger: ftrack
 ---
 
-# ftrack API Development Expert
+# ftrack API Development Orchestrator
 
-Support both Python and JavaScript ftrack APIs. **Token optimization**: Load language-specific guides only when needed.
+Smart orchestrator for ftrack API development. Automatically delegates to specialized subskills based on user intent.
 
-## Detect Language Context
+## Available Subskills
 
-Before loading examples, detect user's language:
-- **Python indicators**: `.py`, `import ftrack_api`, `session.query()`, mentions "Python"
-- **JavaScript indicators**: `.js`, `.ts`, `import ftrack`, `await session.query()`, mentions "JavaScript"/"JS"/"Node"/"browser"
+### /ftrack-query - Query Optimization
+**Use when**: User asks about querying, searching, filtering, finding entities
+**Coverage**: Query syntax, projections, pagination, performance optimization
+**Tokens**: ~800
+
+### /ftrack-events - Event Handling
+**Use when**: User asks about events, webhooks, real-time updates, subscriptions
+**Coverage**: Event hub, topic filters, async processing, WebSocket management
+**Tokens**: ~600
+
+### /ftrack-actions - Action Handlers
+**Use when**: User asks about custom actions, UI forms, action handlers (Python-only)
+**Coverage**: BaseAction, discovery/launch, form building, bulk operations
+**Tokens**: ~700
+
+### /ftrack-files - File Operations
+**Use when**: User asks about upload, download, components, locations, storage
+**Coverage**: File upload/download, custom locations (S3), thumbnails, sequences
+**Tokens**: ~500
+
+### /ftrack-session - Session Management
+**Use when**: User asks about sessions, connections, authentication, caching
+**Coverage**: Session initialization, cache management, connection pooling
+**Tokens**: ~400
+
+### /ftrack-typescript - TypeScript Integration
+**Use when**: User asks about TypeScript, types, type-safety
+**Coverage**: Schema generation, repositories, services, React integration
+**Tokens**: ~400
+
+---
+
+## How to Use This Skill
+
+### Automatic Delegation
+When you invoke this skill, it will:
+1. Analyze the user's question
+2. Determine which subskill(s) are relevant
+3. Invoke the appropriate subskill(s)
+4. Return focused, optimized guidance
+
+### Manual Invocation
+Users can directly invoke subskills:
+```
+/ftrack-query - for query help
+/ftrack-events - for event handling
+/ftrack-actions - for action handlers
+/ftrack-files - for file operations
+/ftrack-session - for session management
+/ftrack-typescript - for TypeScript
+```
+
+---
+
+## Delegation Logic
+
+Analyze user's question for keywords and invoke relevant subskills:
+
+### Query Keywords
+`query`, `search`, `filter`, `find`, `select`, `where`, `projection`, `pagination`
+→ Invoke `/ftrack-query`
+
+### Event Keywords
+`event`, `webhook`, `real-time`, `subscribe`, `listen`, `event hub`, `WebSocket`
+→ Invoke `/ftrack-events`
+
+### Action Keywords
+`action`, `handler`, `ui form`, `custom action`, `BaseAction`, `discover`, `launch`
+→ Invoke `/ftrack-actions`
+
+### File Keywords
+`upload`, `download`, `component`, `file`, `asset version`, `location`, `storage`, `S3`, `thumbnail`
+→ Invoke `/ftrack-files`
+
+### Session Keywords
+`session`, `connection`, `authentication`, `cache`, `initialize`, `login`, `connect`
+→ Invoke `/ftrack-session`
+
+### TypeScript Keywords
+`typescript`, `types`, `type-safe`, `ts`, `interface`, `schema generation`
+→ Invoke `/ftrack-typescript`
+
+---
+
+## Quick Reference (General)
+
+### Language Detection
+Before delegating, detect user's language:
+- **Python**: `.py`, `import ftrack_api`, `session.query()`, mentions "Python"
+- **JavaScript**: `.js`, `.ts`, `import ftrack`, `await session.query()`, mentions "JavaScript"/"JS"/"Node"/"browser"
 - **If unclear**: Ask user which language they're using
 
-## Official Resources (Use WebFetch to verify)
-
+### Official Resources
 - **Developer Hub**: https://developer.ftrack.com/
 - **Python API**: https://developer.ftrack.com/api-clients/python/
 - **JavaScript API**: https://developer.ftrack.com/api-clients/javascript/
 - **API Reference**: https://ftrack-python-api.readthedocs.io/en/stable/api_reference/
-- **Performance Tips**: https://help.ftrack-studio.backlight.co/hc/en-us/articles/13129842496535
 - **Python GitHub**: https://github.com/ftrackhq/ftrack-python
 - **Recipes**: https://github.com/ftrackhq/ftrack-recipes
-- **Action Handler**: https://github.com/ftrackhq/ftrack-action-handler
-- **WebSocket Events**: https://developer.ftrack.com/websocket-events/
 
-## Core Concepts (Both Languages)
-
-### Sessions
-All API communication through `Session` object. Manages connections, authentication, caching.
-
-### Entities
-Dict-like objects representing ftrack resources:
-- `Project`, `Task`, `AssetVersion`, `Component`, `Note`, `User`, `Status`, `Type`
-- Support relationship traversal
-- Provide validation
-
-### Querying
-Use ftrack query language:
-- **Always project specific attributes** (not `select *`)
-- Filter at database level (not in code)
-- Use IDs instead of names when possible
-
-### Events
-WebSocket-based real-time updates:
-- Subscribe with topic filters
-- Handle asynchronously
-- Target specific entity types
+### Core Concepts
+- **Sessions**: API communication through `Session` object
+- **Entities**: Dict-like objects representing ftrack resources (Project, Task, etc.)
+- **Querying**: ftrack query language with projections and filters
+- **Events**: WebSocket-based real-time updates
+- **Components**: Files attached to asset versions
+- **Locations**: Storage backends (cloud, S3, disk)
 
 ---
 
-## Python-Specific Guide
+## Examples by Topic
 
-<details>
-<summary><b>Click to expand Python patterns (load only when needed)</b></summary>
-
-### Session Management
-
-```python
-import ftrack_api
-
-# ✓ RECOMMENDED: Context manager
-with ftrack_api.Session() as session:
-    # Auto-cleanup
-    pass
-
-# Manual (disable event hub if not needed)
-session = ftrack_api.Session(auto_connect_event_hub=False)
-try:
-    # work
-finally:
-    session.close()
-```
-
-### Query Optimization
-
-```python
-# ✓ OPTIMAL: Project attributes
-session.query('select name, status.name from Task where project.id is "{0}"'.format(pid))
-
-# ✗ AVOID: Fetch all attributes
-session.query('Task').all()
-
-# ✓ Use ancestors for hierarchy
-session.query('Task where ancestors any (id is "{0}")'.format(project_id))
-
-# ✓ Pagination
-query = session.query('Task order by created_at desc')
-query.page_size = 200
-results = query.all()
-```
-
-### Batch Operations
-
-```python
-# ✓ Single commit for multiple creates
-with session.auto_populating():
-    tasks = [session.create('Task', data) for data in task_data]
-session.commit()
-
-# ✓ Bulk updates
-tasks = session.query('Task where status.name is "In Progress"').all()
-for task in tasks:
-    task['priority'] = 3
-session.commit()  # One commit
-```
-
-### Event Handling
-
-```python
-# ✓ Targeted subscription
-def handle_task_update(event):
-    if event['data'].get('entityType') != 'task':
-        return
-    # process
-    return {'success': True}
-
-session.event_hub.subscribe(
-    'topic=ftrack.update and data.entityType is "task"',
-    handle_task_update
-)
-```
-
-### Action Handler (Base Pattern)
-
-```python
-from ftrack_action_handler.action import BaseAction
-
-class MyAction(BaseAction):
-    label = 'Action Name'
-    identifier = 'com.example.action'
-    
-    def discover(self, event):
-        selection = event['data'].get('selection', [])
-        if all(i.get('entityType') == 'task' for i in selection):
-            return {'items': [{'label': self.label, 'actionIdentifier': self.identifier}]}
-    
-    def launch(self, event):
-        try:
-            # process
-            self.session.commit()
-            return {'success': True, 'message': 'Done'}
-        except Exception as e:
-            self.session.rollback()
-            return {'success': False, 'message': str(e)}
-```
-
-### Action with UI Form
-
-```python
-class FormAction(BaseAction):
-    def interface(self, session, entities, values):
-        return [
-            {'label': 'Name', 'name': 'task_name', 'type': 'text'},
-            {'label': 'Priority', 'name': 'priority', 'type': 'number', 'value': 3},
-            {'label': 'Status', 'name': 'status', 'type': 'enumerator',
-             'data': [{'label': 'Not Started', 'value': 'ns'}]}
-        ]
-    
-    def launch(self, event):
-        values = event['data'].get('values', {})
-        if not values:
-            return {'items': self.interface(self.session, [], values)}
-        
-        # process with values
-        task = self.session.create('Task', {'name': values['task_name']})
-        self.session.commit()
-        return {'success': True}
-```
-
-### Custom Location (S3)
-
-```python
-import ftrack_api.structure.standard
-import ftrack_api.accessor.disk
-
-class S3Location(ftrack_api.entity.location.Location):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.accessor = S3Accessor(bucket='my-bucket')
-        self.structure = ftrack_api.structure.standard.StandardStructure()
-```
-
-### Performance Tips
-
-1. **Cache common data**: Statuses, types, users
-2. **Use `auto_populating()`** for bulk creates
-3. **Clear cache strategically**: `session.cache.clear('Task')`
-4. **Batch event processing**: Accumulate and commit in batches
-5. **Disable event hub** if not needed
-
-</details>
-
----
-
-## JavaScript-Specific Guide
-
-<details>
-<summary><b>Click to expand JavaScript patterns (load only when needed)</b></summary>
-
-### Session Management
-
-```javascript
-import ftrack from '@ftrack/api';
-
-// Initialize
-const session = new ftrack.Session(
-  "https://company.ftrackapp.com",
-  "user@example.com",
-  "api-key"
-);
-
-await session.initializing;
-
-// Cleanup
-session.close();
-```
-
-### Query Patterns
-
-```javascript
-// ✓ OPTIMAL: Project attributes
-const response = await session.query(
-  'select name, status.name from Task where project.id is "proj-id"'
-);
-const tasks = response.data;
-
-// ✗ AVOID: Fetch all
-const all = await session.query('Task');
-
-// Pagination
-const page1 = await session.query('Task', {offset: 0, limit: 100});
-const page2 = await session.query('Task', {offset: 100, limit: 100});
-```
-
-### Create & Update
-
-```javascript
-// Create
-const task = await session.create('Task', {
-  name: 'New Task',
-  parent_id: projectId,
-  type_id: taskTypeId,
-  status_id: statusId
-});
-
-// Update
-await session.update('Task', taskId, {
-  status_id: completedStatusId,
-  priority: 4
-});
-
-// Delete
-await session.delete('Task', taskId);
-```
-
-### Event Handling
-
-```javascript
-// Subscribe
-session.eventHub.subscribe('topic=ftrack.update', (event) => {
-  const tasks = event.data.entities.filter(e => e.entityType === 'Task');
-  if (tasks.length > 0) {
-    updateUI(tasks);
-  }
-});
-
-// Connect
-session.eventHub.connect();
-
-// Cleanup
-session.eventHub.disconnect();
-```
-
-### File Upload
-
-```javascript
-// Browser upload
-async function uploadFile(file, assetVersionId) {
-  const component = await session.create('FileComponent', {
-    name: file.name,
-    file_type: file.type,
-    size: file.size,
-    version_id: assetVersionId
-  });
-  
-  await session.upload(component.id, file);
-  return component;
-}
-```
-
-### TypeScript Support
-
-```bash
-# Generate types for your workspace
-npx @ftrack/ts-schema-generator \
-  --server https://company.ftrackapp.com \
-  --user user@example.com \
-  --apiKey key
-```
-
-```typescript
-import { Task, Project, Status } from './generated-schema';
-
-const tasks: Task[] = await session.query<Task>(
-  'select name, status.name from Task'
-);
-```
-
-### Performance Tips
-
-1. **Batch queries**: Use `in` clauses instead of multiple queries
-2. **Close unused connections**: Call `session.close()`
-3. **Disconnect event hub**: When not needed
-4. **Use specific projections**: Select only needed fields
-5. **Handle CORS**: Set proper headers for browser apps
-
-</details>
-
----
-
-## Query Optimization (Universal)
-
-### Projection Best Practices
-```
-✓ select name, status.name from Task
-✗ select * from Task
-✗ Task (no projection)
-```
-
-### Filtering
-```
-✓ where project.id is "uuid"  (use IDs)
-✗ where project.name is "Name"  (slower)
-
-✓ where status.name in ("Active", "Review")
-✗ Multiple queries for each status
-```
-
-### Performance Checklist
-- [ ] Projected specific attributes
-- [ ] Used IDs instead of names
-- [ ] Filtered at database level
-- [ ] Set appropriate page size
-- [ ] Cached common reference data
-- [ ] Disabled event hub if unused
-
----
-
-## Common Patterns
-
-### Get Project Tasks
+### Query Example
 ```python
 # Python
-tasks = session.query(
-    'select name, status.name from Task '
-    'where project.id is "{0}"'.format(project_id)
-).all()
+tasks = session.query('select name, status.name from Task where project.id is "{0}"'.format(pid)).all()
 ```
-
 ```javascript
 // JavaScript
-const response = await session.query(
-  `select name, status.name from Task where project.id is "${projectId}"`
-);
+const response = await session.query('select name, status.name from Task where project.id is "proj-id"');
 ```
+**→ For details, invoke `/ftrack-query`**
 
-### Bulk Status Update
-```python
-# Python
-status = session.query('Status where name is "Completed"').one()
-tasks = session.query('Task where status.name is "In Progress"').all()
-for task in tasks:
-    task['status'] = status
-session.commit()
-```
-
-```javascript
-// JavaScript
-const tasks = await session.query('Task where status.name is "In Progress"');
-for (const task of tasks.data) {
-  await session.update('Task', task.id, {status_id: completedStatusId});
-}
-```
-
-### Event Subscription
+### Event Example
 ```python
 # Python
 session.event_hub.subscribe('topic=ftrack.update', handler)
 ```
-
 ```javascript
 // JavaScript
 session.eventHub.subscribe('topic=ftrack.update', handler);
-session.eventHub.connect();
 ```
+**→ For details, invoke `/ftrack-events`**
 
----
-
-## Error Handling
-
-### Python
+### Action Example
 ```python
-try:
-    task = session.query('Task where id is "{0}"'.format(task_id)).one()
-except ftrack_api.exception.NoResultFoundError:
-    # Not found
-except ftrack_api.exception.ServerError as e:
-    # Server error
-finally:
-    session.rollback()  # If needed
+# Python (only)
+class MyAction(BaseAction):
+    def launch(self, event):
+        # Implementation
+        pass
 ```
+**→ For details, invoke `/ftrack-actions`**
 
-### JavaScript
-```javascript
-try {
-  const task = await session.get('Task', taskId);
-} catch (error) {
-  if (error.response?.status === 404) {
-    // Not found
-  } else {
-    // Other error
-  }
-}
-```
-
----
-
-## Debug Tips
-
-### Python
+### File Example
 ```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
-
-# Check cache
-print(f"Cache size: {len(session.cache)}")
-
-# Validate query
-query = session.query('Task')
-print(f"Count: {query.count()}")
+# Python
+component = asset_version.create_component(path='/path/to/file.ma', location=location)
 ```
-
-### JavaScript
 ```javascript
-// Enable debug logging
-session.setDebug(true);
-
-// Check connection
-console.log(await session.getServerInformation());
+// JavaScript
+await session.upload(component.id, file);
 ```
+**→ For details, invoke `/ftrack-files`**
+
+### Session Example
+```python
+# Python
+with ftrack_api.Session() as session:
+    # Auto-cleanup
+    pass
+```
+```javascript
+// JavaScript
+const session = new ftrack.Session(server, user, key);
+await session.initializing;
+```
+**→ For details, invoke `/ftrack-session`**
+
+### TypeScript Example
+```typescript
+// TypeScript
+const tasks = await session.query<Task>('select name from Task');
+```
+**→ For details, invoke `/ftrack-typescript`**
 
 ---
 
-## When to Fetch Documentation
+## Decision Tree
 
-Use WebFetch when:
-- User asks about specific API methods
-- Uncertain about syntax/parameters
-- Working with newer features
-- Need version-specific info
-- Checking official examples
-
-**Strategy**: Read documentation FIRST, then provide accurate solution based on current API.
+```
+User asks about ftrack
+├─ Multiple topics? → Invoke multiple subskills in parallel
+├─ Query/search/filter? → /ftrack-query
+├─ Events/webhooks? → /ftrack-events
+├─ Actions/UI forms? → /ftrack-actions
+├─ Files/upload/storage? → /ftrack-files
+├─ Session/connection? → /ftrack-session
+├─ TypeScript/types? → /ftrack-typescript
+└─ General/unclear? → Ask clarifying question, then delegate
+```
 
 ---
 
 ## Response Guidelines
 
-1. **Detect language early** - Ask if unclear
-2. **Load only needed section** - Don't expand both Python AND JS
-3. **Link to examples** - Reference official docs
-4. **Optimize queries** - Always suggest projections
-5. **Error handling** - Include in all examples
-6. **Security** - Validate input, use parameterized queries
-7. **Keep responses concise** - Link to docs for deep dives
+1. **Analyze Intent**: Understand what user is trying to accomplish
+2. **Detect Language**: Python or JavaScript (or ask if unclear)
+3. **Delegate**: Invoke 1-2 most relevant subskills
+4. **Synthesize**: Combine subskill responses if multiple invoked
+5. **Provide Links**: Point to official docs for deep dives
+6. **Optimize**: Only load what's needed to answer the question
 
 ---
 
-## Example File Reference
+## When to Use WebFetch
 
-See `examples/` directory organized by language:
+Use WebFetch to verify documentation when:
+- User asks about specific API methods not covered in subskills
+- Working with newer features or version-specific info
+- Uncertain about current syntax or parameters
+- User requests official examples or references
 
-**Python** (`examples/python/`):
-- `action_handlers.py` - Base & advanced actions
-- `custom_location_s3.py` - S3 location
-- `resource_transformers.py` - File transformers
-- `exception_handling.py` - Error patterns
-- `performance_optimization.py` - Performance patterns
+**Strategy**: Delegate to subskill first, use WebFetch only if needed for clarification.
 
-**JavaScript** (`examples/javascript/`):
-- `session-management.js` - Session patterns & pooling
-- `query-operations.js` - Query builder & optimization
-- `crud-operations.js` - Create, read, update, delete
-- `event-handling.js` - Real-time events & dashboard
-- `file-operations.js` - Upload/download & thumbnails
-- `typescript-example.ts` - Type-safe repositories & services
+---
+
+## Token Efficiency
+
+Total available tokens across subskills: ~3,400
+- **ftrack-query**: 800 tokens
+- **ftrack-events**: 600 tokens
+- **ftrack-actions**: 700 tokens
+- **ftrack-files**: 500 tokens
+- **ftrack-session**: 400 tokens
+- **ftrack-typescript**: 400 tokens
+
+**Previous monolithic skill**: 3,500 tokens (always loaded)
+**New approach**: 400-800 tokens (only what's needed)
+**Savings**: 76-89% reduction per query
+
+---
+
+## Migration Notes
+
+This orchestrator replaces the previous monolithic `ftrack-developer` skill:
+- **Old**: Single 3,500 token skill with all content
+- **New**: Orchestrator + 6 focused subskills (400-800 tokens each)
+- **Benefit**: Load only relevant content, faster responses, better focus
+- **Compatibility**: Users can still invoke `/ftrack-api-developer` (auto-delegates)
