@@ -322,10 +322,10 @@ When you install `ftrack-api-developer` from the marketplace:
 /install ftrack-api-developer
 
 # From GitHub URL (for latest development version)
-/install https://github.com/ftrackhq/ftrack-skills
+/install https://github.com/ftrackhq/skills
 
 # From specific branch (for testing features)
-/install https://github.com/ftrackhq/ftrack-skills#branch-name
+/install https://github.com/ftrackhq/skills#branch-name
 ```
 
 **Update after changes:**
@@ -354,7 +354,7 @@ Alternative installation using npm CLI:
 npx @claudecode/skills add ftrackhq/ftrack-skills
 
 # Install from GitHub URL
-npx @claudecode/skills add https://github.com/ftrackhq/ftrack-skills
+npx @claudecode/skills add https://github.com/ftrackhq/skills
 
 # Update
 npx @claudecode/skills update ftrackhq/ftrack-skills
@@ -382,7 +382,7 @@ By default, subskills load automatically when needed. If you want specific subsk
 |--------|----------|------------|---------------|
 | **Marketplace UI** | New users, visual preference | 30 seconds | Open marketplace → Search "ftrack" → Install |
 | **Marketplace CLI** | Everyone, fastest | 10 seconds | `/install ftrack-api-developer` |
-| **GitHub URL** | Latest features, development | 15 seconds | `/install https://github.com/ftrackhq/ftrack-skills` |
+| **GitHub URL** | Latest features, development | 15 seconds | `/install https://github.com/ftrackhq/skills` |
 | **npm CLI** | CI/CD, automation scripts | 1 minute | `npx @claudecode/skills add ftrackhq/ftrack-skills` |
 | **Local Source** | Skill development | 5 minutes | `/install /path/to/ftrack-skills` |
 
