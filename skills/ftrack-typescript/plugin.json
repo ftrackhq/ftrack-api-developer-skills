@@ -1,0 +1,15 @@
+{
+  "name": "ftrack-typescript",
+  "description": "ftrack TypeScript integration - type-safe API usage, schema generation, repositories",
+  "version": "1.0.0",
+  "category": "development",
+  "subcategories": ["ftrack", "api", "typescript"],
+  "tags": ["ftrack", "typescript", "types", "type-safe", "javascript", "react", "schema", "skill"],
+  "author": {
+    "name": "Lorenzo Angeli",
+    "email": "lorenzo.angeli@backlight.co"
+  },
+  "parent": "ftrack-api-developer",
+  "installable": true,
+  "languages": ["typescript", "javascript"]
+}
