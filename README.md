@@ -240,35 +240,67 @@ The `ftrack-api-developer` skill automatically loads these focused subskills on-
 
 ## Installation
 
-### 🎯 Simplest Method: Claude Code Marketplace
+### ⚡ Quick Install
 
-**The easiest way to get started** - just 3 clicks:
+**Step 1: Add repository to marketplace** (recommended):
 
-```
-1. Open Claude Code → Click marketplace icon (or type /marketplace)
-2. Search "ftrack" → Find "ftrack-api-developer"
-3. Click "Install" → Done!
+```bash
+/plugin marketplace add https://github.com/ftrackhq/ftrack-skills
 ```
 
-The marketplace installation automatically sets up everything with smart lazy loading.
+**Step 2: Install skills from marketplace**:
 
-### From Claude Code Marketplace (Step-by-Step)
+```bash
+/install ftrack-api-developer
+```
 
-The easiest way to install ftrack skills is through the Claude Code marketplace:
+**Alternative: Direct install from GitHub** (without marketplace):
 
-#### Step 1: Open the Marketplace
+```bash
+/install https://github.com/ftrackhq/ftrack-skills
+```
 
-In Claude Code, access the skill marketplace:
-- Click the **marketplace icon** in the sidebar, or
-- Type `/marketplace` in the chat
+### 🎯 Recommended: Claude Code Marketplace
 
-#### Step 2: Search and Install
+**The easiest and most reliable way** to install ftrack skills:
 
-1. Search for **"ftrack"**
-2. Click on **"ftrack-api-developer"**
-3. Click **"Install"**
+#### Method 1: Marketplace UI (Easiest)
 
-**That's it!** The skill installs with smart subskill loading - only loads what you need, when you need it.
+1. **Open the marketplace**:
+   - Click the **marketplace icon** (🏪) in Claude Code sidebar, OR
+   - Type `/marketplace` in the chat
+
+2. **Search for the skill**:
+   - Type **"ftrack"** in the search bar
+   - Find **"ftrack-api-developer"** in results
+
+3. **Install**:
+   - Click **"Install"** button
+   - Wait for confirmation (usually 5-10 seconds)
+   - Done! Skill is ready to use
+
+#### Method 2: Quick Command (Fastest)
+
+```bash
+# Type in Claude Code chat
+/install ftrack-api-developer
+```
+
+Press Enter and the skill installs automatically from the marketplace.
+
+#### Verify Installation
+
+After installation, confirm it's ready:
+
+```bash
+# Check installed skills
+/skills list
+
+# Or test it directly
+Ask: "How do I query tasks in ftrack?"
+```
+
+You should see `ftrack-api-developer` in the list and automatic responses to ftrack questions.
 
 #### What Gets Installed
 
@@ -281,20 +313,51 @@ When you install `ftrack-api-developer` from the marketplace:
 
 ### Alternative Installation Methods
 
-#### Command Line Installation
+#### Claude Code CLI Installation
 
-If you prefer command-line installation:
+**Install using Claude Code commands** - quick and simple:
 
 ```bash
-# In Claude Code
+# From marketplace (recommended for stable releases)
 /install ftrack-api-developer
+
+# From GitHub URL (for latest development version)
+/install https://github.com/ftrackhq/ftrack-skills
+
+# From specific branch (for testing features)
+/install https://github.com/ftrackhq/ftrack-skills#branch-name
 ```
 
-Or using npm skills CLI:
+**Update after changes:**
 
 ```bash
-# Install from ftrackhq repository
+# Update specific skill
+/skills update ftrack-api-developer
+
+# Update all skills
+/skills update --all
+
+# Check installed skills
+/skills list
+```
+
+**Which option to use?**
+- **Marketplace** (`/install ftrack-api-developer`) - Stable releases, recommended for most users
+- **GitHub URL** (`/install https://github.com/...`) - Latest changes, development versions, private repos
+
+#### npm Skills CLI Installation
+
+Alternative installation using npm CLI:
+
+```bash
+# Install from marketplace
 npx @claudecode/skills add ftrackhq/ftrack-skills
+
+# Install from GitHub URL
+npx @claudecode/skills add https://github.com/ftrackhq/ftrack-skills
+
+# Update
+npx @claudecode/skills update ftrackhq/ftrack-skills
 ```
 
 #### Optional: Install Specific Subskills
@@ -315,14 +378,15 @@ By default, subskills load automatically when needed. If you want specific subsk
 
 ### Installation Method Comparison
 
-| Method | Best For | Setup Time | Command |
-|--------|----------|------------|---------|
-| **Marketplace** | Everyone | 30 seconds | Click "Install" in marketplace |
-| **Command Line** | CLI users | 1 minute | `/install ftrack-api-developer` |
-| **NPM Skills** | Automation | 2 minutes | `npx @claudecode/skills add ftrackhq/ftrack-skills` |
-| **Local Source** | Developers | 5 minutes | `/install /path/to/ftrack-skills` |
+| Method | Best For | Setup Time | Command/Steps |
+|--------|----------|------------|---------------|
+| **Marketplace UI** | New users, visual preference | 30 seconds | Open marketplace → Search "ftrack" → Install |
+| **Marketplace CLI** | Everyone, fastest | 10 seconds | `/install ftrack-api-developer` |
+| **GitHub URL** | Latest features, development | 15 seconds | `/install https://github.com/ftrackhq/ftrack-skills` |
+| **npm CLI** | CI/CD, automation scripts | 1 minute | `npx @claudecode/skills add ftrackhq/ftrack-skills` |
+| **Local Source** | Skill development | 5 minutes | `/install /path/to/ftrack-skills` |
 
-**Recommendation**: Use the **Marketplace** method - it's the simplest and most reliable.
+**Recommendation**: Use **Marketplace CLI** (`/install ftrack-api-developer`) - fastest and most reliable for stable releases.
 
 #### For Developers: Local Source Installation
 
@@ -335,23 +399,6 @@ npx @claudecode/skills add /path/to/ftrack-skills
 # Or in Claude Code
 /install /path/to/ftrack-skills
 ```
-
-### Verify Installation
-
-After installing from the marketplace or command line, verify the skill is ready:
-
-```bash
-# In Claude Code chat
-/skills
-```
-
-You should see `ftrack-api-developer` in the list. Or simply try it:
-
-```
-Ask: "How do I query tasks in ftrack?"
-```
-
-If the skill is installed, it will automatically respond with guidance.
 
 ## Usage
 
@@ -396,15 +443,34 @@ Or invoke specific subskills for faster responses:
 
 ## Update
 
-```bash
-npx skills update ftrackhq/skills -g
-```
-
-Or in Claude Code:
+### Update Skills (Claude Code CLI)
 
 ```bash
-/plugin update ftrack-api-developer
+# Update specific skill
+/skills update ftrack-api-developer
+
+# Update all installed skills
+/skills update --all
+
+# Check for available updates
+/skills list
 ```
+
+### Update Skills (npm CLI)
+
+```bash
+# Update from npm registry
+npx @claudecode/skills update ftrackhq/ftrack-skills
+
+# Update from GitHub URL
+npx @claudecode/skills update https://github.com/ftrackhq/ftrack-skills
+```
+
+**When to update:**
+- New features announced in releases
+- Bug fixes published
+- After pulling latest changes (if using GitHub URL)
+- Marketplace shows update available
 
 ## Documentation
 
