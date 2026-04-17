@@ -1,8 +1,10 @@
 ---
 name: ftrack-api-developer
 description: ftrack API orchestrator - delegates to specialized subskills for queries, events, actions, files, sessions, TypeScript
-trigger: ftrack
 ---
+
+TRIGGER when: code imports `ftrack_api` (Python) or `@ftrack/api` (JavaScript); file contains ftrack Session/Entity usage; user asks about ftrack API, queries, events, actions, file operations, or ftrack integration.
+SKIP: non-ftrack code, other media management systems, general Python/JavaScript questions without ftrack context.
 
 # ftrack API Development Orchestrator
 

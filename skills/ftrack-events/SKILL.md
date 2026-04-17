@@ -1,8 +1,10 @@
 ---
 name: ftrack-events
 description: ftrack real-time event handling - WebSocket subscriptions, event hub, async processing
-trigger: event, webhook, real-time, subscribe, listen
 ---
+
+TRIGGER when: code uses `session.event_hub` (Python) or `session.eventHub` (JavaScript); file contains event subscriptions, WebSocket handling, or ftrack.update/create/delete topics; user asks about ftrack events, real-time updates, webhooks, or event subscriptions.
+SKIP: ftrack actions (use ftrack-actions), general event handling without ftrack, HTTP webhooks.
 
 # ftrack Event Handling Expert
 

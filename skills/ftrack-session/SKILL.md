@@ -1,8 +1,10 @@
 ---
 name: ftrack-session
 description: ftrack session management - initialization, authentication, caching, connection pooling
-trigger: session, connection, authentication, cache, initialize
 ---
+
+TRIGGER when: code contains `ftrack_api.Session()` or `new ftrack.Session()`; file deals with session initialization, authentication, API keys, cache management; user asks about connecting to ftrack, session setup, API authentication, or connection pooling.
+SKIP: general authentication, HTTP sessions, database connections without ftrack.
 
 # ftrack Session Management Expert
 

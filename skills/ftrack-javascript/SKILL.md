@@ -1,8 +1,10 @@
 ---
 name: ftrack-javascript
 description: ftrack JavaScript integration - async patterns, browser/Node.js, bundling, ES6+ features
-trigger: javascript, js, async, await, browser, nodejs, webpack
 ---
+
+TRIGGER when: JavaScript/JS file imports `@ftrack/api`; code uses async/await with ftrack Session; browser/Node.js code with ftrack; user asks about ftrack in JavaScript, ES6+, React integration, webpack/bundling with ftrack.
+SKIP: TypeScript files (use ftrack-typescript instead), Python ftrack code, general JavaScript without ftrack.
 
 # ftrack JavaScript Expert
 

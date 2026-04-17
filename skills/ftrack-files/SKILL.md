@@ -1,8 +1,10 @@
 ---
 name: ftrack-files
 description: ftrack file operations - upload, download, components, locations, thumbnails
-trigger: upload, download, component, file, asset version, location, storage
 ---
+
+TRIGGER when: code uses `create_component()`, `session.upload()`, `Location`, `FileComponent`, or `AssetVersion` with files; user asks about uploading files to ftrack, downloading components, managing locations, S3 storage, or thumbnails.
+SKIP: general file operations without ftrack, OS file handling, non-ftrack storage systems.
 
 # ftrack File Operations Expert
 

@@ -1,8 +1,11 @@
 ---
 name: ftrack-typescript
 description: ftrack TypeScript integration - type-safe API usage, schema generation, repositories
-trigger: typescript, types, type-safe, ts
 ---
+
+TRIGGER when: TypeScript file (.ts/.tsx) imports `@ftrack/api`; code contains ftrack type definitions, interfaces for Task/Project/Asset; file uses `session.query<T>()` with generics; user asks about ftrack with TypeScript, type-safe queries, schema generation, or typed repositories.
+IMPORTANT: When TypeScript is detected, ALWAYS load both ftrack-javascript AND ftrack-typescript as TypeScript builds on JavaScript.
+SKIP: JavaScript files without types, Python code, general TypeScript without ftrack.
 
 # ftrack TypeScript Expert
 
