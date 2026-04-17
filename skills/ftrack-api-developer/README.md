@@ -65,9 +65,14 @@ export FTRACK_API_USER=your-username
 
 The skill automatically detects your language context:
 - **Python**: `.py` files, `import ftrack_api`, mentions "Python"
-- **JavaScript**: `.js`/`.ts` files, `import ftrack`, mentions "JS"/"Node"/"browser"
+- **JavaScript**: `.js` files, `import ftrack`, mentions "JS"/"Node"/"browser" → Loads `/ftrack-javascript` subskill
+- **TypeScript**: `.ts` files, `tsconfig.json`, mentions "TypeScript"/"TS" → Loads both `/ftrack-javascript` and `/ftrack-typescript` subskills
 
 If context is unclear, it will ask which language you're using before loading language-specific examples.
+
+**Note**: 
+- JavaScript projects load the `/ftrack-javascript` subskill with async/await patterns, browser/Node.js specifics, and ES6+ features
+- TypeScript projects load BOTH `/ftrack-javascript` (for async patterns) and `/ftrack-typescript` (for type-safe patterns, schema generation)
 
 ### Common Use Cases
 

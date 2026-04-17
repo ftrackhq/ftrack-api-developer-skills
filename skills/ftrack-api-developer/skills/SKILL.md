@@ -35,6 +35,11 @@ Smart orchestrator for ftrack API development. Automatically delegates to specia
 **Coverage**: Session initialization, cache management, connection pooling
 **Tokens**: ~400
 
+### /ftrack-javascript - JavaScript Patterns
+**Use when**: User asks about JavaScript, async/await, browser/Node.js, ES6+
+**Coverage**: Async patterns, Promises, file handling, bundling, performance
+**Tokens**: ~600
+
 ### /ftrack-typescript - TypeScript Integration
 **Use when**: User asks about TypeScript, types, type-safety
 **Coverage**: Schema generation, repositories, services, React integration
@@ -46,10 +51,11 @@ Smart orchestrator for ftrack API development. Automatically delegates to specia
 
 ### Automatic Delegation
 When you invoke this skill, it will:
-1. Analyze the user's question
-2. Determine which subskill(s) are relevant
-3. Invoke the appropriate subskill(s)
-4. Return focused, optimized guidance
+1. **Check for TypeScript**: If `.ts` files, `tsconfig.json`, or TypeScript keywords detected → ALWAYS include `/ftrack-typescript`
+2. Analyze the user's question
+3. Determine which subskill(s) are relevant
+4. Invoke the appropriate subskill(s)
+5. Return focused, optimized guidance
 
 ### Manual Invocation
 Users can directly invoke subskills:
@@ -59,6 +65,7 @@ Users can directly invoke subskills:
 /ftrack-actions - for action handlers
 /ftrack-files - for file operations
 /ftrack-session - for session management
+/ftrack-javascript - for JavaScript patterns
 /ftrack-typescript - for TypeScript
 ```
 
@@ -88,9 +95,18 @@ Analyze user's question for keywords and invoke relevant subskills:
 `session`, `connection`, `authentication`, `cache`, `initialize`, `login`, `connect`
 → Invoke `/ftrack-session`
 
+### JavaScript Keywords
+`javascript`, `js`, `async`, `await`, `promise`, `.js` files, ES6, browser, Node.js, webpack, bundling
+→ Invoke `/ftrack-javascript`
+
 ### TypeScript Keywords
-`typescript`, `types`, `type-safe`, `ts`, `interface`, `schema generation`
+`typescript`, `types`, `type-safe`, `.ts` files, `interface`, `schema generation`, type definitions, type safety
 → Invoke `/ftrack-typescript`
+
+**Note**: 
+- JavaScript projects (`.js` files, async/await, browser/Node.js keywords) should load `/ftrack-javascript`
+- TypeScript projects (`.ts` files, `tsconfig.json`, TypeScript keywords) should load `/ftrack-typescript`
+- For `.ts` files, ALWAYS load BOTH `/ftrack-javascript` AND `/ftrack-typescript` as TypeScript builds on JavaScript
 
 ---
 
@@ -99,7 +115,8 @@ Analyze user's question for keywords and invoke relevant subskills:
 ### Language Detection
 Before delegating, detect user's language:
 - **Python**: `.py`, `import ftrack_api`, `session.query()`, mentions "Python"
-- **JavaScript**: `.js`, `.ts`, `import ftrack`, `await session.query()`, mentions "JavaScript"/"JS"/"Node"/"browser"
+- **JavaScript**: `.js`, `import ftrack`, `await session.query()`, mentions "JavaScript"/"JS"/"Node"/"browser" → Invoke `/ftrack-javascript`
+- **TypeScript**: `.ts`, `interface`, `type`, mentions "TypeScript"/"TS" → Invoke BOTH `/ftrack-javascript` AND `/ftrack-typescript`
 - **If unclear**: Ask user which language they're using
 
 ### Official Resources
@@ -193,12 +210,13 @@ const tasks = await session.query<Task>('select name from Task');
 ```
 User asks about ftrack
 ├─ Multiple topics? → Invoke multiple subskills in parallel
+├─ TypeScript detected (.ts, tsconfig.json, TS keywords)? → Include /ftrack-javascript + /ftrack-typescript
+├─ JavaScript detected (.js, async/await, browser/Node.js)? → Include /ftrack-javascript
 ├─ Query/search/filter? → /ftrack-query
 ├─ Events/webhooks? → /ftrack-events
 ├─ Actions/UI forms? → /ftrack-actions
 ├─ Files/upload/storage? → /ftrack-files
 ├─ Session/connection? → /ftrack-session
-├─ TypeScript/types? → /ftrack-typescript
 └─ General/unclear? → Ask clarifying question, then delegate
 ```
 
@@ -229,17 +247,18 @@ Use WebFetch to verify documentation when:
 
 ## Token Efficiency
 
-Total available tokens across subskills: ~3,400
+Total available tokens across subskills: ~4,000
 - **ftrack-query**: 800 tokens
 - **ftrack-events**: 600 tokens
 - **ftrack-actions**: 700 tokens
 - **ftrack-files**: 500 tokens
 - **ftrack-session**: 400 tokens
+- **ftrack-javascript**: 600 tokens
 - **ftrack-typescript**: 400 tokens
 
 **Previous monolithic skill**: 3,500 tokens (always loaded)
 **New approach**: 400-800 tokens (only what's needed)
-**Savings**: 76-89% reduction per query
+**Savings**: 77-89% reduction per query
 
 ---
 

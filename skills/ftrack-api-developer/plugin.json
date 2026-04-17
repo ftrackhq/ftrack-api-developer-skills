@@ -15,6 +15,7 @@
     "ftrack-actions",
     "ftrack-files",
     "ftrack-session",
+    "ftrack-javascript",
     "ftrack-typescript"
   ],
   "installMode": "lazy",
