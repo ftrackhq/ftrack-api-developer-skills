@@ -8,28 +8,36 @@ SKIP: ftrack events (use ftrack-events), JavaScript actions (Python-only feature
 
 # ftrack Action Handler Expert
 
-Build custom ftrack actions with UI forms, discovery logic, and robust error handling (Python-specific).
+**Strategy**: Quick reference first → Fetch online docs if needed → Load local examples as fallback
+
+**IMPORTANT**: Actions are Python-only. JavaScript API does not support custom actions.
 
 ## Prerequisites
-
 ```bash
 pip install ftrack-python-api
 pip install ftrack-action-handler
 ```
 
-## Core Concepts
-
-### Action Lifecycle
-1. **Discover**: Determine if action should be shown
-2. **Interface** (optional): Show UI form for user input
-3. **Launch**: Execute action with user selections/values
-
-### BaseAction Class
-Framework for building actions with built-in session management and error handling.
-
 ---
 
-## Basic Action
+## Quick Reference (Use First - 70% of Queries)
+
+### Core Principles
+✓ **Extend BaseAction**: Use `ftrack_action_handler.action.BaseAction`
+✓ **Implement discover()**: Return action metadata or None to hide
+✓ **Implement launch()**: Execute action logic, return success/message
+✓ **Session available**: Use `self.session` (auto-managed by BaseAction)
+✓ **Commit changes**: Always call `self.session.commit()` after modifications
+✗ Avoid complex forms on first iteration (start simple)
+✗ Never skip validation of user input
+✗ Don't forget error handling and rollback
+
+### Action Lifecycle
+1. **Discover**: Determine if action should be shown based on selection
+2. **Interface** (optional): Show UI form for user input
+3. **Launch**: Execute action with user selections and form values
+
+### Simple Action (No Form)
 
 ```python
 from ftrack_action_handler.action import BaseAction
@@ -37,626 +45,514 @@ from ftrack_action_handler.action import BaseAction
 class SimpleAction(BaseAction):
     """Simple action without UI form."""
     
-    # Action metadata
     label = 'Simple Action'
     identifier = 'com.example.simple'
-    description = 'A simple action example'
+    description = 'Updates selected tasks'
     
     def discover(self, event):
-        """Determine if action should be shown.
-        
-        Args:
-            event: Discovery event with selection data
-            
-        Returns:
-            dict with 'items' list, or None to hide action
-        """
+        """Show action only for tasks."""
         selection = event['data'].get('selection', [])
         
-        # Show action only for tasks
         if all(item.get('entityType') == 'task' for item in selection):
             return {
                 'items': [{
                     'label': self.label,
-                    'actionIdentifier': self.identifier,
-                    'description': self.description
+                    'actionIdentifier': self.identifier
                 }]
             }
-        
         return None
     
     def launch(self, event):
-        """Execute the action.
-        
-        Args:
-            event: Launch event with selection and values
-            
-        Returns:
-            dict with 'success' and 'message'
-        """
+        """Execute the action."""
         selection = event['data'].get('selection', [])
         
         try:
             for item in selection:
-                entity_id = item['entityId']
-                entity_type = item['entityType']
-                
-                # Get entity
-                entity = self.session.get(entity_type, entity_id)
-                
-                # Perform action
+                entity = self.session.get(item['entityType'], item['entityId'])
                 entity['description'] = 'Updated by action'
             
-            # Commit all changes
             self.session.commit()
             
             return {
                 'success': True,
                 'message': f'Updated {len(selection)} items'
             }
-            
         except Exception as e:
-            # Rollback on error
             self.session.rollback()
             return {
                 'success': False,
-                'message': f'Error: {str(e)}'
+                'message': str(e)
             }
 
-
+# Register action
 def register(session):
-    """Register action with ftrack."""
-    action = SimpleAction(session)
-    action.register()
+    SimpleAction(session).register()
 ```
 
----
-
-## Action with UI Form
+### Action with Text Input Form
 
 ```python
-from ftrack_action_handler.action import BaseAction
-
 class FormAction(BaseAction):
-    """Action with user input form."""
+    """Action with text input form."""
     
-    label = 'Create Tasks'
-    identifier = 'com.example.create_tasks'
+    label = 'Update Description'
+    identifier = 'com.example.form'
     
     def discover(self, event):
-        """Show action on project entities."""
-        selection = event['data'].get('selection', [])
-        
-        if len(selection) == 1 and selection[0].get('entityType') == 'project':
-            return {
-                'items': [{
-                    'label': self.label,
-                    'actionIdentifier': self.identifier
-                }]
-            }
+        return {
+            'items': [{
+                'label': self.label,
+                'actionIdentifier': self.identifier
+            }]
+        }
     
-    def interface(self, session, entities, values):
-        """Build UI form.
+    def interface(self, event):
+        """Build UI form."""
+        values = event['data'].get('values', {})
         
-        Args:
-            session: ftrack session
-            entities: Selected entities
-            values: Previously entered values (for validation/multi-step)
-            
-        Returns:
-            list of form field definitions
-        """
-        # Get status options
-        statuses = session.query('select id, name from Status').all()
-        status_options = [
-            {'label': s['name'], 'value': s['id']}
-            for s in statuses
-        ]
-        
-        # Get task type options
-        types = session.query('select id, name from Type where entity_type is "Task"').all()
-        type_options = [
-            {'label': t['name'], 'value': t['id']}
-            for t in types
-        ]
-        
-        return [
-            {
-                'label': 'Task Names',
-                'name': 'task_names',
-                'type': 'textarea',
-                'value': '',
-                'empty_text': 'Enter task names (one per line)'
-            },
-            {
-                'label': 'Task Type',
-                'name': 'type_id',
-                'type': 'enumerator',
-                'data': type_options,
-                'value': type_options[0]['value'] if type_options else None
-            },
-            {
-                'label': 'Status',
-                'name': 'status_id',
-                'type': 'enumerator',
-                'data': status_options,
-                'value': status_options[0]['value'] if status_options else None
-            },
-            {
-                'label': 'Priority',
-                'name': 'priority',
-                'type': 'number',
-                'value': 3
-            }
-        ]
-    
-    def launch(self, event):
-        """Execute action with form values."""
-        selection = event['data']['selection']
-        values = event['data'].get('values')
-        
-        # First call: show form
-        if not values:
-            return {
-                'items': self.interface(
-                    self.session,
-                    selection,
-                    values
-                )
-            }
-        
-        # Second call: process form values
-        try:
-            # Validate input
-            task_names = values.get('task_names', '').strip().split('\n')
-            task_names = [name.strip() for name in task_names if name.strip()]
-            
-            if not task_names:
-                return {
-                    'success': False,
-                    'message': 'Please enter at least one task name'
-                }
-            
-            # Get parent project
-            project_id = selection[0]['entityId']
-            project = self.session.get('Project', project_id)
-            
-            # Create tasks
-            created_tasks = []
-            for name in task_names:
-                task = self.session.create('Task', {
-                    'name': name,
-                    'parent': project,
-                    'type_id': values['type_id'],
-                    'status_id': values['status_id'],
-                    'priority': int(values['priority'])
-                })
-                created_tasks.append(task)
-            
-            # Commit all at once
-            self.session.commit()
-            
-            return {
-                'success': True,
-                'message': f'Created {len(created_tasks)} tasks'
-            }
-            
-        except Exception as e:
-            self.session.rollback()
-            return {
-                'success': False,
-                'message': f'Error: {str(e)}'
-            }
-
-
-def register(session):
-    action = FormAction(session)
-    action.register()
-```
-
----
-
-## Form Field Types
-
-### Text Input
-```python
-{
-    'label': 'Task Name',
-    'name': 'task_name',
-    'type': 'text',
-    'value': 'Default Value',
-    'empty_text': 'Enter task name...'
-}
-```
-
-### Textarea
-```python
-{
-    'label': 'Description',
-    'name': 'description',
-    'type': 'textarea',
-    'value': '',
-    'empty_text': 'Enter description...'
-}
-```
-
-### Number
-```python
-{
-    'label': 'Priority',
-    'name': 'priority',
-    'type': 'number',
-    'value': 3
-}
-```
-
-### Checkbox
-```python
-{
-    'label': 'Send Notification',
-    'name': 'notify',
-    'type': 'boolean',
-    'value': True
-}
-```
-
-### Dropdown (Enumerator)
-```python
-{
-    'label': 'Status',
-    'name': 'status_id',
-    'type': 'enumerator',
-    'data': [
-        {'label': 'Not Started', 'value': 'status-id-1'},
-        {'label': 'In Progress', 'value': 'status-id-2'},
-        {'label': 'Complete', 'value': 'status-id-3'}
-    ],
-    'value': 'status-id-1'
-}
-```
-
-### Date Picker
-```python
-{
-    'label': 'Due Date',
-    'name': 'due_date',
-    'type': 'date',
-    'value': '2026-12-31'
-}
-```
-
-### Entity Selector
-```python
-{
-    'label': 'Assigned User',
-    'name': 'user_id',
-    'type': 'entity',
-    'entity_type': 'User',
-    'value': None
-}
-```
-
----
-
-## Advanced Patterns
-
-### Multi-Step Form
-```python
-class MultiStepAction(BaseAction):
-    """Action with conditional form steps."""
-    
-    label = 'Multi-Step Action'
-    identifier = 'com.example.multistep'
-    
-    def interface(self, session, entities, values):
-        """Show different form based on previous values."""
-        
-        # Step 1: Choose action type
+        # If no values, show form
         if not values:
             return [
                 {
-                    'label': 'Action Type',
-                    'name': 'action_type',
+                    'type': 'text',
+                    'label': 'Description',
+                    'name': 'description',
+                    'value': ''
+                }
+            ]
+        
+        # Values submitted, return None to proceed to launch
+        return None
+    
+    def launch(self, event):
+        """Execute with form values."""
+        values = event['data'].get('values', {})
+        description = values.get('description', '')
+        
+        if not description:
+            return {'success': False, 'message': 'Description required'}
+        
+        selection = event['data'].get('selection', [])
+        
+        for item in selection:
+            entity = self.session.get(item['entityType'], item['entityId'])
+            entity['description'] = description
+        
+        self.session.commit()
+        
+        return {
+            'success': True,
+            'message': f'Updated {len(selection)} items'
+        }
+```
+
+### Action with Dropdown Selection
+
+```python
+class StatusAction(BaseAction):
+    """Action with status dropdown."""
+    
+    label = 'Change Status'
+    identifier = 'com.example.status'
+    
+    def interface(self, event):
+        values = event['data'].get('values', {})
+        
+        if not values:
+            # Get available statuses
+            statuses = self.session.query('Status').all()
+            
+            return [
+                {
                     'type': 'enumerator',
+                    'label': 'New Status',
+                    'name': 'status_id',
                     'data': [
-                        {'label': 'Create Tasks', 'value': 'create'},
-                        {'label': 'Update Status', 'value': 'update'}
+                        {'label': s['name'], 'value': s['id']}
+                        for s in statuses
                     ]
                 }
             ]
         
-        # Step 2: Show fields based on action type
-        action_type = values.get('action_type')
-        
-        if action_type == 'create':
-            return [
-                {'label': 'Task Names', 'name': 'task_names', 'type': 'textarea'},
-                {'label': 'Submit', 'name': 'submit', 'type': 'boolean', 'value': False}
-            ]
-        elif action_type == 'update':
-            statuses = session.query('select id, name from Status').all()
-            return [
-                {
-                    'label': 'New Status',
-                    'name': 'status_id',
-                    'type': 'enumerator',
-                    'data': [{'label': s['name'], 'value': s['id']} for s in statuses]
-                },
-                {'label': 'Submit', 'name': 'submit', 'type': 'boolean', 'value': False}
-            ]
+        return None
     
     def launch(self, event):
-        """Handle multi-step form submission."""
-        values = event['data'].get('values')
-        
-        if not values or not values.get('submit'):
-            # Show form (or next step)
-            return {
-                'items': self.interface(
-                    self.session,
-                    event['data']['selection'],
-                    values
-                )
-            }
-        
-        # Process final submission
-        action_type = values['action_type']
-        
-        if action_type == 'create':
-            return self._create_tasks(values)
-        elif action_type == 'update':
-            return self._update_status(values)
-```
-
-### Validation
-```python
-class ValidatedAction(BaseAction):
-    """Action with input validation."""
-    
-    def launch(self, event):
-        values = event['data'].get('values')
-        
-        if not values:
-            return {'items': self.interface(self.session, [], values)}
-        
-        # Validate inputs
-        errors = self._validate(values)
-        if errors:
-            # Return form with error message
-            return {
-                'success': False,
-                'message': '\n'.join(errors),
-                'items': self.interface(self.session, [], values)
-            }
-        
-        # Process valid input
-        return self._process(values)
-    
-    def _validate(self, values):
-        """Validate form values."""
-        errors = []
-        
-        task_name = values.get('task_name', '').strip()
-        if not task_name:
-            errors.append('Task name is required')
-        elif len(task_name) < 3:
-            errors.append('Task name must be at least 3 characters')
-        
-        priority = values.get('priority')
-        if priority is not None:
-            try:
-                priority = int(priority)
-                if priority < 1 or priority > 5:
-                    errors.append('Priority must be between 1 and 5')
-            except ValueError:
-                errors.append('Priority must be a number')
-        
-        return errors
-```
-
-### Bulk Operations
-```python
-class BulkUpdateAction(BaseAction):
-    """Update multiple entities efficiently."""
-    
-    label = 'Bulk Status Update'
-    identifier = 'com.example.bulk_update'
-    
-    def discover(self, event):
-        """Show on multiple task selection."""
+        values = event['data'].get('values', {})
+        status_id = values.get('status_id')
         selection = event['data'].get('selection', [])
         
-        if (len(selection) > 1 and 
-            all(item.get('entityType') == 'task' for item in selection)):
-            return {
-                'items': [{
-                    'label': f'{self.label} ({len(selection)} tasks)',
-                    'actionIdentifier': self.identifier
-                }]
-            }
-    
-    def launch(self, event):
-        selection = event['data']['selection']
-        values = event['data'].get('values')
+        for item in selection:
+            entity = self.session.get(item['entityType'], item['entityId'])
+            entity['status_id'] = status_id
         
-        if not values:
-            # Show form
-            statuses = self.session.query('select id, name from Status').all()
-            return {
-                'items': [{
-                    'label': 'New Status',
-                    'name': 'status_id',
-                    'type': 'enumerator',
-                    'data': [{'label': s['name'], 'value': s['id']} for s in statuses]
-                }]
-            }
+        self.session.commit()
         
-        try:
-            # Update all tasks
-            status_id = values['status_id']
-            
-            for item in selection:
-                task = self.session.get('Task', item['entityId'])
-                task['status_id'] = status_id
-            
-            # Single commit for all changes
-            self.session.commit()
-            
-            return {
-                'success': True,
-                'message': f'Updated {len(selection)} tasks'
-            }
-            
-        except Exception as e:
-            self.session.rollback()
-            return {'success': False, 'message': str(e)}
+        return {'success': True, 'message': 'Status updated'}
 ```
 
----
-
-## Action Server
+### Multi-Field Form
 
 ```python
-import logging
-import ftrack_api
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-def register_actions(session):
-    """Register all actions."""
-    from my_actions import SimpleAction, FormAction, BulkUpdateAction
+class ComplexFormAction(BaseAction):
+    """Action with multiple form fields."""
     
+    label = 'Complex Form'
+    identifier = 'com.example.complex'
+    
+    def interface(self, event):
+        values = event['data'].get('values', {})
+        
+        if not values:
+            return [
+                {
+                    'type': 'text',
+                    'label': 'Name',
+                    'name': 'name'
+                },
+                {
+                    'type': 'textarea',
+                    'label': 'Description',
+                    'name': 'description'
+                },
+                {
+                    'type': 'number',
+                    'label': 'Priority',
+                    'name': 'priority',
+                    'value': 50
+                },
+                {
+                    'type': 'boolean',
+                    'label': 'Notify Users',
+                    'name': 'notify',
+                    'value': True
+                }
+            ]
+        
+        return None
+```
+
+### Form Field Types
+
+```python
+# Text input
+{'type': 'text', 'label': 'Name', 'name': 'name', 'value': ''}
+
+# Multi-line text
+{'type': 'textarea', 'label': 'Description', 'name': 'desc'}
+
+# Number input
+{'type': 'number', 'label': 'Priority', 'name': 'priority', 'value': 50}
+
+# Checkbox
+{'type': 'boolean', 'label': 'Enable', 'name': 'enabled', 'value': True}
+
+# Dropdown
+{
+    'type': 'enumerator',
+    'label': 'Status',
+    'name': 'status',
+    'data': [
+        {'label': 'Active', 'value': 'active'},
+        {'label': 'Done', 'value': 'done'}
+    ]
+}
+
+# Date picker
+{'type': 'date', 'label': 'Due Date', 'name': 'due_date'}
+
+# Entity selector
+{
+    'type': 'entity',
+    'label': 'Assigned To',
+    'name': 'assignee',
+    'entity_type': 'User'
+}
+```
+
+### Validation Pattern
+
+```python
+def launch(self, event):
+    values = event['data'].get('values', {})
+    
+    # Validate required fields
+    if not values.get('name'):
+        return {
+            'success': False,
+            'message': 'Name is required'
+        }
+    
+    # Validate format
+    if not re.match(r'^[a-zA-Z0-9_]+$', values['name']):
+        return {
+            'success': False,
+            'message': 'Name must be alphanumeric'
+        }
+    
+    # Execute action
+    # ...
+```
+
+**→ This quick reference handles most action patterns. For advanced forms or deployment, continue below.**
+
+---
+
+## Online Resources (Fetch for Detailed Info)
+
+### When to Fetch
+- User asks for "all form field types" or "complete action API"
+- Needs action server deployment patterns
+- Questions about advanced validation or multi-step forms
+- Official action examples or best practices
+
+### Actions Documentation
+**URL**: `https://developer.ftrack.com/ftrack/actions/index.html`
+**Fetch Prompt**:
+```
+Extract ftrack action handler patterns and API reference. Include:
+- BaseAction class usage and lifecycle
+- Discovery logic and filtering
+- UI form building with all field types
+- Launch execution patterns
+- Error handling and validation
+- Action server setup and deployment
+- Multi-step form patterns
+- Bulk operations and performance
+Format as markdown with Python code examples.
+```
+
+### Action Handler Library Documentation
+**URL**: `https://github.com/ftrackhq/ftrack-action-handler`
+**Fetch Prompt**:
+```
+Extract ftrack-action-handler library usage patterns. Include:
+- BaseAction subclassing
+- Session management
+- Event subscription in actions
+- Deployment patterns
+- Best practices
+Format as markdown.
+```
+
+### WebFetch Decision Tree
+
+**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
+
+**Trigger detection** (check user's exact query):
+```python
+trigger_phrases = [
+    "all form field types",
+    "complete action API",
+    "official action docs",
+    "action server deployment",
+    "multi-step form",
+    "advanced validation",
+    "action best practices",
+    "all widget types"
+]
+```
+
+**Action when trigger detected:**
+1. **Detect topic**: Form fields, deployment, or API reference
+2. **Use WebFetch** with appropriate URL above
+3. **If fetch succeeds**: Return formatted docs to user
+4. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
+
+**WebFetch Example:**
+```markdown
+# User asks: "Show me all form field types for ftrack actions"
+# Trigger detected: "all form field types"
+
+Use WebFetch tool:
+WebFetch(
+  url="https://developer.ftrack.com/ftrack/actions/index.html",
+  prompt="Extract all ftrack action form field types and widgets. Include text, textarea, number, boolean, enumerator, date, entity, and any other available types. Show configuration options and examples. Format as markdown."
+)
+
+If successful: Present docs
+If fails: Load ./examples/python/action_handlers.py
+```
+
+---
+
+## Local Examples (Fallback - Load Only When Needed)
+
+### When to Load Local
+1. WebFetch fails or times out
+2. User explicitly requests "show me the example file"
+3. Need complete runnable action implementations
+4. Advanced patterns like bulk operations, multi-step forms
+
+### Available Local Files
+
+**Action Handlers Example**
+- **File**: `.././examples/python/action_handlers.py`
+- **Contains**: Complete action implementations with forms, validation, bulk operations
+- **Load when**: User needs production action patterns
+- **Size**: ~400 lines
+
+### How to Load
+```markdown
+Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-api-developer\\examples\\python\\action_handlers.py")
+
+Then extract relevant action patterns for the user's specific question.
+```
+
+---
+
+## Decision Tree
+
+```
+User asks about ftrack actions
+  │
+  ├─ Simple action (no form)?
+  │   └→ Use Quick Reference above ✓
+  │
+  ├─ Action with text input?
+  │   └→ Use Quick Reference (form action) ✓
+  │
+  ├─ Action with dropdown?
+  │   └→ Use Quick Reference (status action) ✓
+  │
+  ├─ Validation patterns?
+  │   └→ Use Quick Reference (validation) ✓
+  │
+  ├─ Need all form field types or complete API?
+  │   ├→ WebFetch actions documentation
+  │   └→ If fails: Load action_handlers.py
+  │
+  ├─ Action server deployment?
+  │   ├→ WebFetch action-handler library docs
+  │   └→ If fails: Provide basic deployment pattern
+  │
+  └─ Production-ready examples with bulk operations?
+      └→ Load action_handlers.py directly
+```
+
+---
+
+## Response Strategy
+
+### For Simple Questions
+1. Answer using Quick Reference patterns
+2. Show appropriate pattern (simple, form, dropdown)
+3. Keep concise (1 example)
+4. Cite: "From action quick reference"
+
+### For Detailed Questions
+1. Start with Quick Reference context
+2. If trigger detected: WebFetch actions documentation
+3. Provide field-specific examples
+4. Cite: "From [URL]"
+5. If fetch fails: Load local example + cite filename
+
+### For Advanced Questions (Multi-step, Bulk)
+1. Check if Quick Reference covers it
+2. If not: WebFetch actions docs
+3. If insufficient or fails: Load local example file
+4. Provide production-ready code
+5. Cite all sources used
+
+### Progressive Disclosure
+- Start minimal (quick reference - simple action or form)
+- Offer more: "Need all form field types or deployment guide? I can fetch official docs"
+- Load comprehensive examples only if requested or if WebFetch fails
+
+---
+
+## Action Server Deployment (Quick Reference)
+
+**Basic Server**
+```python
+import logging
+from ftrack_action_handler.action import BaseAction
+
+logging.basicConfig(level=logging.INFO)
+
+# Register actions
+def register(session):
     SimpleAction(session).register()
     FormAction(session).register()
-    BulkUpdateAction(session).register()
-    
-    logger.info('Actions registered')
-
-def main():
-    """Run action server."""
-    session = ftrack_api.Session(auto_connect_event_hub=True)
-    
-    # Register actions
-    register_actions(session)
-    
-    logger.info('Action server running. Press Ctrl+C to exit.')
-    
-    # Wait for events
-    session.event_hub.wait()
+    StatusAction(session).register()
 
 if __name__ == '__main__':
-    main()
+    import ftrack_api
+    
+    session = ftrack_api.Session(auto_connect_event_hub=True)
+    register(session)
+    
+    # Keep server running
+    session.event_hub.wait()
 ```
 
----
-
-## Deployment
-
-### Docker
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD ["python", "action_server.py"]
-```
-
-### Systemd Service
-```ini
-[Unit]
-Description=ftrack Action Server
-After=network.target
-
-[Service]
-Type=simple
-User=ftrack
-WorkingDirectory=/opt/ftrack-actions
-Environment="FTRACK_SERVER=https://company.ftrackapp.com"
-Environment="FTRACK_API_KEY=your-key"
-Environment="FTRACK_API_USER=your-user"
-ExecStart=/usr/bin/python3 action_server.py
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
----
-
-## Best Practices
-
-1. **Validate Input**: Always validate form values before processing
-2. **Error Handling**: Use try/except and rollback on errors
-3. **Batch Commits**: Commit once for multiple operations
-4. **Clear Feedback**: Return descriptive success/error messages
-5. **Discovery Logic**: Show actions only where relevant
-6. **Logging**: Log actions for debugging and auditing
-7. **Testing**: Test with various selection types and edge cases
+**For complete deployment setup**: Request WebFetch or load `action_handlers.py`
 
 ---
 
 ## Common Patterns
 
-### Status Workflow
+### Bulk Operations
 ```python
-class StatusWorkflowAction(BaseAction):
-    """Advance task through status workflow."""
+def launch(self, event):
+    selection = event['data'].get('selection', [])
+    updated = 0
     
-    WORKFLOW = {
-        'Not Started': 'In Progress',
-        'In Progress': 'Review',
-        'Review': 'Approved',
-        'Approved': 'Complete'
+    for item in selection:
+        try:
+            entity = self.session.get(item['entityType'], item['entityId'])
+            entity['description'] = 'Processed'
+            updated += 1
+        except Exception as e:
+            self.logger.warning(f"Failed to update {item['entityId']}: {e}")
+    
+    self.session.commit()
+    
+    return {
+        'success': True,
+        'message': f'Updated {updated}/{len(selection)} items'
     }
+```
+
+### Entity Query in Discover
+```python
+def discover(self, event):
+    """Show action only for published assets."""
+    selection = event['data'].get('selection', [])
     
-    def discover(self, event):
-        selection = event['data'].get('selection', [])
-        
-        if len(selection) == 1 and selection[0].get('entityType') == 'task':
-            task_id = selection[0]['entityId']
-            task = self.session.get('Task', task_id)
-            current_status = task['status']['name']
-            
-            if current_status in self.WORKFLOW:
-                next_status = self.WORKFLOW[current_status]
-                return {
-                    'items': [{
-                        'label': f'Advance to {next_status}',
-                        'actionIdentifier': self.identifier
-                    }]
-                }
+    # Query selected entities
+    for item in selection:
+        entity = self.session.get(item['entityType'], item['entityId'])
+        if entity.entity_type == 'AssetVersion' and entity['is_published']:
+            return {'items': [{'label': self.label}]}
     
-    def launch(self, event):
-        task_id = event['data']['selection'][0]['entityId']
-        task = self.session.get('Task', task_id)
-        current_status_name = task['status']['name']
-        next_status_name = self.WORKFLOW[current_status_name]
+    return None
+```
+
+### Progress Reporting (Advanced)
+```python
+def launch(self, event):
+    selection = event['data'].get('selection', [])
+    total = len(selection)
+    
+    for i, item in enumerate(selection):
+        entity = self.session.get(item['entityType'], item['entityId'])
+        process_entity(entity)
         
-        # Find next status
-        next_status = self.session.query(
-            'Status where name is "{0}"'.format(next_status_name)
-        ).one()
-        
-        task['status'] = next_status
-        self.session.commit()
-        
-        return {
-            'success': True,
-            'message': f'Status updated to {next_status_name}'
-        }
+        # Update progress
+        progress = (i + 1) / total
+        self.logger.info(f'Progress: {progress:.0%}')
+    
+    self.session.commit()
+    
+    return {'success': True, 'message': 'Complete'}
 ```
 
 ---
 
-## Official Resources
+## Token Efficiency
 
-- **Action Handler**: https://github.com/ftrackhq/ftrack-action-handler
-- **Examples**: https://github.com/ftrackhq/ftrack-recipes
-- **Python API**: https://ftrack-python-api.readthedocs.io/
+**Quick Reference**: ~700 tokens (handles 70%+ of queries)
+**With WebFetch**: ~1,400 tokens (handles advanced scenarios)
+**With Local Files**: ~2,200 tokens (complete implementations)
+
+**Target**: Use quick reference first, only fetch/load when user needs all field types or deployment patterns.

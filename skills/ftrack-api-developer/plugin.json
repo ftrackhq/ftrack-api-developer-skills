@@ -16,7 +16,8 @@
     "ftrack-files",
     "ftrack-session",
     "ftrack-javascript",
-    "ftrack-typescript"
+    "ftrack-typescript",
+    "ftrack-dashboards"
   ],
   "installMode": "lazy",
   "languages": ["python", "javascript", "typescript"]

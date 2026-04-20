@@ -1,9 +1,9 @@
 ---
 name: ftrack-api-developer
-description: ftrack API orchestrator - delegates to specialized subskills for queries, events, actions, files, sessions, TypeScript
+description: ftrack API orchestrator - delegates to 8 specialized subskills for queries, events, actions, files, sessions, JavaScript, TypeScript, dashboards
 ---
 
-TRIGGER when: code imports `ftrack_api` (Python) or `@ftrack/api` (JavaScript); file contains ftrack Session/Entity usage; user asks about ftrack API, queries, events, actions, file operations, or ftrack integration.
+TRIGGER when: code imports `ftrack_api` (Python) or `@ftrack/api` (JavaScript) or `@ftrack/web-widget`; file contains ftrack Session/Entity usage; user asks about ftrack API, queries, events, actions, file operations, dashboards, widgets, or ftrack integration.
 SKIP: non-ftrack code, other media management systems, general Python/JavaScript questions without ftrack context.
 
 # ftrack API Development Orchestrator
@@ -47,6 +47,11 @@ Smart orchestrator for ftrack API development. Automatically delegates to specia
 **Coverage**: Schema generation, repositories, services, React integration
 **Tokens**: ~400
 
+### /ftrack-dashboards - Dashboard Development
+**Use when**: User asks about dashboards, widgets, charts, visualization, React widgets
+**Coverage**: Widget setup, data visualization, charts (Recharts), calendars, PDF export, theme management
+**Tokens**: ~700
+
 ---
 
 ## How to Use This Skill
@@ -69,6 +74,7 @@ Users can directly invoke subskills:
 /ftrack-session - for session management
 /ftrack-javascript - for JavaScript patterns
 /ftrack-typescript - for TypeScript
+/ftrack-dashboards - for dashboard/widget development
 ```
 
 ---
@@ -78,8 +84,9 @@ Users can directly invoke subskills:
 Analyze user's question for keywords and invoke relevant subskills:
 
 ### Query Keywords
-`query`, `search`, `filter`, `find`, `select`, `where`, `projection`, `pagination`
+`query`, `search`, `filter`, `find`, `select`, `where`, `projection`, `pagination`, `aggregate`, `group by`, `count`, `sum`
 → Invoke `/ftrack-query`
+**Note**: ftrack-query now includes comprehensive dashboard aggregation patterns (status counts, completion %, time series, user workload, multi-dimensional grouping)
 
 ### Event Keywords
 `event`, `webhook`, `real-time`, `subscribe`, `listen`, `event hub`, `WebSocket`
@@ -105,10 +112,15 @@ Analyze user's question for keywords and invoke relevant subskills:
 `typescript`, `types`, `type-safe`, `.ts` files, `interface`, `schema generation`, type definitions, type safety
 → Invoke `/ftrack-typescript`
 
+### Dashboard Keywords
+`dashboard`, `widget`, `chart`, `visualization`, `graph`, `calendar`, `@ftrack/web-widget`, `recharts`, `react-big-calendar`, `PDF export`
+→ Invoke `/ftrack-dashboards`
+
 **Note**: 
 - JavaScript projects (`.js` files, async/await, browser/Node.js keywords) should load `/ftrack-javascript`
 - TypeScript projects (`.ts` files, `tsconfig.json`, TypeScript keywords) should load `/ftrack-typescript`
 - For `.ts` files, ALWAYS load BOTH `/ftrack-javascript` AND `/ftrack-typescript` as TypeScript builds on JavaScript
+- Dashboard projects should load `/ftrack-dashboards` (and optionally `/ftrack-javascript` for base patterns)
 
 ---
 
@@ -205,6 +217,25 @@ const tasks = await session.query<Task>('select name from Task');
 ```
 **→ For details, invoke `/ftrack-typescript`**
 
+### Dashboard Example
+```javascript
+// React dashboard widget
+import { getActiveTheme } from '@ftrack/web-widget';
+import useSession from './session_context';
+
+function Dashboard() {
+  const session = useSession();
+  const theme = getActiveTheme();
+  
+  useEffect(() => {
+    window.addEventListener('ftrackWidgetUpdate', handleUpdate);
+  }, []);
+  
+  return <div className={`dashboard theme-${theme}`}>...</div>;
+}
+```
+**→ For details, invoke `/ftrack-dashboards`**
+
 ---
 
 ## Decision Tree
@@ -212,6 +243,7 @@ const tasks = await session.query<Task>('select name from Task');
 ```
 User asks about ftrack
 ├─ Multiple topics? → Invoke multiple subskills in parallel
+├─ Dashboard/widget/chart detected? → Include /ftrack-dashboards (+ /ftrack-javascript if needed)
 ├─ TypeScript detected (.ts, tsconfig.json, TS keywords)? → Include /ftrack-javascript + /ftrack-typescript
 ├─ JavaScript detected (.js, async/await, browser/Node.js)? → Include /ftrack-javascript
 ├─ Query/search/filter? → /ftrack-query
@@ -235,15 +267,111 @@ User asks about ftrack
 
 ---
 
-## When to Use WebFetch
+## Resource Loading Strategy (IMPORTANT)
 
-Use WebFetch to verify documentation when:
-- User asks about specific API methods not covered in subskills
-- Working with newer features or version-specific info
-- Uncertain about current syntax or parameters
-- User requests official examples or references
+**Three-Tier Approach** - Minimize context usage by loading progressively:
 
-**Strategy**: Delegate to subskill first, use WebFetch only if needed for clarification.
+### Tier 1: Quick Reference (70% of queries)
+Each subskill has a minimal quick reference section with 5-8 core patterns.
+- **When**: Simple "how do I..." questions
+- **Action**: Invoke subskill normally - it will use quick reference
+- **Tokens**: 500-800 per subskill
+
+### Tier 2: Online Documentation (25% of queries)
+Fetch fresh, authoritative content from official docs.
+- **When**: User needs detailed API reference, edge cases, or latest features
+- **Action**: Use WebFetch with URLs from "Official Resources" section below
+- **Tokens**: Dynamic, but controlled by fetch prompt
+
+### Tier 3: Local Examples (5% of queries - fallback only)
+Load comprehensive local example files.
+- **When**: WebFetch fails OR user explicitly requests local examples OR needs runnable code
+- **Action**: Read specific example file from `../examples/` directory
+- **Tokens**: 1,500-3,000 per file
+
+### Decision Flow
+```
+User Question
+  ├─ Simple/common pattern? 
+  │   └→ Invoke subskill (uses quick reference)
+  │
+  ├─ Needs detailed docs/API reference?
+  │   ├→ WebFetch official docs first
+  │   └→ If fails: Tell subskill to load local examples
+  │
+  └─ Needs runnable code?
+      └→ Tell subskill to read specific example file
+```
+
+### Official Resources for WebFetch
+
+**Python Query Docs:**
+- URL: `https://developer.ftrack.com/api-clients/python/querying.html`
+- Fetch prompt: "Extract ftrack Python query patterns. Include select/where syntax, projections, filtering, pagination examples. Format as markdown."
+
+**JavaScript Query Docs:**
+- URL: `https://developer.ftrack.com/api-clients/javascript/querying.html`
+- Fetch prompt: "Extract ftrack JavaScript query patterns. Include async/await examples, error handling. Format as markdown."
+
+**Python Events:**
+- URL: `https://developer.ftrack.com/api-clients/python/event_hub.html`
+- Fetch prompt: "Extract Python event hub patterns. Include subscription syntax, event topics, handler patterns. Format as markdown."
+
+**JavaScript Events:**
+- URL: `https://developer.ftrack.com/api-clients/javascript/event_hub.html`
+- Fetch prompt: "Extract JavaScript event hub patterns. Include WebSocket handling, subscriptions. Format as markdown."
+
+**Python Actions:**
+- URL: `https://developer.ftrack.com/ftrack/actions/index.html`
+- Fetch prompt: "Extract action handler patterns. Include BaseAction usage, discovery/launch, UI forms. Format as markdown."
+
+**Locations (Files):**
+- URL: `https://developer.ftrack.com/api-clients/python/locations.html`
+- Fetch prompt: "Extract location and file component patterns. Include upload/download, custom locations. Format as markdown."
+
+**Session Management:**
+- URL: `https://developer.ftrack.com/api-clients/python/session.html`
+- Fetch prompt: "Extract session initialization and management patterns. Include authentication, caching. Format as markdown."
+
+**Example Repositories:**
+- URL: `https://github.com/ftrackhq/ftrack-recipes`
+- Fetch prompt: "Extract [specific topic] examples. Show complete working patterns."
+
+### WebFetch Decision Logic
+
+When delegating to subskills, detect if WebFetch should be used based on user's query:
+
+**Trigger Phrases for Online Docs:**
+- "show all [operators|topics|methods|options]"
+- "complete [reference|syntax|documentation|API]"
+- "official docs" / "official documentation"
+- "latest features" / "what's new"
+- "full API reference"
+- "edge cases for..."
+- "all [authentication|location|event] types"
+
+**Language Selection for URLs:**
+- **Python**: `.py` extension, `import ftrack_api`, "Python" keyword
+- **JavaScript**: `.js` extension, `import ftrack`, "JavaScript"/"JS", "browser", "Node.js"
+- **TypeScript**: `.ts` extension, "TypeScript"/"TS", "type-safe"
+
+**How to Instruct Subskills:**
+
+When invoking a subskill AND trigger phrase detected:
+1. Detect user's language from query context
+2. Pass explicit instruction: "Fetch online docs for [topic] ([language])"
+3. Subskill uses WebFetch with appropriate URL from mapping above
+4. If fetch fails, subskill loads local example file as fallback
+
+**Example:**
+```
+User: "Show me all query operators for Python"
+→ Detect trigger: "show all operators"
+→ Detect language: "Python"
+→ Invoke: /ftrack-query "Fetch online docs for query operators (Python)"
+→ Subskill fetches: https://developer.ftrack.com/api-clients/python/querying.html
+→ If fails: Loads ../examples/python/performance_optimization.py
+```
 
 ---
 

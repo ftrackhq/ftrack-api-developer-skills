@@ -8,554 +8,418 @@ SKIP: general file operations without ftrack, OS file handling, non-ftrack stora
 
 # ftrack File Operations Expert
 
-Master file upload, download, component management, and custom storage locations in ftrack.
+**Strategy**: Quick reference first → Fetch online docs if needed → Load local examples as fallback
 
-## Quick Start
-
-Detect user's language:
-- **Python**: `Component`, `Location`, `ftrack_api.structure`
-- **JavaScript**: `session.upload()`, `FileComponent`, browser/Node.js
+## Language Detection
+- **Python**: `create_component()`, `Location`, `ftrack_api.structure`
+- **JavaScript**: `session.upload()`, browser `File` API, Node.js `fs`
 
 ---
 
-## Core Concepts
+## Quick Reference (Use First - 70% of Queries)
 
-### Components
-Files attached to asset versions. Types:
-- `FileComponent` - Single file
-- `SequenceComponent` - Image sequence
-- `ContainerComponent` - Multiple files
+### Core Principles
+✓ **Upload components to locations**: `AssetVersion.create_component()`
+✓ **Download from locations**: `Location.get_component()`
+✓ **Use appropriate location**: `ftrack.server` for cloud, custom for S3/disk
+✗ Avoid uploading without specifying location
+✗ Never assume default location structure
 
-### Locations
-Storage backends:
-- `ftrack.server` - ftrack cloud storage
-- `ftrack.unmanaged` - External/unmanaged
-- Custom locations (S3, disk, etc.)
+### Core Concepts
+- **Components**: Files attached to asset versions (FileComponent, SequenceComponent)
+- **Locations**: Storage backends (ftrack.server, ftrack.unmanaged, custom S3/disk)
+- **Asset Versions**: Container for components
 
-### Asset Versions
-Container for components representing a published version.
+### Python Quick Patterns
 
----
-
-## Python File Operations
-
-### Upload File
+**Upload File**
 ```python
 import ftrack_api
-
 session = ftrack_api.Session()
 
-# Create asset version
-asset = session.query('Asset where id is "{0}"'.format(asset_id)).one()
-asset_version = session.create('AssetVersion', {
-    'asset': asset,
-    'comment': 'New version'
-})
+# Get location
+location = session.query('Location where name is "ftrack.server"').one()
 
 # Create component
 component = asset_version.create_component(
     path='/path/to/file.ma',
     data={'name': 'main'},
-    location=session.query('Location where name is "ftrack.server"').one()
+    location=location
 )
-
 session.commit()
-print(f"Uploaded: {component['name']}")
 ```
 
-### Download File
+**Download File**
 ```python
-# Get component
-component = session.query(
-    'Component where version.asset.name is "Character" '
-    'and version.version is 5'
-).first()
+# Query component
+component = session.query('Component where id is "{}"'.format(comp_id)).one()
 
-# Get location
+# Get location and download
 location = session.query('Location where name is "ftrack.server"').one()
-
-# Download
-local_path = location.get_filesystem_path(component)
-print(f"File available at: {local_path}")
-
-# Or explicit download
-import tempfile
-download_path = os.path.join(tempfile.gettempdir(), component['name'])
-location.get_component(component, download_path)
+local_path = location.get_component(component, '/download/path/')
 ```
 
-### Sequence Upload
+**Upload Image Sequence**
 ```python
-# Image sequence
-sequence_path = '/path/to/sequence/render.%04d.exr'
-padding = 4
-
 component = asset_version.create_component(
-    path=sequence_path,
+    path='/path/to/render.%04d.exr',
     data={
         'name': 'render',
-        'frame_padding': padding,
+        'frame_padding': 4,
         'frame_start': 1001,
         'frame_end': 1100
     },
     location=location
 )
-
-session.commit()
 ```
 
-### Thumbnail Upload
+**Upload Thumbnail**
 ```python
-# Upload thumbnail for asset version
-asset_version.create_thumbnail('/path/to/thumbnail.jpg')
-session.commit()
-
-# Or use existing component as thumbnail
-thumbnail_component = asset_version.create_component(
-    path='/path/to/thumbnail.jpg',
-    data={'name': 'thumbnail'}
-)
-asset_version['thumbnail'] = thumbnail_component
+asset_version.create_thumbnail('/path/to/thumb.jpg')
 session.commit()
 ```
 
----
+**List Components**
+```python
+components = session.query(
+    'Component where version.id is "{}"'.format(version_id)
+).all()
+```
 
-## JavaScript File Operations
+### JavaScript Quick Patterns
 
-### Browser Upload
+**Browser Upload**
 ```javascript
-import ftrack from '@ftrack/api';
-
-const session = new ftrack.Session(
-  "https://company.ftrackapp.com",
-  "user@example.com",
-  "api-key"
-);
-
-await session.initializing;
-
 // HTML: <input type="file" id="fileInput">
-const fileInput = document.getElementById('fileInput');
-const file = fileInput.files[0];
-
-// Create asset version
-const assetVersion = await session.create('AssetVersion', {
-  asset_id: assetId,
-  comment: 'Uploaded from web'
-});
+const file = document.getElementById('fileInput').files[0];
 
 // Create component
 const component = await session.create('FileComponent', {
   name: file.name,
   file_type: file.type,
   size: file.size,
-  version_id: assetVersion.id
+  version_id: assetVersionId
 });
 
-// Upload file
+// Upload
 await session.upload(component.id, file);
-
-console.log('Upload complete:', component.name);
 ```
 
-### Progress Tracking
+**Upload with Progress**
 ```javascript
-// Upload with progress callback
-async function uploadWithProgress(file, assetVersionId) {
-  const component = await session.create('FileComponent', {
-    name: file.name,
-    file_type: file.type,
-    size: file.size,
-    version_id: assetVersionId
-  });
-  
-  await session.upload(component.id, file, {
-    onProgress: (progress) => {
-      const percent = Math.round((progress.loaded / progress.total) * 100);
-      console.log(`Upload progress: ${percent}%`);
-      updateProgressBar(percent);
-    }
-  });
-  
-  return component;
-}
+await session.upload(component.id, file, {
+  onProgress: (progress) => {
+    const percent = Math.round((progress.loaded / progress.total) * 100);
+    console.log(`Progress: ${percent}%`);
+  }
+});
 ```
 
-### Download File
+**Download File (Browser)**
 ```javascript
-// Get component URL
-const component = await session.get('FileComponent', componentId);
-const downloadUrl = await session.getDownloadUrl(component.id);
-
-// Download in browser
+const downloadUrl = await session.getDownloadUrl(componentId);
 window.open(downloadUrl, '_blank');
-
-// Or fetch and process
-const response = await fetch(downloadUrl);
-const blob = await response.blob();
-const url = URL.createObjectURL(blob);
-
-// Create download link
-const link = document.createElement('a');
-link.href = url;
-link.download = component.name;
-link.click();
-
-URL.revokeObjectURL(url);
 ```
 
-### Node.js Upload
+**Node.js Upload**
 ```javascript
 import fs from 'fs';
 import { Blob } from 'buffer';
 
-// Read file
 const buffer = fs.readFileSync('/path/to/file.ma');
 const blob = new Blob([buffer]);
 
-// Create component
 const component = await session.create('FileComponent', {
   name: 'file.ma',
   size: buffer.length,
   version_id: assetVersionId
 });
 
-// Upload
 await session.upload(component.id, blob);
 ```
 
-### Thumbnail Operations
+**Get Thumbnail**
 ```javascript
-// Get thumbnail URL
-const assetVersion = await session.get('AssetVersion', versionId);
-if (assetVersion.thumbnail_id) {
-  const thumbnailUrl = await session.getThumbnailUrl(
-    assetVersion.thumbnail_id,
-    { size: 300 }  // Request specific size
-  );
-  
-  // Display in img tag
-  imageElement.src = thumbnailUrl;
-}
+const thumbnailUrl = await session.getThumbnailUrl(
+  assetVersion.thumbnail_id,
+  { size: 300 }
+);
+imageElement.src = thumbnailUrl;
+```
 
-// Upload thumbnail
-const thumbnailFile = document.getElementById('thumbInput').files[0];
-const thumbComponent = await session.create('FileComponent', {
-  name: thumbnailFile.name,
-  size: thumbnailFile.size,
-  version_id: assetVersionId
-});
+**→ This quick reference handles most file operations. For custom locations or advanced patterns, continue below.**
 
-await session.upload(thumbComponent.id, thumbnailFile);
+---
 
-// Set as thumbnail
-await session.update('AssetVersion', assetVersionId, {
-  thumbnail_id: thumbComponent.id
-});
+## Online Resources (Fetch for Detailed Info)
+
+### When to Fetch
+- User asks for "all location types" or "complete component API"
+- Needs custom S3 location setup
+- Questions about advanced file handling patterns
+- Storage accessor or resource transformer details
+- Official component schema
+
+### Python Locations Documentation
+**URL**: `https://developer.ftrack.com/api-clients/python/locations.html`
+**Fetch Prompt**:
+```
+Extract ftrack Python location and component patterns. Include:
+- Location types and configuration
+- Component creation and management
+- Custom location setup (S3, disk)
+- Storage accessor patterns
+- Resource transformers for file paths
+- Availability tracking
+- Performance optimization
+Format as markdown with code examples.
+```
+
+### JavaScript File Upload Documentation
+**URL**: `https://developer.ftrack.com/api-clients/javascript/uploading.html`
+**Fetch Prompt**:
+```
+Extract ftrack JavaScript file upload patterns. Include:
+- Browser file upload with File API
+- Node.js file operations
+- Progress tracking implementation
+- Error handling patterns
+- Thumbnail operations
+- Component querying
+Format as markdown with async/await examples.
+```
+
+### Component Schema Reference
+**URL**: `https://developer.ftrack.com/ftrack/api/components.html`
+**Fetch Prompt**:
+```
+Extract ftrack component types and schema. Include:
+- FileComponent vs SequenceComponent vs ContainerComponent
+- Component attributes and metadata
+- Relationship to AssetVersions and Locations
+- Component querying patterns
+Format as markdown.
+```
+
+### WebFetch Decision Tree
+
+**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
+
+**Trigger detection** (check user's exact query):
+```python
+trigger_phrases = [
+    "show all location types",
+    "complete component API",
+    "custom location patterns",
+    "S3 location setup",
+    "storage accessor",
+    "resource transformer",
+    "all component types",
+    "official file docs"
+]
+```
+
+**Action when trigger detected:**
+1. **Detect language**: Python (`ftrack_api`) or JavaScript (`@ftrack/api`)
+2. **Detect topic**: Locations, uploads, downloads, or components
+3. **Use WebFetch** with appropriate URL above
+4. **If fetch succeeds**: Return formatted docs to user
+5. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
+
+**WebFetch Example:**
+```markdown
+# User asks: "Show me how to setup custom S3 location in Python"
+# Trigger detected: "custom location"
+# Language detected: "Python"
+
+Use WebFetch tool:
+WebFetch(
+  url="https://developer.ftrack.com/api-clients/python/locations.html",
+  prompt="Extract custom S3 location setup patterns for ftrack Python API. Include location class definition, storage accessor, S3 configuration, and registration. Format as markdown with complete code example."
+)
+
+If successful: Present docs
+If fails: Load ./examples/python/custom_location_s3.py
 ```
 
 ---
 
-## Custom Locations (Python)
+## Local Examples (Fallback - Load Only When Needed)
 
-### S3 Location
+### When to Load Local
+1. WebFetch fails or times out
+2. User explicitly requests "show me the example file" or "local examples"
+3. Need complete runnable custom location implementation
+4. Advanced S3/disk location patterns not in quick reference
+
+### Available Local Files
+
+**Python S3 Location Example**
+- **File**: `.././examples/python/custom_location_s3.py`
+- **Contains**: Complete custom S3 location implementation with storage accessor, resource transformers
+- **Load when**: User needs full custom S3 location setup, advanced patterns
+- **Size**: ~300 lines
+
+**Python Resource Transformers Example**
+- **File**: `.././examples/python/resource_transformers.py`
+- **Contains**: Custom path transformers, file organization patterns
+- **Load when**: User needs custom file path generation
+- **Size**: ~200 lines
+
+**JavaScript File Operations Example**
+- **File**: `.././examples/javascript/file-operations.js`
+- **Contains**: Browser upload, Node.js operations, progress tracking, error handling
+- **Load when**: User needs production JavaScript file handling patterns
+- **Size**: ~400 lines
+
+### How to Load
+```markdown
+Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-api-developer\\examples\\python\\custom_location_s3.py")
+
+Then extract relevant sections for the user's specific question.
+```
+
+---
+
+## Decision Tree
+
+```
+User asks about ftrack file operations
+  │
+  ├─ Basic upload/download (how do I...)?
+  │   └→ Use Quick Reference above ✓
+  │
+  ├─ Thumbnail operations?
+  │   └→ Use Quick Reference above ✓
+  │
+  ├─ Image sequence upload?
+  │   └→ Use Quick Reference above ✓
+  │
+  ├─ Custom S3 or disk location?
+  │   ├→ WebFetch locations documentation
+  │   └→ If fails: Load custom_location_s3.py
+  │
+  ├─ Storage accessor or resource transformer?
+  │   ├→ WebFetch locations documentation
+  │   └→ If fails: Load local examples
+  │
+  ├─ Complete component API reference?
+  │   ├→ WebFetch component schema docs
+  │   └→ If fails: Use quick reference + guidance
+  │
+  └─ Production-ready example code?
+      └→ Load specific example file directly
+```
+
+---
+
+## Response Strategy
+
+### For Simple Questions
+1. Answer using Quick Reference patterns
+2. Show appropriate code (Python or JavaScript)
+3. Keep concise (1-2 examples max)
+4. Cite: "From file operations quick reference"
+
+### For Detailed Questions
+1. Start with Quick Reference context
+2. If trigger detected: WebFetch relevant documentation
+3. Provide specific configuration examples
+4. Cite: "From [URL]"
+5. If fetch fails: Load local example + cite filename
+
+### For Advanced Questions (Custom Locations)
+1. Assess complexity (S3, custom transformers, etc.)
+2. WebFetch locations documentation first
+3. If insufficient or fails: Load local example files
+4. Provide production-ready code with explanation
+5. Cite all sources used
+
+### Progressive Disclosure
+- Start minimal (quick reference - upload/download pattern)
+- Offer more: "Need custom S3 location setup? I can fetch detailed docs"
+- Load comprehensive examples only if requested or if WebFetch fails
+
+---
+
+## Custom Location Snippet (Quick Reference Extension)
+
+**Python Custom S3 Location (Minimal)**
 ```python
-import boto3
-import ftrack_api
-import ftrack_api.accessor.disk
 import ftrack_api.structure.standard
-
-class S3Accessor(ftrack_api.accessor.base.Accessor):
-    """S3 storage accessor."""
-    
-    def __init__(self, bucket_name, **kwargs):
-        super().__init__(**kwargs)
-        self.s3 = boto3.client('s3')
-        self.bucket = bucket_name
-    
-    def get_container(self, resource_identifier):
-        """Get container (bucket) for resource."""
-        return self.bucket
-    
-    def get_url(self, resource_identifier):
-        """Generate presigned URL."""
-        return self.s3.generate_presigned_url(
-            'get_object',
-            Params={
-                'Bucket': self.bucket,
-                'Key': resource_identifier
-            },
-            ExpiresIn=3600
-        )
-    
-    def is_file(self, resource_identifier):
-        """Check if resource exists."""
-        try:
-            self.s3.head_object(Bucket=self.bucket, Key=resource_identifier)
-            return True
-        except:
-            return False
-    
-    def is_container(self, resource_identifier):
-        """Check if container exists."""
-        return True  # Bucket level
-    
-    def is_sequence(self, resource_identifier):
-        """Check if resource is sequence."""
-        return False
-    
-    def exists(self, resource_identifier):
-        """Check if resource exists."""
-        return self.is_file(resource_identifier)
-    
-    def open(self, resource_identifier, mode='rb'):
-        """Open resource for reading."""
-        obj = self.s3.get_object(Bucket=self.bucket, Key=resource_identifier)
-        return obj['Body']
-    
-    def write(self, resource_identifier, data):
-        """Write data to resource."""
-        self.s3.put_object(
-            Bucket=self.bucket,
-            Key=resource_identifier,
-            Body=data
-        )
-    
-    def remove(self, resource_identifier):
-        """Remove resource."""
-        self.s3.delete_object(Bucket=self.bucket, Key=resource_identifier)
-
+import ftrack_api.accessor.disk
 
 class S3Location(ftrack_api.entity.location.Location):
-    """S3-backed location."""
+    """Custom S3-backed location."""
     
-    def __init__(self, session, bucket_name, **kwargs):
-        super().__init__(session, **kwargs)
-        self.accessor = S3Accessor(bucket_name)
+    def __init__(self, session, **kwargs):
+        super(S3Location, self).__init__(session, **kwargs)
+        
+        # Use S3 accessor (simplified - see full example for boto3 integration)
+        self.accessor = CustomS3Accessor(bucket='your-bucket')
+        
+        # Standard structure
         self.structure = ftrack_api.structure.standard.StandardStructure()
-        self.priority = 100
 
-
-def register_s3_location(session, name='custom.s3'):
-    """Register S3 location."""
-    bucket_name = 'my-ftrack-bucket'
-    
-    # Create or get location
-    try:
-        location = session.query(
-            'Location where name is "{0}"'.format(name)
-        ).one()
-    except ftrack_api.exception.NoResultFoundError:
-        location = session.create('Location', {
-            'name': name
-        })
-        session.commit()
-    
-    # Configure with S3 accessor
-    location.accessor = S3Accessor(bucket_name)
-    location.structure = ftrack_api.structure.standard.StandardStructure()
-    location.priority = 100
-    
-    return location
-
-
-# Usage
-session = ftrack_api.Session()
-s3_location = register_s3_location(session)
-
-# Upload to S3
-component = asset_version.create_component(
-    path='/path/to/file.ma',
-    data={'name': 'main'},
-    location=s3_location
-)
-session.commit()
+# Register location
+def configure_location(session):
+    location = session.query('Location where name is "my-s3-location"').one()
+    location.__class__ = S3Location
 ```
 
-### Disk Location
-```python
-import ftrack_api.accessor.disk
-import ftrack_api.structure.standard
-
-def register_disk_location(session, name='custom.disk', root='/mnt/storage'):
-    """Register custom disk location."""
-    
-    # Create or get location
-    try:
-        location = session.query(
-            'Location where name is "{0}"'.format(name)
-        ).one()
-    except ftrack_api.exception.NoResultFoundError:
-        location = session.create('Location', {
-            'name': name
-        })
-        session.commit()
-    
-    # Configure with disk accessor
-    location.accessor = ftrack_api.accessor.disk.DiskAccessor(prefix=root)
-    location.structure = ftrack_api.structure.standard.StandardStructure()
-    location.priority = 50
-    
-    return location
-
-
-# Usage
-disk_location = register_disk_location(session)
-
-# Files stored at: /mnt/storage/{project}/{asset}/v{version}/filename
-```
-
----
-
-## Resource Transformers (Python)
-
-```python
-class CustomStructure(ftrack_api.structure.base.Structure):
-    """Custom file path structure."""
-    
-    def get_resource_identifier(self, entity, context=None):
-        """Generate file path for component.
-        
-        Returns path like:
-        {project}/{entity_type}/{entity_name}/v{version}/{component_name}
-        """
-        version = entity.get('version')
-        asset = version.get('asset')
-        project = asset.get('parent').get('project')
-        
-        parts = [
-            project['name'],
-            asset['type']['name'],
-            asset['name'],
-            f"v{version['version']:03d}",
-            entity['name']
-        ]
-        
-        return '/'.join(parts)
-
-
-# Register custom structure
-location.structure = CustomStructure()
-```
-
----
-
-## Component Queries
-
-### Find Components
-```python
-# By asset name
-components = session.query(
-    'Component where version.asset.name is "Character"'
-).all()
-
-# Latest version
-latest = session.query(
-    'Component where version.asset.name is "Character" '
-    'and version.version is latest'
-).first()
-
-# By version number
-v5_components = session.query(
-    'Component where version.asset.name is "Character" '
-    'and version.version is 5'
-).all()
-
-# By component name
-main_component = session.query(
-    'Component where version.asset.name is "Character" '
-    'and name is "main"'
-).first()
-```
-
-### Component Metadata
-```python
-component = session.query('Component where id is "{0}"'.format(cid)).one()
-
-print(f"Name: {component['name']}")
-print(f"Size: {component['size']} bytes")
-print(f"Type: {component['file_type']}")
-print(f"Version: {component['version']['version']}")
-print(f"Asset: {component['version']['asset']['name']}")
-```
-
----
-
-## Best Practices
-
-1. **Use Locations**: Always specify target location
-2. **Validate Before Upload**: Check file exists and size
-3. **Error Handling**: Wrap uploads in try/except
-4. **Progress Feedback**: Show upload progress to users
-5. **Cleanup**: Remove temporary files after upload
-6. **Thumbnails**: Always provide thumbnails for visual assets
-7. **Naming**: Use consistent component naming (main, proxy, thumbnail)
-8. **Transactions**: Commit asset version and components together
+**For complete S3 setup**: Request WebFetch or load `custom_location_s3.py`
 
 ---
 
 ## Common Patterns
 
-### Batch Upload
+### Error Handling
 ```python
-def batch_upload(session, file_paths, asset_version):
-    """Upload multiple files as components."""
-    location = session.query('Location where name is "ftrack.server"').one()
-    
-    components = []
-    for file_path in file_paths:
-        if not os.path.exists(file_path):
-            print(f"Skipping missing file: {file_path}")
-            continue
-        
-        try:
-            component = asset_version.create_component(
-                path=file_path,
-                data={'name': os.path.basename(file_path)},
-                location=location
-            )
-            components.append(component)
-        except Exception as e:
-            print(f"Error uploading {file_path}: {e}")
-    
+# Python
+try:
+    component = asset_version.create_component(path, location=location)
     session.commit()
-    return components
+except Exception as e:
+    print(f"Upload failed: {e}")
+    session.rollback()
 ```
 
-### Check File Availability
-```python
-def is_component_available(session, component, location_name='ftrack.server'):
-    """Check if component is available in location."""
-    location = session.query(
-        'Location where name is "{0}"'.format(location_name)
-    ).one()
-    
-    try:
-        path = location.get_filesystem_path(component)
-        return os.path.exists(path)
-    except:
-        return False
+```javascript
+// JavaScript
+try {
+  await session.upload(component.id, file);
+} catch (error) {
+  console.error('Upload failed:', error);
+  throw error;
+}
 ```
 
-### Sync Locations
+### Query Components by Type
 ```python
-def sync_component(session, component, source_location, target_location):
-    """Copy component between locations."""
-    if component not in target_location:
-        # Get component data from source
-        data = source_location.get_component(component)
-        
-        # Add to target
-        target_location.add_component(component, data)
-        
-        print(f"Synced {component['name']} to {target_location['name']}")
+# Python
+file_components = session.query(
+    'FileComponent where version.id is "{}"'.format(version_id)
+).all()
+
+sequence_components = session.query(
+    'SequenceComponent where version.id is "{}"'.format(version_id)
+).all()
+```
+
+### Check Component Availability
+```python
+# Python
+location = session.query('Location where name is "ftrack.server"').one()
+is_available = location.get_component_availability(component)
+print(f"Available: {is_available}")
 ```
 
 ---
 
-## Official Resources
+## Token Efficiency
 
-- **Components**: https://ftrack-python-api.readthedocs.io/en/stable/working_with_components.html
-- **Locations**: https://ftrack-python-api.readthedocs.io/en/stable/locations/index.html
-- **File Upload**: https://developer.ftrack.com/api-clients/javascript/upload.html
+**Quick Reference**: ~500 tokens (handles 70%+ of queries)
+**With WebFetch**: ~1,300 tokens (handles complex scenarios)
+**With Local Files**: ~2,100 tokens (complete implementations)
+
+**Target**: Use quick reference first, only fetch/load when user needs detailed patterns or custom locations.

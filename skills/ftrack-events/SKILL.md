@@ -8,45 +8,32 @@ SKIP: ftrack actions (use ftrack-actions), general event handling without ftrack
 
 # ftrack Event Handling Expert
 
-Master real-time event subscriptions and WebSocket-based updates in ftrack.
+**Strategy**: Quick reference first → Fetch online docs if needed → Load local examples as fallback
 
-## Quick Start
-
-Detect user's language:
+## Language Detection
 - **Python**: `session.event_hub.subscribe()`, `ftrack_api.event`
-- **JavaScript**: `session.eventHub.subscribe()`, `session.eventHub.connect()`
-
-## Core Concepts
-
-### Event Hub
-WebSocket connection for real-time updates from ftrack server.
-
-### Topics
-Filter events by topic patterns:
-- `ftrack.update` - Entity updates
-- `ftrack.create` - Entity creation
-- `ftrack.delete` - Entity deletion
-- `ftrack.action.*` - Action events
-- `ftrack.location.*` - Location events
-
-### Event Data Structure
-```json
-{
-  "topic": "ftrack.update",
-  "data": {
-    "entityType": "task",
-    "entities": [{"id": "...", "changes": {}}],
-    "user": {"id": "..."}
-  },
-  "source": {"user": {"id": "..."}}
-}
-```
+- **JavaScript**: `session.eventHub.subscribe()`, `eventHub.connect()`
 
 ---
 
-## Python Event Handling
+## Quick Reference (Use First - 70% of Queries)
 
-### Basic Subscription
+### Core Principles
+✓ **Filter by topic**: Subscribe to specific events (`ftrack.update`, `ftrack.create`, etc.)
+✓ **Return status**: Handler must return `{'success': True}` (Python) or Promise (JavaScript)
+✓ **Async processing**: Use queues for heavy work to avoid blocking event hub
+✓ **Targeted subscriptions**: Filter by entity type in topic expression
+✗ Avoid subscribing to all topics without filters (performance impact)
+✗ Never block the event hub thread with long operations
+
+### Core Concepts
+- **Event Hub**: WebSocket connection for real-time updates from ftrack server
+- **Topics**: Event filters (`ftrack.update`, `ftrack.create`, `ftrack.delete`, `ftrack.action.*`)
+- **Event Data**: JSON structure with `topic`, `data.entities`, `data.entityType`, `source.user`
+
+### Python Quick Patterns
+
+**Basic Subscription**
 ```python
 import ftrack_api
 
@@ -56,8 +43,6 @@ def handle_update(event):
     """Handle entity updates."""
     entity_type = event['data'].get('entityType')
     print(f"Updated: {entity_type}")
-    
-    # Return value indicates success
     return {'success': True}
 
 # Subscribe to all updates
@@ -67,7 +52,7 @@ session.event_hub.subscribe('topic=ftrack.update', handle_update)
 session.event_hub.wait()
 ```
 
-### Targeted Subscriptions
+**Targeted Topic Filter**
 ```python
 # Filter by entity type in topic
 def handle_task_update(event):
@@ -79,47 +64,27 @@ def handle_task_update(event):
     return {'success': True}
 
 session.event_hub.subscribe(
-    'topic=ftrack.update and data.entityType is "task"',
+    'topic=ftrack.update and data.entityType is "Task"',
     handle_task_update
-)
-
-# Filter by specific entity
-def handle_specific_project(event):
-    """Only processes updates to specific project."""
-    entities = event['data'].get('entities', [])
-    for entity in entities:
-        if entity.get('parentId') == specific_project_id:
-            process_update(entity)
-    return {'success': True}
-
-session.event_hub.subscribe(
-    'topic=ftrack.update and data.entityType is "task"',
-    handle_specific_project
 )
 ```
 
-### Multiple Handlers
+**Multiple Handlers**
 ```python
 def handle_create(event):
-    """Handle entity creation."""
-    entity_type = event['data'].get('entityType')
-    print(f"Created: {entity_type}")
+    print(f"Created: {event['data'].get('entityType')}")
     return {'success': True}
 
 def handle_delete(event):
-    """Handle entity deletion."""
-    entity_type = event['data'].get('entityType')
-    print(f"Deleted: {entity_type}")
+    print(f"Deleted: {event['data'].get('entityType')}")
     return {'success': True}
 
-# Subscribe multiple handlers
 session.event_hub.subscribe('topic=ftrack.create', handle_create)
 session.event_hub.subscribe('topic=ftrack.delete', handle_delete)
-
 session.event_hub.wait()
 ```
 
-### Async Processing
+**Async Processing with Queue**
 ```python
 import threading
 import queue
@@ -132,18 +97,17 @@ def event_handler(event):
     return {'success': True}
 
 def process_events():
-    """Background worker to process queued events."""
+    """Background worker."""
     while True:
         event = event_queue.get()
         try:
-            # Process event (may take time)
             heavy_processing(event)
         except Exception as e:
-            print(f"Error processing event: {e}")
+            print(f"Error: {e}")
         finally:
             event_queue.task_done()
 
-# Start background worker
+# Start worker
 worker = threading.Thread(target=process_events, daemon=True)
 worker.start()
 
@@ -152,418 +116,376 @@ session.event_hub.subscribe('topic=ftrack.update', event_handler)
 session.event_hub.wait()
 ```
 
-### Batch Event Processing
-```python
-import time
-
-class BatchEventProcessor:
-    def __init__(self, session, batch_size=10, interval=5):
-        self.session = session
-        self.batch_size = batch_size
-        self.interval = interval
-        self.events = []
-        self.last_flush = time.time()
-    
-    def handle_event(self, event):
-        """Accumulate events and process in batches."""
-        self.events.append(event)
-        
-        # Flush if batch is full or interval elapsed
-        if (len(self.events) >= self.batch_size or 
-            time.time() - self.last_flush > self.interval):
-            self.flush()
-        
-        return {'success': True}
-    
-    def flush(self):
-        """Process accumulated events."""
-        if not self.events:
-            return
-        
-        print(f"Processing batch of {len(self.events)} events")
-        
-        # Process all events
-        for event in self.events:
-            process_single_event(event)
-        
-        # Commit once for all changes
-        self.session.commit()
-        
-        self.events = []
-        self.last_flush = time.time()
-
-# Usage
-processor = BatchEventProcessor(session)
-session.event_hub.subscribe('topic=ftrack.update', processor.handle_event)
-session.event_hub.wait()
-```
-
-### Stop Propagation
-```python
-def handle_first(event):
-    """First handler - stops propagation if condition met."""
-    if should_stop_propagation(event):
-        # Stop event from reaching other handlers
-        event.stop()
-        return {'success': True, 'message': 'Event handled, stopping propagation'}
-    return {'success': True}
-
-def handle_second(event):
-    """Second handler - only runs if first didn't stop."""
-    print("Processing in second handler")
-    return {'success': True}
-
-# Register in priority order
-session.event_hub.subscribe(
-    'topic=ftrack.update',
-    handle_first,
-    priority=100  # Higher priority runs first
-)
-session.event_hub.subscribe(
-    'topic=ftrack.update',
-    handle_second,
-    priority=50
-)
-```
-
----
-
-## JavaScript Event Handling
-
-### Basic Subscription
-```javascript
-import ftrack from '@ftrack/api';
-
-const session = new ftrack.Session(
-  "https://company.ftrackapp.com",
-  "user@example.com",
-  "api-key"
-);
-
-await session.initializing;
-
-// Subscribe to updates
-session.eventHub.subscribe('topic=ftrack.update', (event) => {
-  const entityType = event.data.entityType;
-  console.log(`Updated: ${entityType}`);
-});
-
-// Connect to event hub
-session.eventHub.connect();
-
-// Disconnect when done
-// session.eventHub.disconnect();
-```
-
-### Targeted Subscriptions
-```javascript
-// Filter by entity type
-session.eventHub.subscribe('topic=ftrack.update', (event) => {
-  const tasks = event.data.entities.filter(e => e.entityType === 'Task');
-  
-  if (tasks.length > 0) {
-    console.log(`${tasks.length} tasks updated`);
-    updateUI(tasks);
-  }
-});
-
-// Filter by specific project
-const projectId = 'abc-123';
-
-session.eventHub.subscribe('topic=ftrack.update', (event) => {
-  const projectEntities = event.data.entities.filter(e => 
-    e.parentId === projectId || e.projectId === projectId
-  );
-  
-  if (projectEntities.length > 0) {
-    handleProjectUpdates(projectEntities);
-  }
-});
-
-session.eventHub.connect();
-```
-
-### Multiple Event Types
-```javascript
-// Create events
-session.eventHub.subscribe('topic=ftrack.create', (event) => {
-  console.log('Created:', event.data.entityType);
-  handleCreate(event.data);
-});
-
-// Update events
-session.eventHub.subscribe('topic=ftrack.update', (event) => {
-  console.log('Updated:', event.data.entityType);
-  handleUpdate(event.data);
-});
-
-// Delete events
-session.eventHub.subscribe('topic=ftrack.delete', (event) => {
-  console.log('Deleted:', event.data.entityType);
-  handleDelete(event.data);
-});
-
-session.eventHub.connect();
-```
-
-### React Integration
-```javascript
-import { useEffect, useState } from 'react';
-import ftrack from '@ftrack/api';
-
-function TaskDashboard() {
-  const [tasks, setTasks] = useState([]);
-  const [session] = useState(() => new ftrack.Session(/*...*/));
-  
-  useEffect(() => {
-    // Initialize session
-    session.initializing.then(() => {
-      // Load initial data
-      loadTasks();
-      
-      // Subscribe to real-time updates
-      session.eventHub.subscribe('topic=ftrack.update', handleTaskUpdate);
-      session.eventHub.connect();
-    });
-    
-    // Cleanup
-    return () => {
-      session.eventHub.disconnect();
-      session.close();
-    };
-  }, []);
-  
-  const handleTaskUpdate = (event) => {
-    const taskUpdates = event.data.entities.filter(e => e.entityType === 'Task');
-    
-    if (taskUpdates.length > 0) {
-      // Update state with new data
-      setTasks(prevTasks => {
-        const updated = [...prevTasks];
-        taskUpdates.forEach(update => {
-          const index = updated.findIndex(t => t.id === update.entityId);
-          if (index >= 0) {
-            updated[index] = { ...updated[index], ...update.changes };
-          }
-        });
-        return updated;
-      });
-    }
-  };
-  
-  const loadTasks = async () => {
-    const response = await session.query('select name, status.name from Task');
-    setTasks(response.data);
-  };
-  
-  return (
-    <div>
-      {tasks.map(task => (
-        <div key={task.id}>{task.name} - {task.status.name}</div>
-      ))}
-    </div>
-  );
-}
-```
-
-### Connection Management
-```javascript
-class EventManager {
-  constructor(session) {
-    this.session = session;
-    this.connected = false;
-    this.reconnectTimer = null;
-  }
-  
-  connect() {
-    if (this.connected) return;
-    
-    this.session.eventHub.connect();
-    this.connected = true;
-    
-    // Handle disconnection
-    this.session.eventHub.on('disconnect', () => {
-      console.log('Event hub disconnected');
-      this.connected = false;
-      this.scheduleReconnect();
-    });
-    
-    // Handle reconnection
-    this.session.eventHub.on('connect', () => {
-      console.log('Event hub connected');
-      this.connected = true;
-      if (this.reconnectTimer) {
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = null;
-      }
-    });
-  }
-  
-  scheduleReconnect() {
-    // Retry connection after 5 seconds
-    this.reconnectTimer = setTimeout(() => {
-      console.log('Attempting to reconnect...');
-      this.connect();
-    }, 5000);
-  }
-  
-  disconnect() {
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-    }
-    this.session.eventHub.disconnect();
-    this.connected = false;
-  }
-}
-
-// Usage
-const manager = new EventManager(session);
-manager.connect();
-```
-
----
-
-## Event Patterns
-
-### Debounce Updates
-```javascript
-// Avoid processing duplicate events too quickly
-function debounce(fn, delay) {
-  let timeoutId;
-  return function(...args) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
-
-const debouncedUpdate = debounce((event) => {
-  console.log('Processing update after delay');
-  handleUpdate(event);
-}, 1000);
-
-session.eventHub.subscribe('topic=ftrack.update', debouncedUpdate);
-```
-
-### Change Detection (Python)
-```python
-def handle_status_change(event):
-    """Only process when status actually changes."""
-    for entity in event['data'].get('entities', []):
-        changes = entity.get('changes', {})
-        
-        # Check if status changed
-        if 'statusId' in changes:
-            old_status = changes['statusId']['old']
-            new_status = changes['statusId']['new']
-            print(f"Status changed: {old_status} -> {new_status}")
-            
-            # Trigger workflow
-            if new_status == completed_status_id:
-                trigger_completion_workflow(entity['entityId'])
-    
-    return {'success': True}
-
-session.event_hub.subscribe(
-    'topic=ftrack.update and data.entityType is "task"',
-    handle_status_change
-)
-```
-
----
-
-## Error Handling
-
-### Python
+**Error Handling**
 ```python
 def safe_handler(event):
     """Handler with error handling."""
     try:
-        # Process event
         process_event(event)
         return {'success': True}
     except Exception as e:
-        # Log error but don't crash event hub
-        print(f"Error handling event: {e}")
+        print(f"Handler error: {e}")
         return {'success': False, 'message': str(e)}
-
-session.event_hub.subscribe('topic=ftrack.update', safe_handler)
 ```
 
-### JavaScript
+### JavaScript Quick Patterns
+
+**Basic Subscription**
 ```javascript
+import ftrack from '@ftrack/api';
+
+const session = new ftrack.Session(server, user, key);
+await session.initializing;
+
+// Subscribe to events
 session.eventHub.subscribe('topic=ftrack.update', (event) => {
+  console.log('Update:', event.data.entityType);
+});
+
+// Connect to event server
+await session.eventHub.connect();
+```
+
+**Targeted Subscription**
+```javascript
+// Filter by entity type
+session.eventHub.subscribe(
+  'topic=ftrack.update and data.entityType is "Task"',
+  (event) => {
+    event.data.entities.forEach(entity => {
+      console.log(`Task ${entity.entityId} updated`);
+    });
+  }
+);
+```
+
+**React Integration with Debouncing**
+```javascript
+import { useState, useEffect } from 'react';
+import debounce from 'lodash.debounce';
+
+function TaskList() {
+  const [tasks, setTasks] = useState([]);
+  
+  useEffect(() => {
+    // Debounced refresh
+    const refreshTasks = debounce(() => {
+      session.query('select name from Task').then(result => {
+        setTasks(result.data);
+      });
+    }, 500);
+    
+    // Subscribe to task updates
+    const subscription = session.eventHub.subscribe(
+      'topic=ftrack.update and data.entityType is "Task"',
+      (event) => {
+        refreshTasks();
+      }
+    );
+    
+    // Cleanup
+    return () => subscription.unsubscribe();
+  }, []);
+  
+  return <ul>{tasks.map(t => <li key={t.id}>{t.name}</li>)}</ul>;
+}
+```
+
+**Error Handling**
+```javascript
+session.eventHub.subscribe('topic=ftrack.update', async (event) => {
   try {
-    processEvent(event);
+    await processEvent(event);
   } catch (error) {
-    console.error('Error handling event:', error);
-    // Don't throw - would disconnect event hub
+    console.error('Event processing failed:', error);
   }
 });
+```
+
+**Connection Management**
+```javascript
+// Connect with error handling
+try {
+  await session.eventHub.connect();
+  console.log('Event hub connected');
+} catch (error) {
+  console.error('Connection failed:', error);
+}
+
+// Handle disconnection
+session.eventHub.on('disconnect', () => {
+  console.log('Event hub disconnected, reconnecting...');
+  setTimeout(() => session.eventHub.connect(), 5000);
+});
+```
+
+**→ This quick reference handles most event subscription scenarios. For advanced patterns, continue below.**
+
+---
+
+## Online Resources (Fetch for Detailed Info)
+
+### When to Fetch
+- User asks for "all event topics" or "complete event reference"
+- Needs event hub configuration options
+- Questions about advanced filtering or batch processing
+- Event data structure details
+- Performance optimization for high-volume events
+
+### Python Events Documentation
+**URL**: `https://developer.ftrack.com/api-clients/python/event_hub.html`
+**Fetch Prompt**:
+```
+Extract ftrack Python event hub patterns and reference. Include:
+- Complete event topic list (ftrack.update, create, delete, action, location, etc.)
+- Event hub subscription syntax with filtering
+- Event data structure and attributes
+- Handler return values and error handling
+- Connection management and threading
+- Performance optimization for high-volume events
+- Async processing patterns
+Format as markdown with code examples.
+```
+
+### JavaScript Events Documentation
+**URL**: `https://developer.ftrack.com/api-clients/javascript/event_hub.html`
+**Fetch Prompt**:
+```
+Extract ftrack JavaScript event hub patterns. Include:
+- EventHub subscription API
+- WebSocket connection management
+- Event filtering and topic syntax
+- Promise-based handlers
+- React/UI integration patterns
+- Reconnection and error handling
+- Debouncing and throttling strategies
+Format as markdown with async/await examples.
+```
+
+### Event Topics Reference
+**URL**: `https://developer.ftrack.com/ftrack/api/events.html`
+**Fetch Prompt**:
+```
+Extract ftrack event topics and data structures. Include:
+- All available event topics
+- Event payload structure for each topic
+- Entity change tracking format
+- User and source information
+- Event filtering expressions
+Format as concise reference.
+```
+
+### WebFetch Decision Tree
+
+**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
+
+**Trigger detection** (check user's exact query):
+```python
+trigger_phrases = [
+    "show all event topics",
+    "complete event reference",
+    "official event docs",
+    "all event types",
+    "event hub configuration",
+    "event data structure",
+    "performance optimization events",
+    "batch event processing"
+]
+```
+
+**Action when trigger detected:**
+1. **Detect language**: Python (`event_hub`) or JavaScript (`eventHub`)
+2. **Detect topic**: Event types, configuration, or patterns
+3. **Use WebFetch** with appropriate URL above
+4. **If fetch succeeds**: Return formatted docs to user
+5. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
+
+**WebFetch Example:**
+```markdown
+# User asks: "Show me all event topics in ftrack"
+# Trigger detected: "all event topics"
+
+Use WebFetch tool:
+WebFetch(
+  url="https://developer.ftrack.com/ftrack/api/events.html",
+  prompt="Extract all ftrack event topics with descriptions. Include ftrack.update, create, delete, action, location, and other event types. Show event payload structure. Format as markdown."
+)
+
+If successful: Present docs
+If fails: Load ./examples/javascript/event-handling.js and extract topics
+```
+
+---
+
+## Local Examples (Fallback - Load Only When Needed)
+
+### When to Load Local
+1. WebFetch fails or times out
+2. User explicitly requests "show me the example file"
+3. Need complete runnable event handling implementation
+4. Advanced patterns like batch processing, React integration
+
+### Available Local Files
+
+**JavaScript Event Handling Example**
+- **File**: `.././examples/javascript/event-handling.js`
+- **Contains**: Complete event hub setup, React integration, debouncing, batch processing, error handling
+- **Load when**: User needs production event handling patterns, UI integration
+- **Size**: ~400 lines
+
+**Python Event Handling (if available)**
+- **File**: `.././examples/python/performance_optimization.py`
+- **Contains**: May include event handling sections with async processing
+- **Load when**: User needs Python production patterns
+- **Note**: Check if file contains event examples before loading
+
+### How to Load
+```markdown
+Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-api-developer\\examples\\javascript\\event-handling.js")
+
+Then extract relevant event subscription patterns for the user's question.
+```
+
+---
+
+## Decision Tree
+
+```
+User asks about ftrack events
+  │
+  ├─ Basic subscription (how do I subscribe)?
+  │   └→ Use Quick Reference above ✓
+  │
+  ├─ Filter by entity type?
+  │   └→ Use Quick Reference (targeted subscription) ✓
+  │
+  ├─ Error handling or async processing?
+  │   └→ Use Quick Reference (queue pattern) ✓
+  │
+  ├─ React/UI integration?
+  │   └→ Use Quick Reference (React example) ✓
+  │
+  ├─ Need all event topics or complete reference?
+  │   ├→ WebFetch event topics reference
+  │   └→ If fails: Load event-handling.js and extract
+  │
+  ├─ Advanced filtering or performance optimization?
+  │   ├→ WebFetch Python/JavaScript event docs
+  │   └→ If fails: Load local examples
+  │
+  └─ Production-ready implementation?
+      └→ Load event-handling.js directly
+```
+
+---
+
+## Response Strategy
+
+### For Simple Questions
+1. Answer using Quick Reference patterns
+2. Show appropriate code (Python or JavaScript)
+3. Keep concise (1 example)
+4. Cite: "From event handling quick reference"
+
+### For Detailed Questions
+1. Start with Quick Reference context
+2. If trigger detected: WebFetch event documentation
+3. Provide topic-specific examples
+4. Cite: "From [URL]"
+5. If fetch fails: Load local example + cite filename
+
+### For Advanced Questions (React, Performance)
+1. Check if Quick Reference covers it (React pattern included)
+2. If not: WebFetch event hub docs
+3. If insufficient or fails: Load local example file
+4. Provide production-ready code
+5. Cite all sources used
+
+### Progressive Disclosure
+- Start minimal (quick reference - basic subscription)
+- Offer more: "Need complete event topic list? I can fetch official docs"
+- Load comprehensive examples only if requested or if WebFetch fails
+
+---
+
+## Common Event Topics
+
+**Core Events:**
+- `ftrack.update` - Entity updates
+- `ftrack.create` - Entity creation
+- `ftrack.delete` - Entity deletion
+
+**System Events:**
+- `ftrack.action.launch` - Action launched
+- `ftrack.action.discover` - Action discovery
+- `ftrack.location.*` - Location events
+- `ftrack.project.create` - Project created
+
+**Filtering Expressions:**
+```python
+# By entity type
+'topic=ftrack.update and data.entityType is "Task"'
+
+# By multiple types
+'topic=ftrack.update and data.entityType in ("Task", "Shot")'
+
+# By topic pattern
+'topic=ftrack.action.*'
+
+# Combined filters
+'topic=ftrack.update and data.entityType is "Task" and data.user.id is "user-id"'
+```
+
+---
+
+## Event Data Structure
+
+```json
+{
+  "topic": "ftrack.update",
+  "data": {
+    "entityType": "Task",
+    "entities": [
+      {
+        "entityId": "task-uuid",
+        "entityType": "task",
+        "changes": {
+          "status_id": {
+            "new": "new-status-uuid",
+            "old": "old-status-uuid"
+          }
+        },
+        "keys": ["status_id"]
+      }
+    ],
+    "user": {
+      "id": "user-uuid",
+      "username": "john.doe"
+    }
+  },
+  "source": {
+    "user": {"id": "user-uuid"},
+    "applicationId": "app-uuid"
+  }
+}
 ```
 
 ---
 
 ## Performance Tips
 
-1. **Filter Early**: Use topic filters to reduce handler invocations
-2. **Batch Operations**: Accumulate changes and commit once
-3. **Async Processing**: Use queues for heavy operations
-4. **Avoid Blocking**: Keep handlers fast, defer heavy work
-5. **Cache Data**: Don't query for same data repeatedly
-6. **Debounce**: Avoid processing duplicate events too quickly
+1. **Filter in topic expression**: Reduces handler invocations
+2. **Use async queues**: Offload heavy processing from event thread
+3. **Debounce UI updates**: Group rapid events (especially in React)
+4. **Batch operations**: Accumulate events before processing
+5. **Unsubscribe when done**: Clean up subscriptions to free resources
 
 ---
 
-## Common Use Cases
+## Token Efficiency
 
-### Auto-assign Tasks
-```python
-def auto_assign_task(event):
-    """Assign new tasks to next available user."""
-    if event['data'].get('entityType') != 'task':
-        return
-    
-    for entity in event['data'].get('entities', []):
-        task_id = entity['entityId']
-        task = session.query('Task where id is "{0}"'.format(task_id)).one()
-        
-        if not task['assignments']:
-            # Assign to next available user
-            user = get_next_available_user(session)
-            session.create('Appointment', {
-                'context': task,
-                'resource': user,
-                'type': 'assignment'
-            })
-            session.commit()
-    
-    return {'success': True}
+**Quick Reference**: ~600 tokens (handles 70%+ of queries)
+**With WebFetch**: ~1,400 tokens (handles advanced scenarios)
+**With Local Files**: ~2,200 tokens (complete implementations)
 
-session.event_hub.subscribe('topic=ftrack.create and data.entityType is "task"', auto_assign_task)
-```
-
-### Status Change Notifications
-```javascript
-session.eventHub.subscribe('topic=ftrack.update', async (event) => {
-  const tasks = event.data.entities.filter(e => e.entityType === 'Task');
-  
-  for (const task of tasks) {
-    if (task.changes?.statusId) {
-      // Status changed - send notification
-      const taskData = await session.get('Task', task.entityId);
-      await sendNotification({
-        title: `Task status changed: ${taskData.name}`,
-        message: `Now ${taskData.status.name}`
-      });
-    }
-  }
-});
-```
-
----
-
-## Official Resources
-
-- **Events Documentation**: https://developer.ftrack.com/websocket-events/
-- **Python Event Hub**: https://ftrack-python-api.readthedocs.io/en/stable/event_hub.html
-- **JavaScript Events**: https://developer.ftrack.com/api-clients/javascript/events.html
+**Target**: Use quick reference first, only fetch/load when user needs complete topic list or advanced patterns.

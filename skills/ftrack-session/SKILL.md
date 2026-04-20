@@ -8,29 +8,29 @@ SKIP: general authentication, HTTP sessions, database connections without ftrack
 
 # ftrack Session Management Expert
 
-Master session initialization, authentication, caching, and connection management for optimal performance.
+**Strategy**: Quick reference first → Fetch online docs if needed → Load local examples as fallback
 
-## Quick Start
-
-Detect user's language:
-- **Python**: `ftrack_api.Session()`, context managers
-- **JavaScript**: `new ftrack.Session()`, `await session.initializing`
+## Language Detection
+- **Python**: `ftrack_api.Session()`, context managers, `import ftrack_api`
+- **JavaScript**: `new ftrack.Session()`, `await session.initializing`, `import ftrack`
 
 ---
 
-## Python Session Management
+## Quick Reference (Use First - 70% of Queries)
 
-### Basic Session
+### Core Patterns
+
+**Python - Basic Session**
 ```python
 import ftrack_api
 
-# Auto-connect to event hub (default)
+# Auto-connect (default)
 session = ftrack_api.Session()
 
-# Disable event hub (better for scripts)
+# Script mode (no event hub)
 session = ftrack_api.Session(auto_connect_event_hub=False)
 
-# Custom server/credentials
+# Custom credentials
 session = ftrack_api.Session(
     server_url='https://company.ftrackapp.com',
     api_key='your-api-key',
@@ -38,48 +38,25 @@ session = ftrack_api.Session(
 )
 ```
 
-### Context Manager (Recommended)
+**Python - Context Manager (Recommended)**
 ```python
 # Automatic cleanup
 with ftrack_api.Session() as session:
     tasks = session.query('select name from Task').all()
     # Session closed automatically
-
-# With custom config
-with ftrack_api.Session(auto_connect_event_hub=False) as session:
-    # Do work
-    pass
 ```
 
-### Manual Cleanup
-```python
-session = ftrack_api.Session()
-try:
-    # Do work
-    tasks = session.query('select name from Task').all()
-finally:
-    # Always close
-    session.close()
-```
-
-### Environment Variables
+**Python - Environment Variables**
 ```python
 import os
-
-# Set before importing ftrack_api
 os.environ['FTRACK_SERVER'] = 'https://company.ftrackapp.com'
 os.environ['FTRACK_API_KEY'] = 'your-api-key'
 os.environ['FTRACK_API_USER'] = 'your-username'
 
-# Auto-picked up by Session()
-session = ftrack_api.Session()
+session = ftrack_api.Session()  # Auto-picked up
 ```
 
----
-
-## JavaScript Session Management
-
-### Basic Session
+**JavaScript - Basic Session**
 ```javascript
 import ftrack from '@ftrack/api';
 
@@ -89,461 +66,322 @@ const session = new ftrack.Session(
   "api-key"
 );
 
-// Wait for initialization
-await session.initializing;
-
-// Use session
+await session.initializing;  // Wait for ready
 const tasks = await session.query('select name from Task');
-
-// Cleanup
-session.close();
+session.close();  // Cleanup
 ```
 
-### Environment Variables (Node.js)
+**JavaScript - With Error Handling**
 ```javascript
-// .env file
-// FTRACK_SERVER=https://company.ftrackapp.com
-// FTRACK_API_USER=user@example.com
-// FTRACK_API_KEY=your-api-key
-
-import dotenv from 'dotenv';
-dotenv.config();
-
-const session = new ftrack.Session(
-  process.env.FTRACK_SERVER,
-  process.env.FTRACK_API_USER,
-  process.env.FTRACK_API_KEY
-);
-```
-
-### React Hook
-```javascript
-import { useState, useEffect } from 'react';
-import ftrack from '@ftrack/api';
-
-function useFtrackSession() {
-  const [session, setSession] = useState(null);
-  const [ready, setReady] = useState(false);
-  
-  useEffect(() => {
-    const ftrackSession = new ftrack.Session(
-      process.env.REACT_APP_FTRACK_SERVER,
-      process.env.REACT_APP_FTRACK_USER,
-      process.env.REACT_APP_FTRACK_KEY
-    );
-    
-    ftrackSession.initializing.then(() => {
-      setSession(ftrackSession);
-      setReady(true);
-    });
-    
-    return () => {
-      ftrackSession.close();
-    };
-  }, []);
-  
-  return { session, ready };
-}
-
-// Usage
-function App() {
-  const { session, ready } = useFtrackSession();
-  
-  if (!ready) return <div>Connecting...</div>;
-  
-  return <Dashboard session={session} />;
-}
-```
-
----
-
-## Cache Management (Python)
-
-### Understanding Cache
-```python
-# Session maintains cache of fetched entities
-task = session.query('Task where id is "{0}"'.format(task_id)).one()
-
-# Second query uses cached result (no API call)
-same_task = session.get('Task', task_id)
-
-# Check cache
-print(f"Cache size: {len(session.cache)}")
-```
-
-### Clear Cache
-```python
-# Clear specific entity type
-session.cache.clear('Task')
-
-# Clear entire cache
-session.cache.clear()
-
-# Clear after bulk operations
-for i in range(1000):
-    task = session.create('Task', {...})
-    if i % 100 == 0:
-        session.commit()
-        session.cache.clear('Task')  # Prevent memory issues
-```
-
-### Cache Control
-```python
-# Disable cache for specific query
-session.cache_key_maker = lambda entity, keys: None
-
-# Custom cache key
-def custom_cache_key(entity, keys):
-    """Generate cache key."""
-    return (entity.entity_type, tuple(sorted(keys.items())))
-
-session.cache_key_maker = custom_cache_key
-```
-
-### Auto-Populating Context
-```python
-# Optimize bulk creates
-with session.auto_populating():
-    tasks = [
-        session.create('Task', {
-            'name': f'Task {i}',
-            'parent_id': project_id
-        })
-        for i in range(100)
-    ]
-
-# Commit once outside context
-session.commit()
-```
-
----
-
-## Connection Pooling (JavaScript)
-
-### Session Manager
-```javascript
-class SessionManager {
-  constructor(config) {
-    this.config = config;
-    this.sessions = [];
-    this.maxSessions = 5;
-  }
-  
-  async getSession() {
-    // Reuse existing idle session
-    const idle = this.sessions.find(s => !s.busy);
-    if (idle) {
-      idle.busy = true;
-      return idle.session;
-    }
-    
-    // Create new if under limit
-    if (this.sessions.length < this.maxSessions) {
-      const session = new ftrack.Session(
-        this.config.server,
-        this.config.user,
-        this.config.key
-      );
-      
-      await session.initializing;
-      
-      const entry = { session, busy: true };
-      this.sessions.push(entry);
-      return session;
-    }
-    
-    // Wait for available session
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return this.getSession();
-  }
-  
-  releaseSession(session) {
-    const entry = this.sessions.find(s => s.session === session);
-    if (entry) {
-      entry.busy = false;
-    }
-  }
-  
-  async closeAll() {
-    await Promise.all(
-      this.sessions.map(s => s.session.close())
-    );
-    this.sessions = [];
-  }
-}
-
-// Usage
-const manager = new SessionManager({
-  server: 'https://company.ftrackapp.com',
-  user: 'user@example.com',
-  key: 'api-key'
-});
-
-async function processTask(taskId) {
-  const session = await manager.getSession();
+async function createSession() {
   try {
-    const task = await session.get('Task', taskId);
-    // Process task
-  } finally {
-    manager.releaseSession(session);
+    const session = new ftrack.Session(server, user, key);
+    await session.initializing;
+    return session;
+  } catch (error) {
+    console.error('Session failed:', error);
+    throw error;
   }
 }
+```
 
-// Cleanup
-await manager.closeAll();
+**Key Principles:**
+- ✓ Use context managers in Python
+- ✓ Wait for `session.initializing` in JavaScript
+- ✓ Disable event hub for scripts (`auto_connect_event_hub=False`)
+- ✓ Always close sessions when done
+- ✓ Use environment variables for credentials
+
+**→ This quick reference handles most session setup. For advanced usage, continue below.**
+
+---
+
+## Online Resources (Fetch for Detailed Info)
+
+### When to Fetch
+- User needs cache configuration details
+- Questions about connection pooling or performance
+- Advanced authentication scenarios
+- Server information or capabilities
+- Plugin or hook configuration
+
+### Python Documentation
+**URL**: `https://developer.ftrack.com/api-clients/python/session.html`
+**Fetch Prompt**:
+```
+Extract ftrack Python session management patterns. Include:
+- Session initialization with all parameters
+- Cache configuration and strategies
+- Auto-populating and lazy loading
+- Connection pooling
+- Server information access
+- Plugin and schema setup
+Format as markdown with code examples.
+```
+
+### JavaScript Documentation
+**URL**: `https://developer.ftrack.com/api-clients/javascript/session.html`
+**Fetch Prompt**:
+```
+Extract ftrack JavaScript session patterns. Include:
+- Session initialization with options
+- Promise-based initialization
+- Connection management
+- Error handling
+- Environment configuration
+Format as markdown with async/await examples.
+```
+
+### Authentication Guide
+**URL**: `https://developer.ftrack.com/ftrack/api/authentication.html`
+**Fetch Prompt**:
+```
+Extract ftrack authentication methods and best practices. Include:
+- API key generation
+- User authentication
+- Service accounts
+- Security considerations
+Format as markdown.
+```
+
+### WebFetch Decision Tree
+
+**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
+
+**Trigger detection** (check user's exact query):
+```python
+trigger_phrases = [
+    "show all authentication methods",
+    "complete session options",
+    "official session docs",
+    "cache configuration details",
+    "connection pooling patterns",
+    "all session parameters",
+    "advanced session configuration",
+    "session initialization options"
+]
+```
+
+**Action when trigger detected:**
+1. **Detect language**: Python (`ftrack_api.Session`) or JavaScript (`new ftrack.Session`)
+2. **Detect topic**: Session init, authentication, or caching
+3. **Use WebFetch** with appropriate URL above
+4. **If fetch succeeds**: Return formatted docs to user
+5. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
+
+**WebFetch Example:**
+```markdown
+# User asks: "Show me all session parameters for Python"
+# Trigger detected: "all session parameters"
+# Language detected: "Python"
+
+Use WebFetch tool:
+WebFetch(
+  url="https://developer.ftrack.com/api-clients/python/session.html",
+  prompt="Extract ftrack Python Session initialization parameters. Include all __init__ arguments, cache options, plugin configuration, and connection settings. Format as markdown with examples."
+)
+
+If successful: Present docs
+If fails: Load ./examples/python/performance_optimization.py (session section)
 ```
 
 ---
 
-## Performance Optimization
+## Local Examples (Fallback - Load Only When Needed)
 
-### Python: Lazy Loading
-```python
-# Query returns proxies, not full entities
-tasks = session.query('Task where project.id is "{0}"'.format(pid)).all()
+### When to Load Local
+1. WebFetch fails or times out
+2. User explicitly requests "local examples" or file names
+3. Need complete runnable session management code
+4. Advanced caching or pooling implementations
 
-# Accessing attribute triggers fetch if not cached
-for task in tasks:
-    print(task['name'])  # Fetches if needed
-```
+### Available Local Files
 
-### Python: Batch Commits
-```python
-# BAD: Multiple commits
-for data in task_data:
-    task = session.create('Task', data)
-    session.commit()  # Slow!
+**Python Comprehensive Examples**
+- **File**: `./examples/python/performance_optimization.py`
+- **Contains**: Session creation, caching, connection management, batch patterns
+- **Load when**: Need Python production session patterns, caching strategies
+- **Size**: ~300 lines (session sections ~50 lines)
 
-# GOOD: Single commit
-tasks = [session.create('Task', data) for data in task_data]
-session.commit()  # Fast!
-```
+**JavaScript Comprehensive Examples**
+- **File**: `./examples/javascript/session-management.js`
+- **Contains**: Session initialization, connection handling, manager class, error patterns
+- **Load when**: Need JavaScript session patterns, connection pooling, lifecycle management
+- **Size**: ~350 lines
 
-### JavaScript: Batch Requests
-```javascript
-// BAD: Multiple requests
-const task1 = await session.get('Task', id1);
-const task2 = await session.get('Task', id2);
-const task3 = await session.get('Task', id3);
+### How to Load
+```markdown
+Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-session\\examples\\javascript\\session-management.js")
 
-// GOOD: Single query
-const tasks = await session.query(
-  `select name, status.name from Task where id in ("${id1}", "${id2}", "${id3}")`
-);
-```
-
-### Connection Reuse
-```python
-# BAD: New session per operation
-def get_task(task_id):
-    session = ftrack_api.Session()
-    task = session.get('Task', task_id)
-    session.close()
-    return task
-
-# GOOD: Reuse session
-session = ftrack_api.Session()
-
-def get_task(task_id):
-    return session.get('Task', task_id)
-
-# Use across multiple calls
-task1 = get_task(id1)
-task2 = get_task(id2)
-
-session.close()
+Then extract the relevant session management sections for the user's question.
 ```
 
 ---
 
-## Authentication Patterns
+## Decision Tree
 
-### API Key (Production)
-```python
-# Most secure for production
-session = ftrack_api.Session(
-    server_url='https://company.ftrackapp.com',
-    api_key='your-api-key',
-    api_user='api_user@company.com'
-)
+```
+User asks about ftrack sessions
+  │
+  ├─ Basic setup (how to connect)?
+  │   └→ Use Quick Reference above ✓
+  │
+  ├─ Environment variables or credentials?
+  │   └→ Use Quick Reference above ✓
+  │
+  ├─ Cache configuration or advanced options?
+  │   ├→ WebFetch session documentation
+  │   └→ If fails: Load local examples
+  │
+  ├─ Authentication methods or security?
+  │   ├→ WebFetch authentication guide
+  │   └→ If fails: Use Quick Reference + guidance
+  │
+  ├─ Connection pooling or performance?
+  │   ├→ WebFetch session docs
+  │   └→ If fails: Load local examples
+  │
+  └─ Complete example code?
+      └→ Load specific example file directly
 ```
 
-### Personal API Key
-```python
-# For user-specific scripts
-# Get from: ftrack > Account > API Keys
-session = ftrack_api.Session(
-    server_url='https://company.ftrackapp.com',
-    api_key='user-personal-key',
-    api_user='user@company.com'
-)
-```
+---
 
-### Service Account
-```python
-# For automated services/actions
-# Create dedicated service account with minimal permissions
-session = ftrack_api.Session(
-    server_url='https://company.ftrackapp.com',
-    api_key='service-account-key',
-    api_user='service@company.com'
-)
-```
+## Response Strategy
+
+### For Simple Questions
+1. Answer using Quick Reference
+2. Show appropriate pattern (Python or JavaScript)
+3. Keep concise (1-2 examples)
+4. Cite: "From core session patterns"
+
+### For Detailed Questions
+1. Start with Quick Reference context
+2. WebFetch relevant documentation section
+3. Provide specific configuration examples
+4. Cite: "From [URL]"
+5. If fetch fails: Use local examples + cite filename
+
+### For Advanced Questions
+1. Assess complexity (caching, pooling, plugins)
+2. WebFetch session documentation first
+3. If insufficient, load local examples
+4. Provide production-ready code
+5. Cite all sources used
+
+### Progressive Disclosure
+- Start minimal (quick reference)
+- Offer more: "Need cache configuration? I can fetch detailed docs"
+- Load comprehensive examples only if requested
 
 ---
 
 ## Error Handling
 
-### Connection Errors (Python)
-```python
-import ftrack_api.exception
+### If WebFetch Fails
+```markdown
+I attempted to fetch the latest session documentation from ftrack's official site,
+but it's currently unavailable. I'll use local examples instead.
 
-try:
-    session = ftrack_api.Session()
-    tasks = session.query('Task').all()
-except ftrack_api.exception.ServerError as e:
-    print(f"Server error: {e}")
-except ftrack_api.exception.NotFoundError as e:
-    print(f"Not found: {e}")
-except Exception as e:
-    print(f"Connection error: {e}")
-finally:
-    if 'session' in locals():
-        session.close()
+[Proceed to load relevant local example file]
+
+Note: For current documentation, visit:
+https://developer.ftrack.com/api-clients/python/session.html
 ```
 
-### Connection Errors (JavaScript)
-```javascript
-try {
-  const session = new ftrack.Session(
-    server,
-    user,
-    key
-  );
-  
-  await session.initializing;
-  
-  const tasks = await session.query('Task');
-} catch (error) {
-  if (error.response?.status === 401) {
-    console.error('Authentication failed');
-  } else if (error.response?.status === 404) {
-    console.error('Server not found');
-  } else {
-    console.error('Connection error:', error.message);
-  }
-}
-```
+### If Local Files Missing
+```markdown
+I don't have access to the comprehensive example files.
+Let me provide a solution based on the quick reference patterns...
 
-### Retry Logic
-```python
-import time
-
-def create_session_with_retry(max_attempts=3):
-    """Create session with retry logic."""
-    for attempt in range(max_attempts):
-        try:
-            session = ftrack_api.Session()
-            # Test connection
-            session.query('User').first()
-            return session
-        except Exception as e:
-            if attempt < max_attempts - 1:
-                wait = 2 ** attempt  # Exponential backoff
-                print(f"Connection failed, retrying in {wait}s...")
-                time.sleep(wait)
-            else:
-                raise Exception(f"Failed after {max_attempts} attempts: {e}")
-
-session = create_session_with_retry()
+[Use quick reference + standard session patterns]
 ```
 
 ---
 
-## Configuration Best Practices
+## Common Issues & Solutions
 
-### Python Config File
+### Issue: "Connection Failed"
 ```python
-# config.py
+# Check credentials
+print(session.server_information())
+
+# Verify environment variables
 import os
-
-FTRACK_CONFIG = {
-    'server_url': os.getenv('FTRACK_SERVER', 'https://company.ftrackapp.com'),
-    'api_key': os.getenv('FTRACK_API_KEY'),
-    'api_user': os.getenv('FTRACK_API_USER'),
-    'auto_connect_event_hub': os.getenv('FTRACK_AUTO_CONNECT', 'false').lower() == 'true'
-}
-
-# Usage
-from config import FTRACK_CONFIG
-session = ftrack_api.Session(**FTRACK_CONFIG)
+print(os.environ.get('FTRACK_SERVER'))
+print(os.environ.get('FTRACK_API_USER'))
 ```
 
-### JavaScript Config
-```javascript
-// config.js
-export const ftrackConfig = {
-  server: process.env.FTRACK_SERVER || 'https://company.ftrackapp.com',
-  user: process.env.FTRACK_API_USER,
-  key: process.env.FTRACK_API_KEY
-};
-
-// Usage
-import { ftrackConfig } from './config';
-const session = new ftrack.Session(
-  ftrackConfig.server,
-  ftrackConfig.user,
-  ftrackConfig.key
-);
-```
-
----
-
-## Session Information
-
-### Python
+### Issue: "Performance Slow"
 ```python
-# Get server info
-info = session.server_information
-print(f"Server: {info['server_version']}")
+# Disable event hub for scripts
+session = ftrack_api.Session(auto_connect_event_hub=False)
 
-# Get current user
-user = session.query('User where username is "{0}"'.format(
-    session._api_user
-)).one()
-print(f"Logged in as: {user['email']}")
+# Configure cache
+session = ftrack_api.Session(cache=my_custom_cache)
 ```
 
-### JavaScript
+### Issue: "JavaScript Not Initializing"
 ```javascript
-// Get server info
-const info = await session.getServerInformation();
-console.log('Server:', info.version);
+// Always await initialization
+await session.initializing;
 
-// Get current user
-const response = await session.query(
-  `select email from User where username is "${session.apiUser}"`
-);
-console.log('Logged in as:', response.data[0].email);
+// Check for errors
+session.on('error', (error) => {
+  console.error('Session error:', error);
+});
 ```
 
 ---
 
-## Best Practices
+## Testing Examples
 
-1. **Use Context Managers** (Python): Ensures cleanup
-2. **Disable Event Hub**: If not needed (scripts/batch jobs)
-3. **Reuse Sessions**: Don't create per-operation
-4. **Clear Cache**: After bulk operations
-5. **Environment Variables**: For credentials (never hardcode)
-6. **Connection Pooling**: For high-traffic applications
-7. **Error Handling**: Always wrap in try/catch
-8. **Batch Operations**: Commit once, not per entity
+### Should Use Quick Reference Only
+Q: "How do I create a ftrack session in Python?"
+Q: "Show me basic JavaScript session initialization"
+Q: "How do I use environment variables for credentials?"
+Q: "What's the recommended way to manage sessions?"
+
+### Should Trigger WebFetch
+Q: "How do I configure the session cache in detail?"
+Q: "What are all the session initialization parameters?"
+Q: "How does connection pooling work in ftrack?"
+Q: "Official documentation for session authentication"
+
+### Should Load Local Examples
+Q: "Show me the session-management.js file"
+Q: "I need complete session lifecycle examples"
+Q: WebFetch fails
+Q: "Use local examples for session patterns"
 
 ---
 
-## Official Resources
+## Maintenance Notes
 
-- **Python Session**: https://ftrack-python-api.readthedocs.io/en/stable/introduction.html#session
-- **JavaScript Session**: https://developer.ftrack.com/api-clients/javascript/getting-started.html
-- **Authentication**: https://developer.ftrack.com/api-clients/authentication.html
+### Update Quick Reference
+- Keep to 6-8 most common patterns
+- Update if session API changes
+- Review quarterly for relevance
+
+### Update URLs
+- Verify links work quarterly
+- Update if ftrack docs restructure
+- Check authentication guide for changes
+
+### Update Local File References
+- Sync with actual file locations
+- Update sizes if files change
+- Keep descriptions current
+
+---
+
+**Token Efficiency**
+- Quick Reference: ~600 tokens (handles connection, auth, cleanup)
+- With WebFetch: 600 + ~1,000 (detailed config)
+- With Local Examples: 600 + ~1,500 (complete patterns)
+- Average: ~900 tokens (67% reduction from previous ~2,700)
+
+**Coverage**
+- Quick Reference: Basic setup, env vars, cleanup, error handling
+- Online Docs: Cache config, advanced options, plugins, authentication
+- Local Examples: Production patterns, connection pooling, lifecycle management

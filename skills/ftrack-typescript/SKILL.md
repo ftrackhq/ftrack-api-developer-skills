@@ -9,10 +9,11 @@ SKIP: JavaScript files without types, Python code, general TypeScript without ft
 
 # ftrack TypeScript Expert
 
-Build type-safe ftrack applications with generated schemas, repositories, and service patterns.
+**Strategy**: Quick reference first → Fetch online docs if needed → Reference ftrack-javascript for base patterns
+
+**Note**: TypeScript builds on JavaScript. For session setup, queries, and CRUD operations, also reference ftrack-javascript patterns.
 
 ## Prerequisites
-
 ```bash
 npm install @ftrack/api
 npm install --save-dev @ftrack/ts-schema-generator typescript
@@ -20,11 +21,21 @@ npm install --save-dev @ftrack/ts-schema-generator typescript
 
 ---
 
-## Schema Generation
+## Quick Reference (Use First - 70% of Queries)
 
-### Generate Types
+### Core Principles
+✓ **Generate schemas**: Use `@ftrack/ts-schema-generator` to create types
+✓ **Type queries**: `session.query<Task>(...)` for type-safe results
+✓ **Repository pattern**: Wrap session with typed methods
+✓ **Avoid `any` types**: Always use generated or defined types
+✗ Avoid manual type definitions (generate from workspace)
+✗ Never use `as any` to bypass type checking
+✗ Don't skip type parameters in generic methods
+
+### Generate Types from Workspace
+
 ```bash
-# Generate TypeScript types for your workspace
+# Generate TypeScript types
 npx @ftrack/ts-schema-generator \
   --server https://company.ftrackapp.com \
   --user user@example.com \
@@ -32,378 +43,149 @@ npx @ftrack/ts-schema-generator \
   --output src/types/ftrack-schema.ts
 ```
 
-### Generated Schema Example
-```typescript
-// src/types/ftrack-schema.ts (auto-generated)
-export interface Task {
-  id: string;
-  name: string;
-  description?: string;
-  status: Status;
-  status_id: string;
-  parent: TypedContext;
-  parent_id: string;
-  project: Project;
-  project_id: string;
-  priority: number;
-  assignments: Appointment[];
-  type: Type;
-  type_id: string;
-  created_at: string;
-  updated_at: string;
-}
+**Generated types include**: Task, Project, Shot, AssetVersion, Status, User, and all custom entities from your workspace.
 
-export interface Status {
-  id: string;
-  name: string;
-  color: string;
-  state: string;
-}
+### Type-Safe Query
 
-export interface Project {
-  id: string;
-  name: string;
-  full_name: string;
-  schema_id: string;
-  created_at: string;
-}
-
-// ... more entity types
-```
-
----
-
-## Type-Safe Queries
-
-### Basic Queries
 ```typescript
 import ftrack from '@ftrack/api';
-import { Task, Status, Project } from './types/ftrack-schema';
+import { Task, Status } from './types/ftrack-schema';
 
-const session = new ftrack.Session(
-  "https://company.ftrackapp.com",
-  "user@example.com",
-  "api-key"
-);
-
+const session = new ftrack.Session(server, user, key);
 await session.initializing;
 
-// Type-safe query
+// Type-safe query - response.data is Task[]
 const response = await session.query<Task>(
-  `select name, status.name, priority from Task where project.id is "${projectId}"`
+  `select name, status.name from Task where project.id is "${projectId}"`
 );
 
-// response.data is typed as Task[]
 const tasks: Task[] = response.data;
 
 tasks.forEach(task => {
   console.log(task.name); // ✓ Type-safe
-  console.log(task.status.name); // ✓ Type-safe
-  // console.log(task.nonexistent); // ✗ Compile error
+  console.log(task.status.name); // ✓ Nested property typed
 });
 ```
 
-### Query with Partial Types
+### Type-Safe CRUD
+
 ```typescript
-// Only querying subset of fields
-interface TaskSummary {
-  id: string;
-  name: string;
-  status: Pick<Status, 'id' | 'name'>;
-}
+// Create with type
+const newTask = await session.create<Task>('Task', {
+  name: 'New Task',
+  parent_id: parentId,
+  type_id: taskTypeId
+});
 
-const response = await session.query<TaskSummary>(
-  'select name, status.name from Task'
-);
-
-const summaries: TaskSummary[] = response.data;
+// Get with type
+const task = await session.get<Task>('Task', taskId);
+task.name = 'Updated Name'; // ✓ Type-checked
+await session.commit();
 ```
 
----
+### Repository Pattern
 
-## Repository Pattern
-
-### Base Repository
 ```typescript
+// TaskRepository.ts
 import ftrack from '@ftrack/api';
-
-export abstract class BaseRepository<T> {
-  constructor(
-    protected session: ftrack.Session,
-    protected entityType: string
-  ) {}
-  
-  async getById(id: string): Promise<T> {
-    return this.session.get<T>(this.entityType, id);
-  }
-  
-  async query(expression: string): Promise<T[]> {
-    const response = await this.session.query<T>(expression);
-    return response.data;
-  }
-  
-  async create(data: Partial<T>): Promise<T> {
-    return this.session.create<T>(this.entityType, data);
-  }
-  
-  async update(id: string, data: Partial<T>): Promise<T> {
-    return this.session.update<T>(this.entityType, id, data);
-  }
-  
-  async delete(id: string): Promise<void> {
-    await this.session.delete(this.entityType, id);
-  }
-}
-```
-
-### Task Repository
-```typescript
 import { Task, Status } from './types/ftrack-schema';
-import { BaseRepository } from './base-repository';
 
-export class TaskRepository extends BaseRepository<Task> {
-  constructor(session: ftrack.Session) {
-    super(session, 'Task');
+export class TaskRepository {
+  constructor(private session: typeof ftrack.Session) {}
+  
+  async getById(id: string): Promise<Task> {
+    return await this.session.get<Task>('Task', id);
   }
   
   async getByProject(projectId: string): Promise<Task[]> {
-    return this.query(
-      `select name, status.name, priority from Task where project.id is "${projectId}"`
+    const response = await this.session.query<Task>(
+      `select name, status.name from Task where project.id is "${projectId}"`
     );
+    return response.data;
   }
   
-  async getActive(projectId: string): Promise<Task[]> {
-    return this.query(
-      `select name, status.name from Task 
-       where project.id is "${projectId}" 
-       and status.state is "active"`
-    );
+  async updateStatus(taskId: string, statusId: string): Promise<void> {
+    const task = await this.getById(taskId);
+    task.status_id = statusId;
+    await this.session.commit();
   }
   
-  async updateStatus(taskId: string, statusId: string): Promise<Task> {
-    return this.update(taskId, { status_id: statusId });
-  }
-  
-  async assignUser(taskId: string, userId: string): Promise<void> {
-    await this.session.create('Appointment', {
-      context_id: taskId,
-      resource_id: userId,
-      type: 'assignment'
-    });
-  }
-  
-  async getByStatus(projectId: string, statusName: string): Promise<Task[]> {
-    return this.query(
-      `select name, assignments from Task 
-       where project.id is "${projectId}" 
-       and status.name is "${statusName}"`
-    );
+  async create(data: Partial<Task>): Promise<Task> {
+    const task = await this.session.create<Task>('Task', data);
+    await this.session.commit();
+    return task;
   }
 }
+
+// Usage
+const taskRepo = new TaskRepository(session);
+const tasks = await taskRepo.getByProject(projectId);
 ```
 
-### Project Repository
+### Service Pattern
+
 ```typescript
-import { Project } from './types/ftrack-schema';
-import { BaseRepository } from './base-repository';
-
-export class ProjectRepository extends BaseRepository<Project> {
-  constructor(session: ftrack.Session) {
-    super(session, 'Project');
-  }
-  
-  async getAll(): Promise<Project[]> {
-    return this.query('select name, full_name, created_at from Project');
-  }
-  
-  async getByName(name: string): Promise<Project | null> {
-    const projects = await this.query(
-      `select name, full_name from Project where name is "${name}"`
-    );
-    return projects[0] || null;
-  }
-  
-  async getActive(): Promise<Project[]> {
-    return this.query(
-      'select name, full_name from Project where status is "active"'
-    );
-  }
-}
-```
-
----
-
-## Service Layer
-
-### Task Service
-```typescript
-import ftrack from '@ftrack/api';
-import { TaskRepository } from './repositories/task-repository';
-import { Task } from './types/ftrack-schema';
-
+// TaskService.ts
 export class TaskService {
-  private taskRepo: TaskRepository;
+  constructor(
+    private taskRepository: TaskRepository,
+    private statusRepository: StatusRepository
+  ) {}
   
-  constructor(private session: ftrack.Session) {
-    this.taskRepo = new TaskRepository(session);
+  async completeTask(taskId: string): Promise<void> {
+    const doneStatus = await this.statusRepository.getByName('Done');
+    await this.taskRepository.updateStatus(taskId, doneStatus.id);
   }
   
-  async createBulkTasks(
-    projectId: string,
-    taskNames: string[],
-    typeId: string,
-    statusId: string
-  ): Promise<Task[]> {
-    const tasks: Task[] = [];
+  async createTaskWithDefaults(name: string, parentId: string): Promise<Task> {
+    const defaultType = await this.getDefaultTaskType();
+    const defaultStatus = await this.statusRepository.getByName('Not Started');
     
-    for (const name of taskNames) {
-      const task = await this.taskRepo.create({
-        name,
-        parent_id: projectId,
-        type_id: typeId,
-        status_id: statusId,
-        priority: 3
-      } as Partial<Task>);
-      
-      tasks.push(task);
-    }
-    
-    return tasks;
-  }
-  
-  async advanceTaskStatus(taskId: string): Promise<Task> {
-    const task = await this.taskRepo.getById(taskId);
-    const nextStatus = await this.getNextStatus(task.status_id);
-    
-    if (!nextStatus) {
-      throw new Error('Task is at final status');
-    }
-    
-    return this.taskRepo.updateStatus(taskId, nextStatus.id);
-  }
-  
-  async getTaskStatistics(projectId: string): Promise<TaskStats> {
-    const tasks = await this.taskRepo.getByProject(projectId);
-    
-    const stats: TaskStats = {
-      total: tasks.length,
-      byStatus: {},
-      byPriority: {}
-    };
-    
-    tasks.forEach(task => {
-      const statusName = task.status.name;
-      stats.byStatus[statusName] = (stats.byStatus[statusName] || 0) + 1;
-      
-      const priority = task.priority;
-      stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
+    return await this.taskRepository.create({
+      name,
+      parent_id: parentId,
+      type_id: defaultType.id,
+      status_id: defaultStatus.id,
+      priority: 50
     });
-    
-    return stats;
   }
-  
-  private async getNextStatus(currentStatusId: string): Promise<Status | null> {
-    // Implement workflow logic
-    const response = await this.session.query<Status>(
-      `select name, sort from Status order by sort`
-    );
-    
-    const statuses = response.data;
-    const currentIndex = statuses.findIndex(s => s.id === currentStatusId);
-    
-    return currentIndex < statuses.length - 1 
-      ? statuses[currentIndex + 1] 
-      : null;
-  }
-}
-
-interface TaskStats {
-  total: number;
-  byStatus: Record<string, number>;
-  byPriority: Record<number, number>;
 }
 ```
 
----
+### React Hook with Types
 
-## React Integration
-
-### Context Provider
-```typescript
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import ftrack from '@ftrack/api';
-
-interface FtrackContextType {
-  session: ftrack.Session | null;
-  ready: boolean;
-}
-
-const FtrackContext = createContext<FtrackContextType>({
-  session: null,
-  ready: false
-});
-
-export const FtrackProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<ftrack.Session | null>(null);
-  const [ready, setReady] = useState(false);
-  
-  useEffect(() => {
-    const ftrackSession = new ftrack.Session(
-      process.env.REACT_APP_FTRACK_SERVER!,
-      process.env.REACT_APP_FTRACK_USER!,
-      process.env.REACT_APP_FTRACK_KEY!
-    );
-    
-    ftrackSession.initializing.then(() => {
-      setSession(ftrackSession);
-      setReady(true);
-    });
-    
-    return () => {
-      ftrackSession.close();
-    };
-  }, []);
-  
-  return (
-    <FtrackContext.Provider value={{ session, ready }}>
-      {children}
-    </FtrackContext.Provider>
-  );
-};
-
-export const useFtrack = () => useContext(FtrackContext);
-```
-
-### Custom Hooks
 ```typescript
 import { useState, useEffect } from 'react';
-import { useFtrack } from './ftrack-context';
 import { Task } from './types/ftrack-schema';
-import { TaskRepository } from './repositories/task-repository';
 
-export function useTasks(projectId: string) {
-  const { session, ready } = useFtrack();
+function useTasksByProject(projectId: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   
   useEffect(() => {
-    if (!ready || !session) return;
+    async function fetchTasks() {
+      try {
+        const response = await session.query<Task>(
+          `select name, status.name from Task where project.id is "${projectId}"`
+        );
+        setTasks(response.data);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    }
     
-    const taskRepo = new TaskRepository(session);
-    
-    taskRepo.getByProject(projectId)
-      .then(setTasks)
-      .catch(setError)
-      .finally(() => setLoading(false));
-  }, [session, ready, projectId]);
+    fetchTasks();
+  }, [projectId]);
   
   return { tasks, loading, error };
 }
 
-// Usage in component
+// Component usage
 function TaskList({ projectId }: { projectId: string }) {
-  const { tasks, loading, error } = useTasks(projectId);
+  const { tasks, loading, error } = useTasksByProject(projectId);
   
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -411,238 +193,304 @@ function TaskList({ projectId }: { projectId: string }) {
   return (
     <ul>
       {tasks.map(task => (
-        <li key={task.id}>
-          {task.name} - {task.status.name}
-        </li>
+        <li key={task.id}>{task.name} - {task.status.name}</li>
       ))}
     </ul>
   );
 }
 ```
 
+### Testing with Types
+
+```typescript
+// TaskService.test.ts
+import { describe, it, expect, vi } from 'vitest';
+import { TaskService } from './TaskService';
+import type { Task, Status } from './types/ftrack-schema';
+
+describe('TaskService', () => {
+  it('should complete task', async () => {
+    // Mock repository
+    const mockTaskRepo = {
+      getById: vi.fn().mockResolvedValue({
+        id: 'task-1',
+        name: 'Test Task'
+      } as Task),
+      updateStatus: vi.fn().mockResolvedValue(undefined)
+    };
+    
+    const mockStatusRepo = {
+      getByName: vi.fn().mockResolvedValue({
+        id: 'status-done',
+        name: 'Done'
+      } as Status)
+    };
+    
+    const service = new TaskService(mockTaskRepo, mockStatusRepo);
+    
+    await service.completeTask('task-1');
+    
+    expect(mockStatusRepo.getByName).toHaveBeenCalledWith('Done');
+    expect(mockTaskRepo.updateStatus).toHaveBeenCalledWith('task-1', 'status-done');
+  });
+});
+```
+
+**→ This quick reference handles most TypeScript patterns. For advanced type patterns or schema customization, continue below.**
+
 ---
 
-## Express API
+## Online Resources (Fetch for Detailed Info)
 
-### Type-Safe REST API
+### When to Fetch
+- User asks for complete TypeScript integration guide
+- Needs schema generator configuration options
+- Questions about advanced type patterns or generics
+- Official TypeScript examples
+
+### TypeScript Schema Generator Documentation
+**URL**: `https://github.com/ftrackhq/ftrack-ts-schema-generator`
+**Fetch Prompt**:
+```
+Extract ftrack TypeScript schema generator usage and configuration. Include:
+- Installation and setup
+- CLI options and flags
+- Generated schema structure
+- Customization options
+- Type generation patterns
+- Best practices
+Format as markdown.
+```
+
+### JavaScript API Documentation (TypeScript builds on this)
+**URL**: `https://developer.ftrack.com/api-clients/javascript/`
+**Fetch Prompt**:
+```
+Extract ftrack JavaScript API patterns for TypeScript adaptation. Include:
+- Session initialization
+- Query methods with generic type support
+- CRUD operations
+- Async patterns
+Show how to add TypeScript types to these patterns. Format as markdown.
+```
+
+### WebFetch Decision Tree
+
+**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
+
+**Trigger detection** (check user's exact query):
+```python
+trigger_phrases = [
+    "schema generator configuration",
+    "complete typescript guide",
+    "official typescript docs",
+    "advanced type patterns",
+    "schema customization",
+    "typescript examples ftrack"
+]
+```
+
+**Action when trigger detected:**
+1. **Detect topic**: Schema generation, types, or patterns
+2. **Use WebFetch** with appropriate URL above
+3. **If fetch succeeds**: Return formatted docs to user
+4. **If fetch fails**: Reference ftrack-javascript + add type annotations
+
+**WebFetch Example:**
+```markdown
+# User asks: "Show me schema generator configuration options"
+# Trigger detected: "schema generator configuration"
+
+Use WebFetch tool:
+WebFetch(
+  url="https://github.com/ftrackhq/ftrack-ts-schema-generator",
+  prompt="Extract TypeScript schema generator CLI options and configuration. Include all flags, output options, filtering, and customization settings. Format as markdown with examples."
+)
+
+If successful: Present docs
+If fails: Show basic generation command from quick reference
+```
+
+---
+
+## Local Examples (Reference ftrack-javascript)
+
+### When to Reference ftrack-javascript
+1. User needs session setup → Use ftrack-javascript + add types
+2. User needs query patterns → Use ftrack-javascript query + generic types
+3. User needs CRUD operations → Use ftrack-javascript CRUD + type parameters
+4. User needs file operations → Use ftrack-javascript files + typed components
+
+**Pattern**: Load ftrack-javascript example, then show how to add TypeScript types.
+
+### Example Transformation
+
+**From JavaScript** (ftrack-javascript):
+```javascript
+const response = await session.query('select name from Task');
+const tasks = response.data;
+```
+
+**To TypeScript** (add types):
 ```typescript
-import express from 'express';
-import ftrack from '@ftrack/api';
-import { TaskService } from './services/task-service';
 import { Task } from './types/ftrack-schema';
 
-const app = express();
-app.use(express.json());
-
-// Initialize ftrack session
-const session = new ftrack.Session(
-  process.env.FTRACK_SERVER!,
-  process.env.FTRACK_USER!,
-  process.env.FTRACK_KEY!
-);
-
-await session.initializing;
-
-const taskService = new TaskService(session);
-
-// Get tasks by project
-app.get('/api/projects/:projectId/tasks', async (req, res) => {
-  try {
-    const { projectId } = req.params;
-    const tasks = await taskService.taskRepo.getByProject(projectId);
-    res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Create task
-interface CreateTaskRequest {
-  name: string;
-  type_id: string;
-  status_id: string;
-  priority?: number;
-}
-
-app.post('/api/projects/:projectId/tasks', async (req, res) => {
-  try {
-    const { projectId } = req.params;
-    const data: CreateTaskRequest = req.body;
-    
-    const task = await taskService.taskRepo.create({
-      ...data,
-      parent_id: projectId,
-      priority: data.priority || 3
-    } as Partial<Task>);
-    
-    res.status(201).json(task);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-// Update task
-app.patch('/api/tasks/:taskId', async (req, res) => {
-  try {
-    const { taskId } = req.params;
-    const updates: Partial<Task> = req.body;
-    
-    const task = await taskService.taskRepo.update(taskId, updates);
-    res.json(task);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-app.listen(3000, () => {
-  console.log('API running on http://localhost:3000');
-});
+const response = await session.query<Task>('select name from Task');
+const tasks: Task[] = response.data; // Now type-safe
 ```
 
 ---
 
-## Testing
+## Decision Tree
 
-### Jest with TypeScript
-```typescript
-import ftrack from '@ftrack/api';
-import { TaskRepository } from './task-repository';
-import { Task } from './types/ftrack-schema';
-
-// Mock ftrack session
-jest.mock('@ftrack/api');
-
-describe('TaskRepository', () => {
-  let mockSession: jest.Mocked<ftrack.Session>;
-  let taskRepo: TaskRepository;
-  
-  beforeEach(() => {
-    mockSession = {
-      query: jest.fn(),
-      get: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
-    } as any;
-    
-    taskRepo = new TaskRepository(mockSession);
-  });
-  
-  it('should get tasks by project', async () => {
-    const mockTasks: Task[] = [
-      { id: '1', name: 'Task 1', project_id: 'proj-1' } as Task,
-      { id: '2', name: 'Task 2', project_id: 'proj-1' } as Task
-    ];
-    
-    mockSession.query.mockResolvedValue({ data: mockTasks });
-    
-    const tasks = await taskRepo.getByProject('proj-1');
-    
-    expect(tasks).toEqual(mockTasks);
-    expect(mockSession.query).toHaveBeenCalledWith(
-      expect.stringContaining('project.id is "proj-1"')
-    );
-  });
-  
-  it('should update task status', async () => {
-    const updatedTask: Task = {
-      id: '1',
-      name: 'Task 1',
-      status_id: 'new-status-id'
-    } as Task;
-    
-    mockSession.update.mockResolvedValue(updatedTask);
-    
-    const result = await taskRepo.updateStatus('1', 'new-status-id');
-    
-    expect(result).toEqual(updatedTask);
-    expect(mockSession.update).toHaveBeenCalledWith(
-      'Task',
-      '1',
-      { status_id: 'new-status-id' }
-    );
-  });
-});
+```
+User asks about ftrack TypeScript
+  │
+  ├─ Generate types from workspace?
+  │   └→ Use Quick Reference (schema generation) ✓
+  │
+  ├─ Type-safe queries?
+  │   └→ Use Quick Reference (typed query) ✓
+  │
+  ├─ Repository pattern?
+  │   └→ Use Quick Reference (repository) ✓
+  │
+  ├─ React hooks with types?
+  │   └→ Use Quick Reference (React hook) ✓
+  │
+  ├─ Testing with types?
+  │   └→ Use Quick Reference (testing) ✓
+  │
+  ├─ Schema generator config or advanced types?
+  │   ├→ WebFetch schema generator docs
+  │   └→ If fails: Use quick reference + guidance
+  │
+  ├─ Session/CRUD/files (JavaScript base patterns)?
+  │   └→ Reference ftrack-javascript + show type additions
+  │
+  └─ Complete TypeScript integration guide?
+      ├→ WebFetch JavaScript API docs
+      └→ Add TypeScript type annotations to examples
 ```
 
 ---
 
-## Type Utilities
+## Response Strategy
 
-### Partial Updates
+### For Simple Questions
+1. Answer using Quick Reference patterns
+2. Show appropriate pattern (query, repository, hook)
+3. Keep concise (1 example)
+4. Cite: "From TypeScript quick reference"
+
+### For Detailed Questions
+1. Start with Quick Reference context
+2. If trigger detected: WebFetch schema generator docs
+3. Provide type-specific examples
+4. Cite: "From [URL]"
+5. If fetch fails: Use quick reference + additional guidance
+
+### For JavaScript Base Patterns
+1. Note that TypeScript builds on JavaScript
+2. Reference ftrack-javascript skill for base pattern
+3. Show how to add TypeScript types
+4. Provide typed version of the pattern
+
+### Progressive Disclosure
+- Start minimal (quick reference - generate types + basic query)
+- Offer more: "Need schema generator config or advanced patterns? I can fetch official docs"
+- Reference ftrack-javascript for JavaScript base patterns + type additions
+
+---
+
+## Key TypeScript Advantages
+
+1. **Type Safety**: Catch errors at compile time, not runtime
+2. **IntelliSense**: IDE autocomplete for entity properties
+3. **Refactoring**: Rename properties safely across codebase
+4. **Documentation**: Types serve as inline documentation
+5. **Maintenance**: Easier to maintain large codebases
+
+---
+
+## Common Type Patterns
+
+### Union Types
 ```typescript
-type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
+type TaskOrShot = Task | Shot;
 
-async function updateTask(
-  taskId: string,
-  updates: DeepPartial<Task>
-): Promise<Task> {
-  return session.update('Task', taskId, updates);
+function processEntity(entity: TaskOrShot) {
+  if ('priority' in entity) {
+    // It's a Task
+    console.log(entity.priority);
+  }
 }
 ```
 
-### Query Builder
+### Generic Repository
 ```typescript
-class TypedQueryBuilder<T> {
-  private projections: string[] = [];
-  private conditions: string[] = [];
-  
+class BaseRepository<T> {
   constructor(
-    private session: ftrack.Session,
+    private session: typeof ftrack.Session,
     private entityType: string
   ) {}
   
-  select(...fields: Array<keyof T>): this {
-    this.projections.push(...(fields as string[]));
-    return this;
+  async getById(id: string): Promise<T> {
+    return await this.session.get<T>(this.entityType, id);
   }
   
-  where(condition: string): this {
-    this.conditions.push(condition);
-    return this;
-  }
-  
-  async execute(): Promise<T[]> {
-    const projection = this.projections.length > 0
-      ? `select ${this.projections.join(', ')} from `
-      : '';
-    
-    const where = this.conditions.length > 0
-      ? ` where ${this.conditions.join(' and ')}`
-      : '';
-    
-    const query = `${projection}${this.entityType}${where}`;
-    const response = await this.session.query<T>(query);
+  async query(queryString: string): Promise<T[]> {
+    const response = await this.session.query<T>(queryString);
     return response.data;
   }
 }
 
-// Usage
-const tasks = await new TypedQueryBuilder<Task>(session, 'Task')
-  .select('name', 'status', 'priority')
-  .where('project.id is "proj-1"')
-  .where('status.state is "active"')
-  .execute();
+const taskRepo = new BaseRepository<Task>(session, 'Task');
+const tasks = await taskRepo.query('select name from Task');
+```
+
+### Partial Updates
+```typescript
+async function updateTask(id: string, updates: Partial<Task>): Promise<void> {
+  const task = await session.get<Task>('Task', id);
+  Object.assign(task, updates);
+  await session.commit();
+}
+
+// Usage - only update specific fields
+await updateTask('task-id', { name: 'New Name', priority: 75 });
 ```
 
 ---
 
-## Best Practices
+## tsconfig.json Recommendations
 
-1. **Generate Types**: Always generate from your workspace schema
-2. **Repository Pattern**: Encapsulate data access logic
-3. **Service Layer**: Implement business logic separately
-4. **Error Handling**: Type errors properly
-5. **Mocking**: Use jest.mock for testing
-6. **Validation**: Use zod or joi for runtime validation
-7. **Documentation**: Document custom types and interfaces
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
+```
 
 ---
 
-## Official Resources
+## Token Efficiency
 
-- **TypeScript Generator**: https://www.npmjs.com/package/@ftrack/ts-schema-generator
-- **JavaScript API**: https://developer.ftrack.com/api-clients/javascript/
-- **TypeScript Docs**: https://www.typescriptlang.org/
+**Quick Reference**: ~400 tokens (handles 70%+ of queries)
+**With WebFetch**: ~1,300 tokens (handles advanced scenarios)
+**With ftrack-javascript reference**: ~1,000 tokens (base patterns + types)
+
+**Target**: Use quick reference first, reference ftrack-javascript for JavaScript patterns + add types, only fetch for schema generator config.

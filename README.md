@@ -33,8 +33,8 @@ Agent skills for ftrack development workflows.
 
 | Plugin | Version | Description | Documentation |
 |--------|---------|-------------|---------------|
-| **[ftrack-api-developer](skills/ftrack-api-developer/)** | 2.0.0 | ftrack API development orchestrator with 6 specialized subskills | [API Skills README](API_SKILLS.md) |
-| **[ftrack-create-pull-request](skills/ftrack-create-pull-request/)** | 1.0.0 | Create GitHub PRs with org template and linked Linear tickets | [Automation README](AUTOMATION.md) |
+| **[ftrack-api-developer](skills/ftrack-api-developer/)** | 2.0.0 | ftrack API development orchestrator with 8 specialized subskills | [Full Documentation](skills/ftrack-api-developer/README.md) |
+| **[ftrack-create-pull-request](skills/ftrack-create-pull-request/)** | 1.0.0 | Create GitHub PRs with org template and linked Linear tickets | [Full Documentation](skills/ftrack-create-pull-request/README.md) |
 
 ## Plugin Categories
 
@@ -50,8 +50,9 @@ The **ftrack-api-developer** plugin provides comprehensive ftrack API developmen
 - **ftrack-session** - Session management, authentication, caching
 - **ftrack-typescript** - TypeScript integration, schema generation, type safety
 - **ftrack-javascript** - JavaScript integration, async patterns, bundling
+- **ftrack-dashboards** - Dashboard widgets, data visualization, charts, PDF export
 
-[→ Read API Skills Documentation](API_SKILLS.md)
+[→ Read Full Documentation](skills/ftrack-api-developer/README.md)
 
 ### Automation Skills
 
