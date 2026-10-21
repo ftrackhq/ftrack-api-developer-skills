@@ -118,7 +118,7 @@ Analyze user's question for keywords and invoke relevant subskills:
 ### Language Detection
 Before delegating, detect user's language:
 - **Python**: `.py`, `import ftrack_api`, `session.query()`, mentions "Python"
-- **JavaScript**: `.js`, `import ftrack`, `await session.query()`, mentions "JavaScript"/"JS"/"Node"/"browser" → Invoke `/ftrack-javascript`
+- **JavaScript**: `.js`, `@ftrack/api` imports, `await session.query()`, mentions "JavaScript"/"JS"/"Node"/"browser" → Invoke `/ftrack-javascript`
 - **TypeScript**: `.ts`, `interface`, `type`, mentions "TypeScript"/"TS" → Invoke BOTH `/ftrack-javascript` AND `/ftrack-typescript`
 - **If unclear**: Ask user which language they're using
 
@@ -194,7 +194,8 @@ with ftrack_api.Session() as session:
 ```
 ```javascript
 // JavaScript
-const session = new ftrack.Session(server, user, key);
+import { Session } from "@ftrack/api";
+const session = new Session(server, user, key);
 await session.initializing;
 ```
 **→ For details, invoke `/ftrack-session`**
@@ -338,7 +339,7 @@ When delegating to subskills, detect if WebFetch should be used based on user's 
 
 **Language Selection for URLs:**
 - **Python**: `.py` extension, `import ftrack_api`, "Python" keyword
-- **JavaScript**: `.js` extension, `import ftrack`, "JavaScript"/"JS", "browser", "Node.js"
+- **JavaScript**: `.js` extension, `@ftrack/api` imports, "JavaScript"/"JS", "browser", "Node.js"
 - **TypeScript**: `.ts` extension, "TypeScript"/"TS", "type-safe"
 
 **How to Instruct Subskills:**
