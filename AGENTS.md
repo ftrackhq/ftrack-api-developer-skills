@@ -5,7 +5,7 @@ This repo is a Claude Code plugin marketplace (`ftrack-skills`) containing one p
 ## Layout
 
 - `.claude-plugin/marketplace.json` - marketplace with one entry, `source: "./"`. Skills are found by the default `skills/` scan; don't add a `skills` list or `strict` (they conflict with `plugin.json`).
-- `.claude-plugin/plugin.json` - listing metadata, `license: Apache-2.0`. **No `version`**: the git commit SHA is the version, so every push to `main` reaches users. Don't add one unless you will bump it on every release.
+- `.claude-plugin/plugin.json` - listing metadata, `license: Apache-2.0`, and the plugin **`version`** (semver). Set it only here, never also on the marketplace entry. Users only get changes when this version changes: `claude plugin update` reports "already at the latest version" otherwise.
 - `skills/<name>/SKILL.md` + `references/*.md` + `examples/` (+ `scripts/` in ftrack-setup). Each skill must work on its own: keep its examples inside its own folder, even if that means small duplication.
 - No per-skill `plugin.json`, no root `CLAUDE.md` (plugins don't load it and the validator warns).
 
@@ -51,7 +51,7 @@ Check the published package version when documenting behaviour - the GitHub defa
 
 ## Verifying a change
 
-1. `claude plugin validate .` - must pass. Expected warnings: no `version` (deliberate), no icon.
+1. `claude plugin validate .` - must pass. Expected warning: no icon.
 2. Frontmatter parses and stays within the caps:
    `python -c "import yaml,pathlib;[print(p.parent.name,len((f:=yaml.safe_load(p.read_text(encoding='utf-8').split('---')[1]))['description'])+len(f['when_to_use'])) for p in pathlib.Path('skills').glob('*/SKILL.md')]"`
 3. Examples: `python -m py_compile` / `node --check`; type-check TypeScript under `strict` against `@ftrack/api` and a generated schema.
@@ -61,5 +61,6 @@ Check the published package version when documenting behaviour - the GitHub defa
 ## Commits and releases
 
 - Small, descriptive commits; say in the message which sources a change was verified against.
-- Work on a branch and open a PR to `main`; merging is the release (no version bump).
+- Work on a branch and open a PR to `main`. Every PR that changes what users get bumps `version` in `.claude-plugin/plugin.json`: patch for fixes and wording, minor for new skills/references or notable content, major for renamed/removed skills or breaking layout changes. Merging the PR is the release.
+- To test a local change without bumping, reinstall from the checkout (`claude plugin uninstall` + `install`); `claude plugin update` only picks up a new version.
 - Don't open issues or PRs on other ftrackhq repositories without the maintainers' go-ahead.

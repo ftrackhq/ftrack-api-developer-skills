@@ -26,7 +26,7 @@ The repository is private: you need read access to `ftrackhq/ftrack-api-develope
 
 ### Updates
 
-The plugin has no fixed version, so every commit on the default branch is a new release. Auto-update is off by default for this marketplace; enable it under `/plugin` → Marketplaces → ftrack-skills, or update manually:
+Releases are versioned (semver `version` in `.claude-plugin/plugin.json`); users receive an update when that version changes on the default branch. Auto-update is off by default for this marketplace; enable it under `/plugin` → Marketplaces → ftrack-skills, or update manually:
 
 ```bash
 claude plugin marketplace update ftrack-skills
@@ -63,7 +63,7 @@ To invoke a skill explicitly, type `/ftrack-api-developer:<skill>`, e.g. `/ftrac
 ```text
 .claude-plugin/
   marketplace.json      # marketplace "ftrack-skills" with one plugin entry (source "./")
-  plugin.json           # plugin metadata; no version, so every commit is a release
+  plugin.json           # plugin metadata and semver version (bump it to release)
 skills/<skill>/
   SKILL.md              # frontmatter (name, description, when_to_use) + short body
   references/*.md       # detail loaded on demand
@@ -86,8 +86,9 @@ To test local changes, register this checkout as the marketplace instead of the 
 claude plugin marketplace remove ftrack-skills
 claude plugin marketplace add /path/to/checkout
 claude plugin install ftrack-api-developer@ftrack-skills
-# after each commit:
-claude plugin marketplace update ftrack-skills && claude plugin update ftrack-api-developer@ftrack-skills
+# after each commit (update only picks up a new version, so reinstall):
+claude plugin marketplace update ftrack-skills
+claude plugin uninstall ftrack-api-developer@ftrack-skills && claude plugin install ftrack-api-developer@ftrack-skills
 ```
 
 Switch back with `claude plugin marketplace remove ftrack-skills` followed by the installation steps above.
