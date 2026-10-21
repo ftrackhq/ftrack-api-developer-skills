@@ -19,7 +19,7 @@ data = {"entities": [{
     "changes": {"statusid": {"old": "44ddd0fe-...", "new": "44dd9fb2-..."}},
     "parents": [{"entityId": "5671dcb0-...", "entityType": "show"}],
 }]}
-source = {"user": {"id": "..."}, ...}   # API clients publishing events set source.user.username instead
+source = {"user": {"id": "...", "username": "..."}, ...}
 ```
 
 `move` is sent when a task's parent changes. `data.pushToken` is present when the change came from a session that set the `ftrack-pushtoken` header.

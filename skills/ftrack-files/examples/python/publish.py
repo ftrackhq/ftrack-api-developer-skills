@@ -50,7 +50,8 @@ def describe(session, version):
     ).all()
     for component in components:
         location = session.pick_location(component)
-        print(component["name"], component["file_type"], "in", location["name"] if location else "nowhere")
+        # Encode outputs have no location until the job is done.
+        print(component["name"], component["file_type"], "in", location["name"] if location else "(pending)")
         if location and location["id"] == server["id"]:
             print("  url:", server.get_url(component))
 

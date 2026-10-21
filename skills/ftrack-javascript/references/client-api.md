@@ -55,7 +55,7 @@ All operations in one `call` run in a single server transaction. Results come ba
 
 ## Uploads
 
-`createComponent(file)` accepts a `File` or `Blob` (available in browsers and Node.js 20+). It creates a `FileComponent`, uploads the data (multipart for large files) and registers it in the `ftrack.server` location. `onProgress` receives a percentage. Abort with `signal`; `onAborted` is called after cleanup. `data` is merged into the created `FileComponent` (`name`, `file_type`, `size` and `id` are filled from the file unless given), so it can attach the component to a version:
+`createComponent(file)` accepts a `File` or `Blob` and **requires a browser**: the uploader uses `XMLHttpRequest`, which Node.js lacks (it creates the `FileComponent`, then stalls; the `xhr2` polyfill doesn't fix it). In Node.js, upload with the raw protocol: create the `FileComponent`, call `{ action: "get_upload_metadata", component_id, file_name, file_size, checksum }`, `PUT` the bytes to the returned `url` with its `headers`, then create a `ComponentLocation` in `SERVER_LOCATION_ID` (see `uploadFileNode()` in the examples). It creates a `FileComponent`, uploads the data (multipart for large files) and registers it in the `ftrack.server` location. `onProgress` receives a percentage. Abort with `signal`; `onAborted` is called after cleanup. `data` is merged into the created `FileComponent` (`name`, `file_type`, `size` and `id` are filled from the file unless given), so it can attach the component to a version:
 
 ```javascript
 const [{ data: component }] = await session.createComponent(file, {

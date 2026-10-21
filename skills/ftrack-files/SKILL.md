@@ -55,7 +55,7 @@ availability = session.get_component_availability(component) # {location_id: 0-1
 
 ## JavaScript
 
-Only the `ftrack.server` location is available. `session.createComponent(file, { data: { version_id } })` uploads and attaches a file; `getComponentUrl` / `thumbnailUrl` build download and thumbnail URLs (they contain the API key). Encode for review with a raw operation:
+Only the `ftrack.server` location is available. In browsers `session.createComponent(file, { data: { version_id } })` uploads and attaches a file; in Node.js it stalls (no `XMLHttpRequest`), so use the `uploadFileNode()` helper in [examples/javascript/upload.js](examples/javascript/upload.js); `getComponentUrl` / `thumbnailUrl` build download and thumbnail URLs (they contain the API key). Encode for review with a raw operation:
 
 ```javascript
 await session.call([{ action: "encode_media", component_id: componentId, version_id: versionId, keep_original: true }]);

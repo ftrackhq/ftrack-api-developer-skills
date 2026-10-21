@@ -57,4 +57,4 @@ JavaScript: `session.thumbnailUrl(componentId, { size })`.
 3. `PUT` the bytes to that URL with those headers (HTTP 200 = success).
 4. Create a `ComponentLocation` with `component_id` and `location_id` `3a372bde-05bc-11e4-8908-20c9d081909b` (`ftrack.server`).
 
-The Python and JavaScript clients do all of this inside `create_component` / `createComponent`.
+The Python client does all of this inside `create_component`; the JavaScript `createComponent` does too, but only in browsers. Node.js code must do these steps itself (tested: `fetch` PUT with the returned headers works).

@@ -53,7 +53,7 @@ await session.delete("Task", [task.id]);
 // Get or create (updates non-identifying values if they differ); resolves to the entity
 const meta = await session.ensure(
   "Metadata",
-  { parent_id: shotId, parent_type: "Shot", key: "camera", value: "A" },
+  { parent_id: shotId, parent_type: "TypedContext", key: "camera", value: "A" },
   ["parent_id", "key"]
 );
 ```
@@ -82,7 +82,7 @@ const downloadUrl = session.getComponentUrl(componentId);
 const thumbUrl = session.thumbnailUrl(componentId, { size: 300 });
 ```
 
-`createComponent` uploads to the `ftrack.server` location. Attaching to a version, encoding and other locations: see ftrack-files. `getComponentUrl` and `thumbnailUrl` embed the API key in the URL - don't log or share them.
+`createComponent` uploads to the `ftrack.server` location and **only works in browsers** (it uses `XMLHttpRequest`; in Node.js it creates the component and then stalls). In Node.js use the `uploadFileNode()` helper in [examples/javascript/crud-examples.js](examples/javascript/crud-examples.js) (get_upload_metadata + `fetch` PUT + `ComponentLocation`). Attaching to a version, encoding and other locations: see ftrack-files. `getComponentUrl` and `thumbnailUrl` embed the API key in the URL - don't log or share them.
 
 ## Events
 

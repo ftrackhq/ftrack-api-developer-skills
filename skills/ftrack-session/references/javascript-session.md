@@ -48,7 +48,7 @@ Requests made before initialization finishes wait for it. There is no `close()` 
 | `delete(entityType, keys, options?)` | |
 | `ensure(entityType, data, identifyingKeys?)` | Get or create; resolves to the entity, throws a plain `Error` if several match |
 | `call(operations, options?)` | Several operations in one request and one transaction |
-| `createComponent(file, options?)` | Upload a file (see ftrack-files) |
+| `createComponent(file, options?)` | Upload a file - browsers only (see ftrack-files for Node.js) |
 | `getSchemas()`, `getServerInformation()`, `getServerVersion()` | |
 
 There is no unit of work: every `create`/`update`/`delete` is its own request. For changes that must succeed or fail together, use `call`:
