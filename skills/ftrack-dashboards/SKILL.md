@@ -1,10 +1,7 @@
 ---
 name: ftrack-dashboards
-description: ftrack dashboard development - React widgets, data visualization, charts, PDF export
+description: ftrack dashboard widgets in React - `@ftrack/web-widget` setup, theme handling, charts (Recharts), calendars (react-big-calendar), data aggregation and PDF export. Use when code imports `@ftrack/web-widget` or the user wants to build an ftrack dashboard, widget or data visualization. Not for Python reporting or non-ftrack visualization.
 ---
-
-TRIGGER when: code imports `@ftrack/web-widget`, `react-big-calendar`, `recharts`, chart libraries; file contains dashboard components, widget setup, data visualization; user asks about ftrack dashboards, widgets, charts, data visualization, PDF export, or custom dashboard development.
-SKIP: Python dashboards, backend data processing, non-ftrack visualization.
 
 # ftrack Dashboard Development Expert
 

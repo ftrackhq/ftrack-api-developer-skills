@@ -1,10 +1,7 @@
 ---
 name: ftrack-files
-description: ftrack file operations - upload, download, components, locations, thumbnails
+description: ftrack file handling for Python and JavaScript - components, asset versions, locations (including custom S3 locations), upload, download, thumbnails, resource transformers. Use when code calls `create_component()`, `session.upload()`, or works with `Location`, `FileComponent` or `AssetVersion` files, or the user asks about publishing or retrieving files in ftrack. Not for general OS file handling or non-ftrack storage.
 ---
-
-TRIGGER when: code uses `create_component()`, `session.upload()`, `Location`, `FileComponent`, or `AssetVersion` with files; user asks about uploading files to ftrack, downloading components, managing locations, S3 storage, or thumbnails.
-SKIP: general file operations without ftrack, OS file handling, non-ftrack storage systems.
 
 # ftrack File Operations Expert
 

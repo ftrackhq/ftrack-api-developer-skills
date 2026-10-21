@@ -1,10 +1,7 @@
 ---
 name: ftrack-javascript
-description: ftrack JavaScript integration - async patterns, browser/Node.js, bundling, ES6+ features
+description: ftrack JavaScript API (`@ftrack/api`) - session, queries, CRUD, events and file upload with async/await, in browser and Node.js, plus React usage and bundling. Use when JavaScript code imports `@ftrack/api` or the user asks about using ftrack from JavaScript, Node.js or the browser. For TypeScript also use ftrack-typescript; not for Python ftrack code.
 ---
-
-TRIGGER when: JavaScript/JS file imports `@ftrack/api`; code uses async/await with ftrack Session; browser/Node.js code with ftrack; user asks about ftrack in JavaScript, ES6+, React integration, webpack/bundling with ftrack.
-SKIP: TypeScript files (use ftrack-typescript instead), Python ftrack code, general JavaScript without ftrack.
 
 # ftrack JavaScript Expert
 

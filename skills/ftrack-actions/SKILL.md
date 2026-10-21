@@ -1,10 +1,7 @@
 ---
 name: ftrack-actions
-description: ftrack custom action handlers - Python BaseAction, UI forms, discovery, launch patterns
+description: ftrack custom actions in Python - `BaseAction` / ftrack-action-handler, discover and launch, UI forms, running an action server. Use when code imports `ftrack_action_handler` or subclasses `BaseAction`, or the user wants to add a custom action or action UI form to ftrack. Python only; not for event listeners in general (use ftrack-events).
 ---
-
-TRIGGER when: code imports `ftrack_action_handler` or `BaseAction`; file contains action handler class with discover/launch methods; user asks about ftrack actions, UI forms, action discovery, or custom action handlers.
-SKIP: ftrack events (use ftrack-events), JavaScript actions (Python-only feature), general Python code.
 
 # ftrack Action Handler Expert
 

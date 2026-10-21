@@ -1,10 +1,7 @@
 ---
 name: ftrack-session
-description: ftrack session management - initialization, authentication, caching, connection pooling
+description: ftrack session setup for Python and JavaScript - creating a Session, API key authentication, environment variables, caching, commit/rollback, error handling and retries. Use when code creates `ftrack_api.Session()` or `new Session()` from `@ftrack/api`, or the user asks about connecting or authenticating to ftrack, session caching or handling ftrack API errors. Not for generic HTTP sessions or non-ftrack authentication.
 ---
-
-TRIGGER when: code contains `ftrack_api.Session()` or `new ftrack.Session()`; file deals with session initialization, authentication, API keys, cache management; user asks about connecting to ftrack, session setup, API authentication, or connection pooling.
-SKIP: general authentication, HTTP sessions, database connections without ftrack.
 
 # ftrack Session Management Expert
 

@@ -1,10 +1,7 @@
 ---
 name: ftrack-query
-description: ftrack query optimization - projections, filtering, pagination for Python & JavaScript
+description: ftrack query language for Python and JavaScript - select/where syntax, projections, filtering, pagination, performance, and aggregation for dashboards. Use when code calls `session.query()` or contains ftrack query strings, or the user asks how to search, filter or count ftrack entities (tasks, assets, versions, projects). Not for SQL or non-ftrack databases.
 ---
-
-TRIGGER when: code uses `session.query()` method; file contains ftrack query strings with select/where/from syntax; user asks about querying ftrack, searching entities, filtering tasks/assets, projections, or pagination.
-SKIP: SQL queries, general database queries, search without ftrack context.
 
 # ftrack Query Optimization Expert
 
