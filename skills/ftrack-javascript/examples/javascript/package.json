@@ -1,14 +1,10 @@
 {
   "name": "ftrack-javascript-examples",
   "version": "1.0.0",
-  "description": "ftrack JavaScript API examples for browser and Node.js",
+  "description": "ftrack JavaScript API examples",
   "type": "module",
   "scripts": {
-    "example:session": "node session-management.js",
-    "example:query": "node query-operations.js",
-    "example:crud": "node crud-operations.js",
-    "example:events": "node event-handling.js",
-    "example:files": "node file-operations.js"
+    "example:crud": "node crud-examples.js"
   },
   "keywords": [
     "ftrack",
@@ -17,12 +13,12 @@
     "javascript"
   ],
   "dependencies": {
-    "@ftrack/api": "^3.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0"
+    "@ftrack/api": "^1.11.2"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
   }
 }

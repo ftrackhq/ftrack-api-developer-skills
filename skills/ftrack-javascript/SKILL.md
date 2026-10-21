@@ -1,525 +1,119 @@
 ---
 name: ftrack-javascript
-description: ftrack JavaScript API (`@ftrack/api`) - session, queries, CRUD, events and file upload with async/await, in browser and Node.js, plus React usage and bundling. Use when JavaScript code imports `@ftrack/api` or the user asks about using ftrack from JavaScript, Node.js or the browser. For TypeScript also use ftrack-typescript; not for Python ftrack code.
+description: ftrack JavaScript client `@ftrack/api` - Session, query, create/update/delete/ensure, atomic session.call batches, createComponent uploads, eventHub, dates, cancellation, and usage in Node.js, browsers and React. Use when JavaScript code imports `@ftrack/api` or calls `session.query`, `session.create`, `session.update`, `session.call`, `session.createComponent` or `session.eventHub`, or the user asks how to use ftrack from JavaScript, Node.js, the browser or React. For TypeScript also use ftrack-typescript. Not for Python ftrack code.
 ---
 
-# ftrack JavaScript Expert
+# ftrack JavaScript client (`@ftrack/api`)
 
-**Strategy**: Quick reference first → Fetch online docs if needed → Load local examples as fallback
-
-## Environment Detection
-- **Browser**: DOM available, `window` object, ES6 modules
-- **Node.js**: `process.env`, filesystem access, CommonJS or ES modules
-- **React**: JSX syntax, hooks, component patterns
-
----
-
-## Quick Reference (Use First - 70% of Queries)
-
-### Core Principles
-✓ **Use async/await**: Modern promise handling over `.then()` chains
-✓ **Error handling**: Always wrap in try/catch blocks
-✓ **Wait for initializing**: `await session.initializing` before using session
-✓ **Close sessions**: Call `session.close()` when done
-✓ **Parse responses**: Access data with `response.data`
-✗ Avoid callback chains (use async/await instead)
-✗ Never ignore promise rejections
-✗ Don't forget to wait for `session.initializing`
-
-### Session Initialization
-
-**Node.js**
-```javascript
-import ftrack from '@ftrack/api';
-
-const session = new ftrack.Session(
-  process.env.FTRACK_SERVER,
-  process.env.FTRACK_API_USER,
-  process.env.FTRACK_API_KEY
-);
-
-await session.initializing;
-// Ready to use
+```bash
+npm install @ftrack/api      # Node.js 20+ or a modern browser
 ```
 
-**Browser**
 ```javascript
-import ftrack from '@ftrack/api';
-
-const session = new ftrack.Session(
-  'https://company.ftrackapp.com',
-  'user@example.com',
-  'api-key'
-);
-
-await session.initializing;
+import { Session, operation, expression, error, Event } from "@ftrack/api";
 ```
 
-**With Error Handling**
+Named exports only - `import ftrack from "@ftrack/api"` and `new ftrack.Session(...)` don't work with the current package.
+
+**This client is not the Python client.** There is no `session.get`, no `session.commit()`, no unit of work, no `session.close()`, no attribute lazy-loading and no automatic paging. Code that uses those is wrong.
+
+## Session
+
 ```javascript
-async function createSession() {
-  try {
-    const session = new ftrack.Session(server, user, key);
-    await session.initializing;
-    return session;
-  } catch (error) {
-    console.error('Session failed:', error);
-    throw error;
-  }
-}
+const session = new Session(serverUrl, apiUser, apiKey, { autoConnectEventHub: false });
+await session.initializing;   // rejects on bad URL or credentials
 ```
 
-### Query Patterns
+Create one session per process or app and share it. Options, errors and strict mode: see ftrack-session.
 
-**Basic Query**
-```javascript
-async function getTasks(projectId) {
-  const response = await session.query(
-    `select name, status.name from Task where project.id is "${projectId}"`
-  );
-  return response.data;
-}
-```
-
-**Error Handling**
-```javascript
-async function getTaskSafely(taskId) {
-  try {
-    const task = await session.get('Task', taskId);
-    return task;
-  } catch (error) {
-    console.error('Task not found:', error);
-    return null;
-  }
-}
-```
-
-**Iteration**
-```javascript
-async function processAllTasks() {
-  const response = await session.query('select name from Task');
-  
-  response.data.forEach(task => {
-    console.log(task.name);
-  });
-}
-```
-
-### CRUD Operations
-
-**Create**
-```javascript
-const task = await session.create('Task', {
-  name: 'New Task',
-  parent_id: parentId,
-  type_id: taskTypeId
-});
-```
-
-**Update**
-```javascript
-const task = await session.get('Task', taskId);
-task.name = 'Updated Name';
-await session.commit();
-```
-
-**Delete**
-```javascript
-await session.delete('Task', taskId);
-await session.commit();
-```
-
-### File Upload (Browser)
+## Query
 
 ```javascript
-// HTML: <input type="file" id="fileInput">
-const file = document.getElementById('fileInput').files[0];
-
-const component = await session.create('FileComponent', {
-  name: file.name,
-  file_type: file.type,
-  size: file.size,
-  version_id: assetVersionId
-});
-
-await session.upload(component.id, file, {
-  onProgress: (progress) => {
-    const percent = Math.round((progress.loaded / progress.total) * 100);
-    console.log(`Progress: ${percent}%`);
-  }
-});
-```
-
-### React Integration
-
-**Basic Hook**
-```javascript
-import { useState, useEffect } from 'react';
-
-function TaskList({ projectId }) {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    async function fetchTasks() {
-      try {
-        const response = await session.query(
-          `select name from Task where project.id is "${projectId}"`
-        );
-        setTasks(response.data);
-      } catch (error) {
-        console.error('Failed to load tasks:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchTasks();
-  }, [projectId]);
-  
-  if (loading) return <div>Loading...</div>;
-  
-  return (
-    <ul>
-      {tasks.map(task => <li key={task.id}>{task.name}</li>)}
-    </ul>
-  );
-}
-```
-
-**Custom Session Hook**
-```javascript
-function useFtrackSession() {
-  const [session, setSession] = useState(null);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    async function init() {
-      try {
-        const s = new ftrack.Session(server, user, key);
-        await s.initializing;
-        setSession(s);
-      } catch (err) {
-        setError(err);
-      }
-    }
-    
-    init();
-    
-    return () => {
-      if (session) session.close();
-    };
-  }, []);
-  
-  return { session, error };
-}
-```
-
-### Node.js Patterns
-
-**Environment Variables**
-```javascript
-// .env file
-// FTRACK_SERVER=https://company.ftrackapp.com
-// FTRACK_API_USER=username
-// FTRACK_API_KEY=api-key
-
-import 'dotenv/config';
-import ftrack from '@ftrack/api';
-
-const session = new ftrack.Session(
-  process.env.FTRACK_SERVER,
-  process.env.FTRACK_API_USER,
-  process.env.FTRACK_API_KEY
+const { data, metadata } = await session.query(
+  expression`select name, status.name from Task where project_id is "${projectId}"`
 );
 ```
 
-**Batch Processing**
+- `data` is an array of plain objects with only the projected attributes (plus ids).
+- Use the `expression` tag for interpolated values - it escapes quotes.
+- Paging is manual: loop with `offset`/`limit` until `metadata.next.offset` is `null`.
+- Query syntax and `group by`: see ftrack-query.
+
+## Create, update, delete
+
+Each call is sent immediately and returns `{ data }`.
+
 ```javascript
-async function processBatch(taskIds) {
-  const promises = taskIds.map(id => session.get('Task', id));
-  const tasks = await Promise.all(promises);
-  
-  tasks.forEach(task => {
-    task.status_id = newStatusId;
-  });
-  
-  await session.commit();
-}
+const { data: task } = await session.create("Task", {
+  name: "lighting", parent_id: shotId, type_id: typeId,
+});
+await session.update("Task", [task.id], { status_id: statusId, description: "WIP" });
+await session.delete("Task", [task.id]);
+// Get or create (updates non-identifying values if they differ); resolves to the entity
+const meta = await session.ensure(
+  "Metadata",
+  { parent_id: shotId, parent_type: "Shot", key: "camera", value: "A" },
+  ["parent_id", "key"]
+);
 ```
 
-**→ This quick reference handles most JavaScript ftrack patterns. For advanced usage, continue below.**
+- Set relations through their id attributes (`status_id`, `parent_id`, `priority_id`, ...).
+- Updates take the primary key, so query the id first if you only know a name.
+- For several changes that must succeed or fail together, batch them - one request, one transaction:
 
----
-
-## Online Resources (Fetch for Detailed Info)
-
-### When to Fetch
-- User asks for "complete JavaScript API reference"
-- Needs browser vs Node.js differences
-- Installation and getting-started steps
-- Advanced async patterns or performance optimization
-- Official module imports and exports
-
-### JavaScript API Documentation
-**URL**: `https://developer.ftrack.com/api-clients/javascript/`
-**Fetch Prompt**:
-```
-Extract ftrack JavaScript API patterns and reference. Include:
-- Session initialization for browser and Node.js
-- Async/await query patterns
-- CRUD operations with examples
-- File upload and download
-- Event hub integration
-- Error handling best practices
-- Promise-based operations
-- Browser vs Node.js differences
-- Performance optimization tips
-Format as markdown with ES6+ async/await examples.
-```
-
-### JavaScript Query Documentation
-**URL**: `https://developer.ftrack.com/api/query-language`
-**Fetch Prompt**:
-```
-Extract ftrack JavaScript query patterns. Include:
-- Query syntax with string interpolation
-- Response data access (response.data)
-- Async iteration patterns
-- Error handling in queries
-- Pagination with JavaScript
-- Query optimization tips
-Format as markdown with modern ES6+ examples.
-```
-
-### Installation & Tutorial
-**URLs**: `https://developer.ftrack.com/api-clients/javascript/installing`, `https://developer.ftrack.com/api-clients/javascript/tutorial`
-**Fetch Prompt**:
-```
-Extract ftrack JavaScript API installation and getting-started steps. Include package install, session creation, first query, create/update/delete. Format as markdown.
-```
-
-**Note**: ftrack has no official bundling guide. `@ftrack/api` is a standard npm ES module, so answer webpack/Vite/Rollup questions with general bundler knowledge rather than fetching.
-
-### WebFetch Decision Tree
-
-**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
-
-**Trigger detection** (check user's exact query):
-```python
-trigger_phrases = [
-    "complete javascript api",
-    "official javascript docs",
-    "browser vs node.js",
-    "getting started javascript",
-    "all javascript methods",
-    "es6 module setup",
-    "performance optimization javascript"
-]
-```
-
-**Action when trigger detected:**
-1. **Detect environment**: Browser, Node.js, or React
-2. **Detect topic**: API reference, installation, or patterns
-3. **Use WebFetch** with appropriate URL above
-4. **If fetch succeeds**: Return formatted docs to user
-5. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
-
-**WebFetch Example:**
-```markdown
-# User asks: "Show me the official getting started for ftrack JavaScript"
-
-WebFetch(
-  url="https://developer.ftrack.com/api-clients/javascript/tutorial",
-  prompt="Extract the ftrack JavaScript tutorial steps: session setup, querying, creating and updating entities. Format as markdown with code examples."
-)
-
-If successful: Present docs
-If fails: Load examples/javascript/session-management.js
-```
-
----
-
-## Local Examples (Fallback - Load Only When Needed)
-
-### When to Load Local
-1. WebFetch fails or times out
-2. User explicitly requests "show me the example file"
-3. Need complete runnable JavaScript implementations
-4. Advanced patterns like batch processing, React hooks
-
-### Available Local Files
-
-**CRUD Operations Example**
-- **File**: `examples/javascript/crud-operations.js`
-- **Contains**: Create, read, update, delete patterns with error handling
-- **Load when**: User needs comprehensive CRUD examples
-- **Size**: ~400 lines
-
-**Query Operations Example**
-- **File**: `examples/javascript/query-operations.js`
-- **Contains**: Advanced query patterns, pagination, filtering, aggregation
-- **Load when**: User needs query optimization patterns
-- **Size**: ~400 lines
-
-**Session Management Example**
-- **File**: `examples/javascript/session-management.js`
-- **Contains**: Session lifecycle, connection pooling, error recovery
-- **Load when**: User needs production session patterns
-- **Size**: ~350 lines
-
-**Event Handling Example**
-- **File**: `examples/javascript/event-handling.js`
-- **Contains**: Event subscriptions, React integration, debouncing
-- **Load when**: User needs event handling patterns
-- **Size**: ~400 lines
-
-**File Operations Example**
-- **File**: `examples/javascript/file-operations.js`
-- **Contains**: Browser/Node.js file upload/download, progress tracking
-- **Load when**: User needs file handling patterns
-- **Size**: ~400 lines
-
-### How to Load
-Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
-
----
-
-## Decision Tree
-
-```
-User asks about ftrack JavaScript
-  │
-  ├─ Session setup (how do I connect)?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ Query patterns?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ CRUD operations?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ File upload (browser)?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ React integration?
-  │   └→ Use Quick Reference (hooks) ✓
-  │
-  ├─ Complete API reference or browser vs Node.js?
-  │   ├→ WebFetch JavaScript API docs
-  │   └→ If fails: Load session-management.js
-  │
-  ├─ Webpack/bundling configuration?
-  │   └→ Answer from general bundler knowledge (no official guide)
-  │
-  └─ Production-ready examples?
-      └→ Load specific example file (crud, query, session, etc.)
-```
-
----
-
-## Response Strategy
-
-### For Simple Questions
-1. Answer using Quick Reference patterns
-2. Show appropriate environment (browser/Node.js/React)
-3. Keep concise (1 example)
-4. Cite: "From JavaScript quick reference"
-
-### For Detailed Questions
-1. Start with Quick Reference context
-2. If trigger detected: WebFetch JavaScript documentation
-3. Provide environment-specific examples
-4. Cite: "From [URL]"
-5. If fetch fails: Load local example + cite filename
-
-### For Advanced Questions (Bundling, Performance)
-1. Check if Quick Reference covers it
-2. If not: WebFetch JavaScript docs (bundling: general knowledge)
-3. If insufficient or fails: Load local example file
-4. Provide production-ready code
-5. Cite all sources used
-
-### Progressive Disclosure
-- Start minimal (quick reference - session + query)
-- Offer more: "Need the complete API reference? I can fetch official docs"
-- Load comprehensive examples only if requested or if WebFetch fails
-
----
-
-## Common Patterns
-
-### Async Iteration
 ```javascript
-async function processAllProjects() {
-  const response = await session.query('select name from Project');
-  
-  for (const project of response.data) {
-    await processProject(project);
-  }
-}
+await session.call([
+  operation.create("Task", { name: "comp", parent_id: shotId, type_id: typeId }),
+  operation.update("Shot", [shotId], { description: "comp added" }),
+]);
 ```
 
-### Parallel Queries
+## Files
+
 ```javascript
-async function loadDashboard() {
-  const [tasks, projects, users] = await Promise.all([
-    session.query('select name from Task'),
-    session.query('select name from Project'),
-    session.query('select username from User')
-  ]);
-  
-  return { tasks: tasks.data, projects: projects.data, users: users.data };
-}
+const [componentResponse] = await session.createComponent(file, {   // File or Blob
+  data: { name: "main", version_id: versionId },   // optional FileComponent attributes
+  onProgress: (percent) => console.log(percent),
+  signal: controller.signal,
+});
+const componentId = componentResponse.data.id;
+const downloadUrl = session.getComponentUrl(componentId);
+const thumbUrl = session.thumbnailUrl(componentId, { size: 300 });
 ```
 
-### Retry Logic
+`createComponent` uploads to the `ftrack.server` location. Attaching to a version, encoding and other locations: see ftrack-files. `getComponentUrl` and `thumbnailUrl` embed the API key in the URL - don't log or share them.
+
+## Events
+
 ```javascript
-async function queryWithRetry(queryString, maxRetries = 3) {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await session.query(queryString);
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-}
+session.eventHub.connect();   // or autoConnectEventHub: true
+const id = session.eventHub.subscribe("topic=ftrack.update", (event) => {
+  console.log(event.data.entities);
+});
+session.eventHub.unsubscribe(id);
+await session.eventHub.publish(new Event("my-company.some-topic", { key: "value" }));
 ```
 
-### Environment Detection
-```javascript
-const isNode = typeof process !== 'undefined' && process.versions?.node;
-const isBrowser = typeof window !== 'undefined';
+Subscriptions only support `topic=...` (wildcards allowed, e.g. `topic=ftrack.*`). Details: see ftrack-events.
 
-if (isNode) {
-  // Node.js specific code
-  const fs = await import('fs');
-} else if (isBrowser) {
-  // Browser specific code
-  const fileInput = document.getElementById('upload');
-}
-```
+## Dates
 
----
+Datetimes are returned as dayjs objects by default. Pass `{ decodeDatesAsIso: true }` to `query`/`call` to get ISO strings (also what generated TypeScript types declare). Dates you send are encoded as ISO 8601 UTC.
 
-## Browser vs Node.js Differences
+## Environments
 
-| Feature | Browser | Node.js |
-|---------|---------|---------|
-| **Import** | ES modules (`import`) | ES modules or CommonJS (`require`) |
-| **Environment** | `window` object | `process.env` |
-| **File Upload** | `File` API, `<input type="file">` | `fs.readFileSync()`, `Buffer` |
-| **File Download** | `window.open()`, `Blob` | `fs.writeFileSync()`, streams |
-| **Auth** | Hardcoded or from form | Environment variables |
-| **Bundling** | Webpack, Rollup required | Optional, can run directly |
+- **Node.js**: read `FTRACK_SERVER`, `FTRACK_API_USER`, `FTRACK_API_KEY` from `process.env` and pass them to the constructor - the client doesn't read them itself.
+- **Browser**: never ship an API key. ftrack dashboard widgets get the current user's credentials from ftrack at runtime (see ftrack-dashboards); other web apps should go through their own backend.
+- **React**: keep the session in a module or context (not per component); pass an `AbortController` signal to requests in `useEffect` and abort in the cleanup.
 
----
+## Reference files
 
-## Performance Tips
+Paths are relative to this skill's directory. Read only what the question needs.
 
-1. **Use async/await consistently**: Avoid mixing with `.then()`
-2. **Batch operations**: Use `Promise.all()` for parallel queries
-3. **Close sessions**: Always call `session.close()` when done
-4. **Debounce updates**: In React, debounce rapid state changes
-5. **Cache responses**: Store frequently accessed data in state/memory
+| File | Read when |
+|---|---|
+| [references/client-api.md](references/client-api.md) | Full method and option list, response shapes, error classes, event hub methods |
+| [examples/javascript/crud-examples.js](examples/javascript/crud-examples.js) | Runnable Node.js: query, create/update/delete, ensure, atomic call, upload |
+| [examples/javascript/react-hooks.jsx](examples/javascript/react-hooks.jsx) | React: shared session context, data hook with cancellation, upload with progress |
+
+Sources: https://github.com/ftrackhq/ftrack-javascript (README and `source/`), https://developer.ftrack.com/api-clients/javascript/.
