@@ -1,5 +1,5 @@
 ---
-name: ftrack-api-developer
+name: ftrack-overview
 description: "Entry point for ftrack Studio API work in Python and JavaScript/TypeScript: core data model, client differences, and which ftrack-* skill covers each task."
 when_to_use: "General or mixed ftrack API questions where no single ftrack-* skill fits: \"write an ftrack script\", \"build an ftrack integration\", \"automate ftrack\", code importing `ftrack_api` or `@ftrack/api`, `*.ftrackapp.com` URLs."
 ---
