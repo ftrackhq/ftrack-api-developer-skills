@@ -1,0 +1,24 @@
+{
+  "name": "ftrack-api-developer",
+  "description": "ftrack API development orchestrator - delegates to specialized subskills for queries, events, actions, files, sessions, TypeScript",
+  "version": "2.0.0",
+  "category": "development",
+  "subcategories": ["ftrack", "api", "orchestrator"],
+  "tags": ["ftrack", "development", "api", "orchestrator", "python", "javascript", "skill"],
+  "author": {
+    "name": "Lorenzo Angeli",
+    "email": "lorenzo.angeli@backlight.co"
+  },
+  "subskills": [
+    "ftrack-query",
+    "ftrack-events",
+    "ftrack-actions",
+    "ftrack-files",
+    "ftrack-session",
+    "ftrack-javascript",
+    "ftrack-typescript",
+    "ftrack-dashboards"
+  ],
+  "installMode": "lazy",
+  "languages": ["python", "javascript", "typescript"]
+}

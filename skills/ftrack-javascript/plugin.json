@@ -1,0 +1,15 @@
+{
+  "name": "ftrack-javascript",
+  "description": "ftrack JavaScript integration - async patterns, browser/Node.js, bundling, ES6+ features",
+  "version": "1.0.0",
+  "category": "development",
+  "subcategories": ["ftrack", "api", "javascript"],
+  "tags": ["ftrack", "javascript", "js", "async", "browser", "nodejs", "es6", "webpack", "skill"],
+  "author": {
+    "name": "Lorenzo Angeli",
+    "email": "lorenzo.angeli@backlight.co"
+  },
+  "parent": "ftrack-api-developer",
+  "installable": true,
+  "languages": ["javascript"]
+}
