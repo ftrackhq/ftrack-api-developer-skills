@@ -5,19 +5,10 @@
     "email": "support@ftrack.com"
   },
   "metadata": {
-    "description": "Agent skills for ftrack development workflows",
+    "description": "Agent skills for ftrack API development",
     "version": "0.1.0"
   },
   "plugins": [
-    {
-      "name": "ftrack-create-pull-request",
-      "description": "Create GitHub pull requests with the org PR template and linked Linear tickets",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./skills/ftrack-create-pull-request"
-      ]
-    },
     {
       "name": "ftrack-api-developer",
       "description": "ftrack API development - orchestrator plus subskills for queries, events, actions, files, sessions, JavaScript, TypeScript and dashboards",

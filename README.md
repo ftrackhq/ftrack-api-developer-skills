@@ -1,6 +1,6 @@
 # ftrack Skills
 
-Agent skills for ftrack development workflows.
+Agent skills for ftrack API development.
 
 ## Installation
 
@@ -8,9 +8,8 @@ Agent skills for ftrack development workflows.
 # Add this repository as a plugin marketplace
 /plugin marketplace add ftrackhq/ftrack-api-developer-skills
 
-# Install the plugins you need
+# Install the plugin
 /plugin install ftrack-api-developer@ftrack-skills
-/plugin install ftrack-create-pull-request@ftrack-skills
 ```
 
 To pull the latest version later:
@@ -41,15 +40,6 @@ Each subskill keeps its runnable examples in its own `examples/` directory so it
 
 **Prerequisites**: an ftrack server URL, username and API key.
 
-### ftrack-create-pull-request
-
-Creates GitHub pull requests using the org PR template and links them to Linear tickets. See [SKILL.md](skills/ftrack-create-pull-request/SKILL.md).
-
-**Prerequisites**:
-- `gh` CLI authenticated with the ftrackhq GitHub org
-- Linear MCP server connected
-- Git repository on a feature branch
-
 ## Usage
 
 Skills load automatically when the conversation matches them:
@@ -65,7 +55,6 @@ They can also be invoked explicitly:
 ```bash
 /ftrack-api-developer:ftrack-api-developer
 /ftrack-api-developer:ftrack-query
-/ftrack-create-pull-request:ftrack-create-pull-request
 ```
 
 ## Links
