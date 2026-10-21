@@ -1,7 +1,7 @@
 ---
 name: ftrack-setup
 description: Install and configure ftrack development dependencies - ftrack-python-api, ftrack-action-handler, @ftrack/api (plus ws on older Node.js), @ftrack/ts-schema-generator, @ftrack/web-widget - set FTRACK_SERVER / FTRACK_API_USER / FTRACK_API_KEY, generate TypeScript types, and verify the connection.
-when_to_use: "Requests like \"set up an ftrack project\", \"install the ftrack API\", \"pip install ftrack\", \"npm install @ftrack/api\", \"ModuleNotFoundError: No module named 'ftrack_api'\", \"Cannot find module '@ftrack/api'\", \"install ftrack-action-handler\", \"generate ftrack TypeScript types\", \"configure ftrack credentials\", \"test my ftrack connection\", or a new script/listener/action/widget that needs ftrack packages that aren't installed yet. Code signals: requirements.txt, pyproject.toml or package.json being created for ftrack work, imports of `ftrack_api`, `ftrack_action_handler`, `@ftrack/api`, `@ftrack/web-widget` with no installed package."
+when_to_use: "Asks: set up an ftrack project, install ftrack-python-api / ftrack-action-handler / @ftrack/api / ts-schema-generator / web-widget, configure credentials, test the connection. Errors: `No module named 'ftrack_api'`, `Cannot find module '@ftrack/api'`."
 ---
 
 # ftrack setup

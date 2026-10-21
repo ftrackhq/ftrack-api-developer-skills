@@ -1,7 +1,7 @@
 ---
 name: ftrack-actions
 description: ftrack custom actions - Python BaseAction/AdvancedBaseAction from ftrack-action-handler, discover and launch, UI responses (message, form, widget), form field types, action servers, and JavaScript actions via the event hub.
-when_to_use: "Code signals: `import ftrack_action_handler`, `from ftrack_action_handler.action import BaseAction` or `AdvancedBaseAction`, classes with `identifier`, `label`, `discover`, `launch` and `interface` methods, topics `ftrack.action.discover` / `ftrack.action.launch` / `ftrack.action.trigger-user-interface`, `actionIdentifier`, returning `items` with `type: enumerator` / `text` / `hidden` form fields, `event['data']['values']`. Requests like \"custom ftrack action\", \"add an action to the ftrack actions menu\", \"action with a form\", \"run a script from ftrack on the selected shots\", \"action server\"."
+when_to_use: "Code: `ftrack_action_handler`, `BaseAction`, `discover`/`launch`/`interface` methods, `ftrack.action.launch`, form `items`. Asks: custom ftrack action, actions menu, action with a form, action server."
 ---
 
 # ftrack actions

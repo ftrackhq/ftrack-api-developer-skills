@@ -46,7 +46,7 @@ The `ftrack-api-developer` plugin contains these skills. Claude loads them autom
 | [ftrack-query](skills/ftrack-query/SKILL.md) | Query syntax, projections, has/any filters, pagination, group by aggregation |
 | [ftrack-session](skills/ftrack-session/SKILL.md) | Sessions, API keys, commit/rollback, caching, errors |
 | [ftrack-events](skills/ftrack-events/SKILL.md) | Event hub listeners, ftrack.update payloads, publishing, webhooks |
-| [ftrack-actions](skills/ftrack-actions/SKILL.md) | Custom actions with UI forms (Python) |
+| [ftrack-actions](skills/ftrack-actions/SKILL.md) | Custom actions with UI forms (Python and JavaScript) |
 | [ftrack-files](skills/ftrack-files/SKILL.md) | Components, locations, upload/download, thumbnails |
 | [ftrack-javascript](skills/ftrack-javascript/SKILL.md) | `@ftrack/api` in Node.js, browsers and React |
 | [ftrack-typescript](skills/ftrack-typescript/SKILL.md) | Typed sessions and generated workspace types |
