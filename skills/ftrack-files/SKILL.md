@@ -239,7 +239,7 @@ WebFetch(
 )
 
 If successful: Present docs
-If fails: Load ./examples/python/custom_location_s3.py
+If fails: Load examples/python/custom_location_s3.py
 ```
 
 ---
@@ -255,29 +255,25 @@ If fails: Load ./examples/python/custom_location_s3.py
 ### Available Local Files
 
 **Python S3 Location Example**
-- **File**: `.././examples/python/custom_location_s3.py`
+- **File**: `examples/python/custom_location_s3.py`
 - **Contains**: Complete custom S3 location implementation with storage accessor, resource transformers
 - **Load when**: User needs full custom S3 location setup, advanced patterns
 - **Size**: ~300 lines
 
 **Python Resource Transformers Example**
-- **File**: `.././examples/python/resource_transformers.py`
+- **File**: `examples/python/resource_transformers.py`
 - **Contains**: Custom path transformers, file organization patterns
 - **Load when**: User needs custom file path generation
 - **Size**: ~200 lines
 
 **JavaScript File Operations Example**
-- **File**: `.././examples/javascript/file-operations.js`
+- **File**: `examples/javascript/file-operations.js`
 - **Contains**: Browser upload, Node.js operations, progress tracking, error handling
 - **Load when**: User needs production JavaScript file handling patterns
 - **Size**: ~400 lines
 
 ### How to Load
-```markdown
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-api-developer\\examples\\python\\custom_location_s3.py")
-
-Then extract relevant sections for the user's specific question.
-```
+Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
@@ -413,13 +409,3 @@ location = session.query('Location where name is "ftrack.server"').one()
 is_available = location.get_component_availability(component)
 print(f"Available: {is_available}")
 ```
-
----
-
-## Token Efficiency
-
-**Quick Reference**: ~500 tokens (handles 70%+ of queries)
-**With WebFetch**: ~1,300 tokens (handles complex scenarios)
-**With Local Files**: ~2,100 tokens (complete implementations)
-
-**Target**: Use quick reference first, only fetch/load when user needs detailed patterns or custom locations.

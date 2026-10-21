@@ -15,42 +15,34 @@ Smart orchestrator for ftrack API development. Automatically delegates to specia
 ### /ftrack-query - Query Optimization
 **Use when**: User asks about querying, searching, filtering, finding entities
 **Coverage**: Query syntax, projections, pagination, performance optimization
-**Tokens**: ~800
 
 ### /ftrack-events - Event Handling
 **Use when**: User asks about events, webhooks, real-time updates, subscriptions
 **Coverage**: Event hub, topic filters, async processing, WebSocket management
-**Tokens**: ~600
 
 ### /ftrack-actions - Action Handlers
 **Use when**: User asks about custom actions, UI forms, action handlers (Python-only)
 **Coverage**: BaseAction, discovery/launch, form building, bulk operations
-**Tokens**: ~700
 
 ### /ftrack-files - File Operations
 **Use when**: User asks about upload, download, components, locations, storage
 **Coverage**: File upload/download, custom locations (S3), thumbnails, sequences
-**Tokens**: ~500
 
 ### /ftrack-session - Session Management
 **Use when**: User asks about sessions, connections, authentication, caching
 **Coverage**: Session initialization, cache management, connection pooling
-**Tokens**: ~400
 
 ### /ftrack-javascript - JavaScript Patterns
 **Use when**: User asks about JavaScript, async/await, browser/Node.js, ES6+
 **Coverage**: Async patterns, Promises, file handling, bundling, performance
-**Tokens**: ~600
 
 ### /ftrack-typescript - TypeScript Integration
 **Use when**: User asks about TypeScript, types, type-safety
 **Coverage**: Schema generation, repositories, services, React integration
-**Tokens**: ~400
 
 ### /ftrack-dashboards - Dashboard Development
 **Use when**: User asks about dashboards, widgets, charts, visualization, React widgets
 **Coverage**: Widget setup, data visualization, charts (Recharts), calendars, PDF export, theme management
-**Tokens**: ~700
 
 ---
 
@@ -275,19 +267,16 @@ User asks about ftrack
 Each subskill has a minimal quick reference section with 5-8 core patterns.
 - **When**: Simple "how do I..." questions
 - **Action**: Invoke subskill normally - it will use quick reference
-- **Tokens**: 500-800 per subskill
 
 ### Tier 2: Online Documentation (25% of queries)
 Fetch fresh, authoritative content from official docs.
 - **When**: User needs detailed API reference, edge cases, or latest features
 - **Action**: Use WebFetch with URLs from "Official Resources" section below
-- **Tokens**: Dynamic, but controlled by fetch prompt
 
 ### Tier 3: Local Examples (5% of queries - fallback only)
 Load comprehensive local example files.
 - **When**: WebFetch fails OR user explicitly requests local examples OR needs runnable code
-- **Action**: Read specific example file from `../examples/` directory
-- **Tokens**: 1,500-3,000 per file
+- **Action**: Tell the subskill to read a specific file from its own `examples/` directory
 
 ### Decision Flow
 ```
@@ -370,32 +359,5 @@ User: "Show me all query operators for Python"
 → Detect language: "Python"
 → Invoke: /ftrack-query "Fetch online docs for query operators (Python)"
 → Subskill fetches: https://developer.ftrack.com/api-clients/python/querying.html
-→ If fails: Loads ../examples/python/performance_optimization.py
+→ If fails: ftrack-query loads its examples/python/performance_optimization.py
 ```
-
----
-
-## Token Efficiency
-
-Total available tokens across subskills: ~4,000
-- **ftrack-query**: 800 tokens
-- **ftrack-events**: 600 tokens
-- **ftrack-actions**: 700 tokens
-- **ftrack-files**: 500 tokens
-- **ftrack-session**: 400 tokens
-- **ftrack-javascript**: 600 tokens
-- **ftrack-typescript**: 400 tokens
-
-**Previous monolithic skill**: 3,500 tokens (always loaded)
-**New approach**: 400-800 tokens (only what's needed)
-**Savings**: 77-89% reduction per query
-
----
-
-## Migration Notes
-
-This orchestrator replaces the previous monolithic `ftrack-developer` skill:
-- **Old**: Single 3,500 token skill with all content
-- **New**: Orchestrator + 6 focused subskills (400-800 tokens each)
-- **Benefit**: Load only relevant content, faster responses, better focus
-- **Compatibility**: Users can still invoke `/ftrack-api-developer` (auto-delegates)

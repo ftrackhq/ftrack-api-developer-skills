@@ -323,6 +323,15 @@ If fails: Show basic generation command from quick reference
 
 **Pattern**: Load ftrack-javascript example, then show how to add TypeScript types.
 
+### Available Local Files
+Paths are relative to this skill's directory (the folder containing this SKILL.md).
+
+**TypeScript Examples**
+- **File**: `examples/typescript/typescript-example.ts`
+- **Contains**: Entity type definitions, typed queries, CRUD, repository/service patterns
+- **Load when**: User needs a complete runnable type-safe example
+- **Size**: ~470 lines
+
 ### Example Transformation
 
 **From JavaScript** (ftrack-javascript):
@@ -484,13 +493,3 @@ await updateTask('task-id', { name: 'New Name', priority: 75 });
   "exclude": ["node_modules"]
 }
 ```
-
----
-
-## Token Efficiency
-
-**Quick Reference**: ~400 tokens (handles 70%+ of queries)
-**With WebFetch**: ~1,300 tokens (handles advanced scenarios)
-**With ftrack-javascript reference**: ~1,000 tokens (base patterns + types)
-
-**Target**: Use quick reference first, reference ftrack-javascript for JavaScript patterns + add types, only fetch for schema generator config.

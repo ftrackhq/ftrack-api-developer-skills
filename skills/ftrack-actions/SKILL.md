@@ -370,7 +370,7 @@ WebFetch(
 )
 
 If successful: Present docs
-If fails: Load ./examples/python/action_handlers.py
+If fails: Load examples/python/action_handlers.py
 ```
 
 ---
@@ -386,17 +386,13 @@ If fails: Load ./examples/python/action_handlers.py
 ### Available Local Files
 
 **Action Handlers Example**
-- **File**: `.././examples/python/action_handlers.py`
+- **File**: `examples/python/action_handlers.py`
 - **Contains**: Complete action implementations with forms, validation, bulk operations
 - **Load when**: User needs production action patterns
 - **Size**: ~400 lines
 
 ### How to Load
-```markdown
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-api-developer\\examples\\python\\action_handlers.py")
-
-Then extract relevant action patterns for the user's specific question.
-```
+Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
@@ -546,13 +542,3 @@ def launch(self, event):
     
     return {'success': True, 'message': 'Complete'}
 ```
-
----
-
-## Token Efficiency
-
-**Quick Reference**: ~700 tokens (handles 70%+ of queries)
-**With WebFetch**: ~1,400 tokens (handles advanced scenarios)
-**With Local Files**: ~2,200 tokens (complete implementations)
-
-**Target**: Use quick reference first, only fetch/load when user needs all field types or deployment patterns.

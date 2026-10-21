@@ -308,7 +308,7 @@ WebFetch(
 )
 
 If successful: Present docs
-If fails: Load ./examples/python/performance_optimization.py (lines 1-100)
+If fails: Load examples/python/performance_optimization.py (lines 1-100)
 ```
 
 ---
@@ -324,7 +324,7 @@ If fails: Load ./examples/python/performance_optimization.py (lines 1-100)
 ### Available Local Files
 
 **Python Comprehensive Examples**
-- **File**: `./examples/python/performance_optimization.py`
+- **File**: `examples/python/performance_optimization.py`
 - **Contains**: 
   - Query optimization patterns (projections, filtering, pagination)
   - **Dashboard aggregations** (status counts, completion %, time series, user workload, multi-dimensional)
@@ -338,7 +338,7 @@ If fails: Load ./examples/python/performance_optimization.py (lines 1-100)
   - Lines 288+: Batch operations and caching
 
 **JavaScript Comprehensive Examples**
-- **File**: `./examples/javascript/query-operations.js`
+- **File**: `examples/javascript/query-operations.js`
 - **Contains**: 
   - Async patterns with await/promises
   - Error handling and pagination
@@ -352,11 +352,7 @@ If fails: Load ./examples/python/performance_optimization.py (lines 1-100)
   - Lines 422+: Query utilities
 
 ### How to Load
-```markdown
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-query\\examples\\python\\performance_optimization.py")
-
-Then extract relevant sections for the user's specific question.
-```
+Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
@@ -457,35 +453,3 @@ Q: "Show me the performance_optimization.py file"
 Q: "I need the complete Python query examples"
 Q: WebFetch fails
 Q: "Use local examples"
-
----
-
-## Maintenance Notes
-
-### Update Quick Reference
-- Review quarterly
-- Keep to 5-8 core patterns
-- Update if ftrack API syntax changes
-
-### Update URLs
-- Verify links quarterly
-- Update if docs restructure
-- Add new recipe URLs as available
-
-### Update Local File References
-- Sync with actual file locations
-- Update if files reorganized
-- Keep descriptions current
-
----
-
-**Token Efficiency**
-- Quick Reference: ~800 tokens (70% of queries)
-- With WebFetch: 800 + dynamic (~1,500 avg)
-- With Local Examples: 800 + 2,000 (~2,800 total)
-- Average: ~1,100 tokens (60% reduction from previous 2,800)
-
-**Coverage**
-- Quick Reference: Common queries, basic filtering, simple patterns
-- Online Docs: Complete operator list, advanced features, edge cases
-- Local Examples: Production code, performance optimization, complex patterns

@@ -484,36 +484,25 @@ If fails: Use quick reference examples
 ### Available Local Files
 
 **Dashboard Template Example**:
-- **File**: `./examples/javascript/dashboard-template.jsx`
+- **File**: `examples/javascript/dashboard-template.jsx`
 - **Contains**: Complete widget setup with session context, theme management, ftrackWidgetUpdate handling, loading states, context detection (overview vs project)
 - **Load when**: User needs basic dashboard structure or complete widget boilerplate
 - **Size**: ~150 lines
 
 **Chart Examples**:
-- **File**: `./examples/javascript/chart-examples.jsx`
+- **File**: `examples/javascript/chart-examples.jsx`
 - **Contains**: Pie chart (status distribution), bar chart (progress by type), line chart (completion trend), calendar widget (milestones), multi-chart dashboard layout
 - **Load when**: User needs visualization examples with Recharts or React Big Calendar
 - **Size**: ~300 lines
 
 **Data Patterns**:
-- **File**: `./examples/javascript/data-patterns.jsx`
+- **File**: `examples/javascript/data-patterns.jsx`
 - **Contains**: Data aggregation functions, batch operations, custom hooks (useTaskData, useCachedDashboardData, useRealtimeDashboard), filtering patterns, localStorage persistence, CSV export helpers
 - **Load when**: User needs data processing, real-time updates, or performance optimization patterns
 - **Size**: ~350 lines
 
 ### How to Load
-```markdown
-# Load dashboard template
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-dashboards\\examples\\javascript\\dashboard-template.jsx")
-
-# Load chart examples
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-dashboards\\examples\\javascript\\chart-examples.jsx")
-
-# Load data patterns
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-dashboards\\examples\\javascript\\data-patterns.jsx")
-
-Then extract relevant sections for the user's specific question.
-```
+Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
@@ -728,13 +717,3 @@ export default defineConfig({
 4. **Lazy load charts**: Load visualizations only when visible
 5. **Cache data**: Use local storage for frequently accessed data
 6. **Optimize renders**: Use React.memo for expensive components
-
----
-
-## Token Efficiency
-
-**Quick Reference**: ~700 tokens (handles 70%+ of queries)
-**With WebFetch**: ~1,500 tokens (handles advanced scenarios)
-**With Local Files**: ~2,300 tokens (complete implementations)
-
-**Target**: Use quick reference first, only fetch/load when user needs complete API or deployment guides.

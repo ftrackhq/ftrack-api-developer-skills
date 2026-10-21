@@ -345,7 +345,7 @@ WebFetch(
 )
 
 If successful: Present docs
-If fails: Load ./examples/javascript/README.md or provide basic config
+If fails: Provide a basic webpack config from the quick reference
 ```
 
 ---
@@ -361,41 +361,37 @@ If fails: Load ./examples/javascript/README.md or provide basic config
 ### Available Local Files
 
 **CRUD Operations Example**
-- **File**: `.././examples/javascript/crud-operations.js`
+- **File**: `examples/javascript/crud-operations.js`
 - **Contains**: Create, read, update, delete patterns with error handling
 - **Load when**: User needs comprehensive CRUD examples
 - **Size**: ~400 lines
 
 **Query Operations Example**
-- **File**: `.././examples/javascript/query-operations.js`
+- **File**: `examples/javascript/query-operations.js`
 - **Contains**: Advanced query patterns, pagination, filtering, aggregation
 - **Load when**: User needs query optimization patterns
 - **Size**: ~400 lines
 
 **Session Management Example**
-- **File**: `.././examples/javascript/session-management.js`
+- **File**: `examples/javascript/session-management.js`
 - **Contains**: Session lifecycle, connection pooling, error recovery
 - **Load when**: User needs production session patterns
 - **Size**: ~350 lines
 
 **Event Handling Example**
-- **File**: `.././examples/javascript/event-handling.js`
+- **File**: `examples/javascript/event-handling.js`
 - **Contains**: Event subscriptions, React integration, debouncing
 - **Load when**: User needs event handling patterns
 - **Size**: ~400 lines
 
 **File Operations Example**
-- **File**: `.././examples/javascript/file-operations.js`
+- **File**: `examples/javascript/file-operations.js`
 - **Contains**: Browser/Node.js file upload/download, progress tracking
 - **Load when**: User needs file handling patterns
 - **Size**: ~400 lines
 
 ### How to Load
-```markdown
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-api-developer\\examples\\javascript\\crud-operations.js")
-
-Then extract relevant sections for the user's specific question.
-```
+Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
@@ -538,13 +534,3 @@ if (isNode) {
 3. **Close sessions**: Always call `session.close()` when done
 4. **Debounce updates**: In React, debounce rapid state changes
 5. **Cache responses**: Store frequently accessed data in state/memory
-
----
-
-## Token Efficiency
-
-**Quick Reference**: ~600 tokens (handles 70%+ of queries)
-**With WebFetch**: ~1,400 tokens (handles advanced scenarios)
-**With Local Files**: ~2,500 tokens (complete implementations)
-
-**Target**: Use quick reference first, only fetch/load when user needs complete API reference or bundling config.

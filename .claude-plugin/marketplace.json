@@ -20,11 +20,19 @@
     },
     {
       "name": "ftrack-api-developer",
-      "description": "ftrack API development expert - Python API, events, queries, and integrations",
+      "description": "ftrack API development - orchestrator plus subskills for queries, events, actions, files, sessions, JavaScript, TypeScript and dashboards",
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/ftrack-api-developer"
+        "./skills/ftrack-api-developer",
+        "./skills/ftrack-query",
+        "./skills/ftrack-events",
+        "./skills/ftrack-actions",
+        "./skills/ftrack-files",
+        "./skills/ftrack-session",
+        "./skills/ftrack-javascript",
+        "./skills/ftrack-typescript",
+        "./skills/ftrack-dashboards"
       ]
     }
   ]

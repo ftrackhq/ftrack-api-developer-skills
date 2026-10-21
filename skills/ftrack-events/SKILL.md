@@ -312,7 +312,7 @@ WebFetch(
 )
 
 If successful: Present docs
-If fails: Load ./examples/javascript/event-handling.js and extract topics
+If fails: Load examples/javascript/event-handling.js and extract topics
 ```
 
 ---
@@ -328,23 +328,14 @@ If fails: Load ./examples/javascript/event-handling.js and extract topics
 ### Available Local Files
 
 **JavaScript Event Handling Example**
-- **File**: `.././examples/javascript/event-handling.js`
+- **File**: `examples/javascript/event-handling.js`
 - **Contains**: Complete event hub setup, React integration, debouncing, batch processing, error handling
 - **Load when**: User needs production event handling patterns, UI integration
 - **Size**: ~400 lines
 
-**Python Event Handling (if available)**
-- **File**: `.././examples/python/performance_optimization.py`
-- **Contains**: May include event handling sections with async processing
-- **Load when**: User needs Python production patterns
-- **Note**: Check if file contains event examples before loading
 
 ### How to Load
-```markdown
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-api-developer\\examples\\javascript\\event-handling.js")
-
-Then extract relevant event subscription patterns for the user's question.
-```
+Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
@@ -479,13 +470,3 @@ User asks about ftrack events
 3. **Debounce UI updates**: Group rapid events (especially in React)
 4. **Batch operations**: Accumulate events before processing
 5. **Unsubscribe when done**: Clean up subscriptions to free resources
-
----
-
-## Token Efficiency
-
-**Quick Reference**: ~600 tokens (handles 70%+ of queries)
-**With WebFetch**: ~1,400 tokens (handles advanced scenarios)
-**With Local Files**: ~2,200 tokens (complete implementations)
-
-**Target**: Use quick reference first, only fetch/load when user needs complete topic list or advanced patterns.

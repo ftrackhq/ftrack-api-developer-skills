@@ -4,116 +4,73 @@ Agent skills for ftrack development workflows.
 
 ## Installation
 
-### Quick Install from Marketplace
-
-**Step 1: Add repository to marketplace**:
-
 ```bash
-/plugin marketplace add https://github.com/ftrackhq/ftrack-skills
+# Add this repository as a plugin marketplace
+/plugin marketplace add ftrackhq/ftrack-api-developer-skills
+
+# Install the plugins you need
+/plugin install ftrack-api-developer@ftrack-skills
+/plugin install ftrack-create-pull-request@ftrack-skills
 ```
 
-**Step 2: Install skills**:
+To pull the latest version later:
 
 ```bash
-# Install main orchestrator skill
-/install ftrack-api-developer
-
-# Install PR automation skill
-/install ftrack-create-pull-request
+/plugin marketplace update ftrack-skills
 ```
 
-### Alternative: Direct Install
+## Plugins
 
-```bash
-# Install all skills directly from GitHub
-/install https://github.com/ftrackhq/ftrack-skills
-```
+### ftrack-api-developer
 
-## Available Plugins
+ftrack API development support for Python and JavaScript/TypeScript. The `ftrack-api-developer` skill acts as an orchestrator and delegates to focused subskills, which can also be used on their own:
 
-| Plugin | Version | Description | Documentation |
-|--------|---------|-------------|---------------|
-| **[ftrack-api-developer](skills/ftrack-api-developer/)** | 2.0.0 | ftrack API development orchestrator with 8 specialized subskills | [Full Documentation](skills/ftrack-api-developer/README.md) |
-| **[ftrack-create-pull-request](skills/ftrack-create-pull-request/)** | 1.0.0 | Create GitHub PRs with org template and linked Linear tickets | [Full Documentation](skills/ftrack-create-pull-request/README.md) |
+| Skill | Covers |
+|-------|--------|
+| [ftrack-api-developer](skills/ftrack-api-developer/SKILL.md) | Orchestrator - routes to the subskills below |
+| [ftrack-query](skills/ftrack-query/SKILL.md) | Query syntax, projections, filtering, pagination, aggregation |
+| [ftrack-events](skills/ftrack-events/SKILL.md) | Event hub, subscriptions, real-time updates |
+| [ftrack-actions](skills/ftrack-actions/SKILL.md) | Custom action handlers with UI forms (Python only) |
+| [ftrack-files](skills/ftrack-files/SKILL.md) | Upload/download, components, locations, thumbnails |
+| [ftrack-session](skills/ftrack-session/SKILL.md) | Session setup, authentication, caching, error handling |
+| [ftrack-javascript](skills/ftrack-javascript/SKILL.md) | JavaScript API, async patterns, browser/Node.js, bundling |
+| [ftrack-typescript](skills/ftrack-typescript/SKILL.md) | Type-safe usage, schema generation, typed repositories |
+| [ftrack-dashboards](skills/ftrack-dashboards/SKILL.md) | Dashboard widgets, charts, data visualization, PDF export |
 
-## Plugin Categories
+Each subskill keeps its runnable examples in its own `examples/` directory so it works independently.
 
-### API Development Skills
+**Prerequisites**: an ftrack server URL, username and API key.
 
-The **ftrack-api-developer** plugin provides comprehensive ftrack API development support through specialized subskills. See [API_SKILLS.md](API_SKILLS.md) for details.
+### ftrack-create-pull-request
 
-**Subskills included**:
-- **ftrack-query** - Query optimization, projections, filtering, pagination
-- **ftrack-events** - Real-time event handling, WebSocket subscriptions
-- **ftrack-actions** - Custom action handlers with UI forms (Python only)
-- **ftrack-files** - File upload/download, components, storage locations
-- **ftrack-session** - Session management, authentication, caching
-- **ftrack-typescript** - TypeScript integration, schema generation, type safety
-- **ftrack-javascript** - JavaScript integration, async patterns, bundling
-- **ftrack-dashboards** - Dashboard widgets, data visualization, charts, PDF export
+Creates GitHub pull requests using the org PR template and links them to Linear tickets. See [SKILL.md](skills/ftrack-create-pull-request/SKILL.md).
 
-[→ Read Full Documentation](skills/ftrack-api-developer/README.md)
-
-### Automation Skills
-
-The **ftrack-create-pull-request** plugin automates GitHub pull request creation with Linear integration. See [AUTOMATION.md](AUTOMATION.md) for details.
-
-[→ Read Automation Documentation](AUTOMATION.md)
+**Prerequisites**:
+- `gh` CLI authenticated with the ftrackhq GitHub org
+- Linear MCP server connected
+- Git repository on a feature branch
 
 ## Usage
 
-### Automatic Invocation
-
-Skills trigger automatically when you mention ftrack:
+Skills load automatically when the conversation matches them:
 
 ```
-"How do I query tasks in ftrack?"           → Auto-loads ftrack-query
-"Setup an event listener for ftrack"        → Auto-loads ftrack-events
-"Create a custom ftrack action with UI"     → Auto-loads ftrack-actions
+"How do I query tasks in ftrack?"          → ftrack-query
+"Set up an event listener for ftrack"      → ftrack-events
+"Create a custom ftrack action with a UI"  → ftrack-actions
 ```
 
-### Manual Invocation
+They can also be invoked explicitly:
 
 ```bash
-# Invoke orchestrator
-/ftrack-api-developer "your question"
-
-# Invoke specific subskills
-/ftrack-query "optimize this query"
-/ftrack-events "setup event handler"
-/ftrack-actions "create custom action"
-
-# Invoke automation
-/ftrack-create-pull-request
-```
-
-## Prerequisites
-
-**For ftrack-api-developer**:
-- ftrack account and API credentials
-
-**For ftrack-create-pull-request**:
-- `gh` CLI authenticated with ftrackhq GitHub org
-- Linear MCP server connected
-- Git repository with feature branch
-
-## Update
-
-```bash
-# Update specific skill
-/skills update ftrack-api-developer
-
-# Update all skills
-/skills update --all
-
-# Check for updates
-/skills list
+/ftrack-api-developer:ftrack-api-developer
+/ftrack-api-developer:ftrack-query
+/ftrack-create-pull-request:ftrack-create-pull-request
 ```
 
 ## Links
 
 - [ftrack](https://www.ftrack.com)
-- [ftrackhq on GitHub](https://github.com/ftrackhq)
 - [ftrack Developer Hub](https://developer.ftrack.com/)
 - [ftrack Python API](https://developer.ftrack.com/api-clients/python/)
 - [ftrack JavaScript API](https://developer.ftrack.com/api-clients/javascript/)

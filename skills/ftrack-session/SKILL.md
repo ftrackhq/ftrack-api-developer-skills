@@ -182,7 +182,7 @@ WebFetch(
 )
 
 If successful: Present docs
-If fails: Load ./examples/python/performance_optimization.py (session section)
+If fails: Load examples/python/performance_optimization.py (session section)
 ```
 
 ---
@@ -198,23 +198,25 @@ If fails: Load ./examples/python/performance_optimization.py (session section)
 ### Available Local Files
 
 **Python Comprehensive Examples**
-- **File**: `./examples/python/performance_optimization.py`
+- **File**: `examples/python/performance_optimization.py`
 - **Contains**: Session creation, caching, connection management, batch patterns
 - **Load when**: Need Python production session patterns, caching strategies
 - **Size**: ~300 lines (session sections ~50 lines)
 
 **JavaScript Comprehensive Examples**
-- **File**: `./examples/javascript/session-management.js`
+- **File**: `examples/javascript/session-management.js`
 - **Contains**: Session initialization, connection handling, manager class, error patterns
 - **Load when**: Need JavaScript session patterns, connection pooling, lifecycle management
 - **Size**: ~350 lines
 
-### How to Load
-```markdown
-Read(file_path="C:\\Users\\loren\\Documents\\devel\\solution delivery\\ftrack\\skills\\skills\\ftrack-session\\examples\\javascript\\session-management.js")
+**Python Exception Handling**
+- **File**: `examples/python/exception_handling.py`
+- **Contains**: `ftrack_api.exception` handling, retry decorators, safe commit/rollback patterns
+- **Load when**: User needs robust error handling or retry logic around session operations
+- **Size**: ~280 lines
 
-Then extract the relevant session management sections for the user's question.
-```
+### How to Load
+Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
@@ -353,35 +355,3 @@ Q: "Show me the session-management.js file"
 Q: "I need complete session lifecycle examples"
 Q: WebFetch fails
 Q: "Use local examples for session patterns"
-
----
-
-## Maintenance Notes
-
-### Update Quick Reference
-- Keep to 6-8 most common patterns
-- Update if session API changes
-- Review quarterly for relevance
-
-### Update URLs
-- Verify links work quarterly
-- Update if ftrack docs restructure
-- Check authentication guide for changes
-
-### Update Local File References
-- Sync with actual file locations
-- Update sizes if files change
-- Keep descriptions current
-
----
-
-**Token Efficiency**
-- Quick Reference: ~600 tokens (handles connection, auth, cleanup)
-- With WebFetch: 600 + ~1,000 (detailed config)
-- With Local Examples: 600 + ~1,500 (complete patterns)
-- Average: ~900 tokens (67% reduction from previous ~2,700)
-
-**Coverage**
-- Quick Reference: Basic setup, env vars, cleanup, error handling
-- Online Docs: Cache config, advanced options, plugins, authentication
-- Local Examples: Production patterns, connection pooling, lifecycle management
