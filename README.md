@@ -47,10 +47,10 @@ The `ftrack-api-developer` plugin contains these skills. Claude loads them autom
 | [ftrack-session](skills/ftrack-session/SKILL.md) | Sessions, API keys, commit/rollback, caching, errors |
 | [ftrack-events](skills/ftrack-events/SKILL.md) | Event hub listeners, ftrack.update payloads, publishing, webhooks |
 | [ftrack-actions](skills/ftrack-actions/SKILL.md) | Custom actions with UI forms (Python and JavaScript) |
-| [ftrack-files](skills/ftrack-files/SKILL.md) | Components, locations, upload/download, thumbnails |
+| [ftrack-files](skills/ftrack-files/SKILL.md) | Publishing versions, components and sequences, locations, thumbnails, review media, uploads |
 | [ftrack-javascript](skills/ftrack-javascript/SKILL.md) | `@ftrack/api` in Node.js, browsers and React |
 | [ftrack-typescript](skills/ftrack-typescript/SKILL.md) | Typed sessions and generated workspace types |
-| [ftrack-dashboards](skills/ftrack-dashboards/SKILL.md) | Dashboard widgets, charts, PDF export |
+| [ftrack-dashboards](skills/ftrack-dashboards/SKILL.md) | Custom dashboard widgets: credentials, entity context, theme, chart data |
 
 Each skill keeps its reference docs and runnable examples in its own `references/` and `examples/` folders, so it works on its own and offline.
 
@@ -60,6 +60,19 @@ To invoke a skill explicitly, type `/ftrack-api-developer:<skill>`, e.g. `/ftrac
 
 ## Development
 
+```text
+.claude-plugin/
+  marketplace.json      # marketplace "ftrack-skills" with one plugin entry (source "./")
+  plugin.json           # plugin metadata; no version, so every commit is a release
+skills/<skill>/
+  SKILL.md              # frontmatter (name, description, when_to_use) + short body
+  references/*.md       # detail loaded on demand
+  examples/             # runnable examples (and scripts/ for ftrack-setup)
+AGENTS.md               # conventions and checks for anyone (human or agent) editing skills
+```
+
+Read [AGENTS.md](AGENTS.md) before changing a skill: it covers the writing conventions, size budgets, sources of truth and how to verify changes.
+
 Validate before pushing:
 
 ```bash
@@ -67,7 +80,17 @@ claude plugin validate .
 claude plugin details ftrack-api-developer@ftrack-skills   # token cost per skill
 ```
 
-To test local changes, add this checkout as the marketplace (`claude plugin marketplace add /path/to/checkout`) instead of the GitHub repository; the two can't be registered under the same name at once.
+To test local changes, register this checkout as the marketplace instead of the GitHub repository (the two can't share the name `ftrack-skills` at once):
+
+```bash
+claude plugin marketplace remove ftrack-skills
+claude plugin marketplace add /path/to/checkout
+claude plugin install ftrack-api-developer@ftrack-skills
+# after each commit:
+claude plugin marketplace update ftrack-skills && claude plugin update ftrack-api-developer@ftrack-skills
+```
+
+Switch back with `claude plugin marketplace remove ftrack-skills` followed by the installation steps above.
 
 ## Links
 

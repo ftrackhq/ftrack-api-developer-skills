@@ -56,7 +56,7 @@ Several dimensions: `group by project_id, status_id`.
 
 ## JavaScript
 
-The developer hub documents group by with Python only; ftrack's own web app sends the same query from JavaScript through `session.call` with the strict header.
+The developer hub documents group by with Python only, but it works the same from JavaScript through `session.call` with the strict header (tested with `@ftrack/api` 1.11.2; ftrack's own web app does the same).
 
 ```javascript
 import { operation, expression } from "@ftrack/api";
