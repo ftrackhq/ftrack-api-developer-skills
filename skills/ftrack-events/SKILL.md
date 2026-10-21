@@ -1,6 +1,7 @@
 ---
 name: ftrack-events
 description: ftrack event hub for Python and JavaScript - subscribing to and publishing events, topics like ftrack.update, real-time WebSocket updates, async handling. Use when code uses `session.event_hub` or `session.eventHub`, or the user asks about ftrack events, listeners, real-time updates or reacting to changes in ftrack. Not for custom actions (use ftrack-actions) or generic HTTP webhooks.
+when_to_use: "Code signals: `session.event_hub`, `session.eventHub`, `event_hub.subscribe(`, `event_hub.wait()`, `event_hub.publish(`, `ftrack_api.event.base.Event`, `new Event(` from `@ftrack/api`, topics such as `topic=ftrack.update`, `ftrack.action.*`, `ftrack.location.*`, `auto_connect_event_hub=True`, `FTRACK_EVENT_PLUGIN_PATH`, event plugins with `register(session)`. Requests like \"listen for status changes in ftrack\", \"react when a version is published\", \"ftrack event listener\", \"real-time ftrack updates\"."
 ---
 
 # ftrack Event Handling Expert
@@ -332,7 +333,7 @@ If fails: Load examples/javascript/event-handling.js and extract topics
 
 
 ### How to Load
-Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
+Files are under `${CLAUDE_SKILL_DIR}`. Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 

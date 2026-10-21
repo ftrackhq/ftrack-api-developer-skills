@@ -1,6 +1,7 @@
 ---
 name: ftrack-dashboards
 description: ftrack dashboard widgets in React - `@ftrack/web-widget` setup, theme handling, charts (Recharts), calendars (react-big-calendar), data aggregation and PDF export. Use when code imports `@ftrack/web-widget` or the user wants to build an ftrack dashboard, widget or data visualization. Not for Python reporting or non-ftrack visualization.
+when_to_use: "Code signals: `@ftrack/web-widget`, `ftrackWidget.initialize(`, `getCredentials()`, `getEntity()`, `getActiveTheme`, `ftrackWidgetUpdate` or `ftrackWidgetLoad` events, widget credentials passed from ftrack, React dashboard components with Recharts or react-big-calendar fed by `@ftrack/api`. Requests like \"ftrack dashboard\", \"custom ftrack widget\", \"web view widget\", \"chart of tasks per status\", \"export an ftrack report to PDF\"."
 ---
 
 # ftrack Dashboard Development Expert
@@ -499,7 +500,7 @@ If fails: Use quick reference examples
 - **Size**: ~350 lines
 
 ### How to Load
-Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
+Files are under `${CLAUDE_SKILL_DIR}`. Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 

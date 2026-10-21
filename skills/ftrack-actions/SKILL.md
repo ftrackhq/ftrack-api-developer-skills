@@ -1,6 +1,7 @@
 ---
 name: ftrack-actions
 description: ftrack custom actions in Python - `BaseAction` / ftrack-action-handler, discover and launch, UI forms, running an action server. Use when code imports `ftrack_action_handler` or subclasses `BaseAction`, or the user wants to add a custom action or action UI form to ftrack. Python only; not for event listeners in general (use ftrack-events).
+when_to_use: "Code signals: `import ftrack_action_handler`, `from ftrack_action_handler.action import BaseAction`, classes with `discover` and `launch` methods, `identifier = ` and `label = ` class attributes, topics `ftrack.action.discover` / `ftrack.action.launch`, returning `items` with UI form widgets. Requests like \"custom ftrack action\", \"add a menu action in ftrack\", \"action with a form\", \"run a script from the ftrack actions menu\"."
 ---
 
 # ftrack Action Handler Expert
@@ -389,7 +390,7 @@ If fails: Load examples/python/action_handlers.py
 - **Size**: ~400 lines
 
 ### How to Load
-Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
+Files are under `${CLAUDE_SKILL_DIR}`. Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 

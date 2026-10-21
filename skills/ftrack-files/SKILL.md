@@ -1,6 +1,7 @@
 ---
 name: ftrack-files
 description: ftrack file handling for Python and JavaScript - components, asset versions, locations (including custom S3 locations), upload, download, thumbnails, resource transformers. Use when code calls `create_component()`, `session.upload()`, or works with `Location`, `FileComponent` or `AssetVersion` files, or the user asks about publishing or retrieving files in ftrack. Not for general OS file handling or non-ftrack storage.
+when_to_use: "Code signals: `create_component(`, `session.createComponent(`, `encode_media(`, `get_filesystem_path(`, `component_locations`, `Location`, `ftrack.server`, `ftrack.unmanaged`, `session.pick_location(`, `ftrack_api.accessor`, `ftrack_api.structure`, `FileComponent`, `SequenceComponent`, `ContainerComponent`, `AssetVersion` publishing, `create_thumbnail(`, `thumbnail_id`. Requests like \"publish a file to ftrack\", \"upload media\", \"download a component\", \"custom S3 location\", \"set a thumbnail\", \"image sequence in ftrack\"."
 ---
 
 # ftrack File Operations Expert
@@ -270,7 +271,7 @@ If fails: Load examples/python/custom_location_s3.py
 - **Size**: ~400 lines
 
 ### How to Load
-Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
+Files are under `${CLAUDE_SKILL_DIR}`. Read only the file you need, then extract the sections relevant to the user's question.
 
 ---
 
