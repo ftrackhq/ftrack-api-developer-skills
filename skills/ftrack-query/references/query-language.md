@@ -134,7 +134,7 @@ Because results are pruned by permissions, the server may scan past the requeste
 
 ## Strict mode
 
-Enabled per session: Python `ftrack_api.Session(..., strict_api=True)`, JavaScript `new Session(url, user, key, { strictApi: true })`.
+Sent as the `ftrack-strict-api: true` request header. Python: `ftrack_api.Session(..., strict_api=True)` (whole session). JavaScript: `new Session(url, user, key, { strictApi: true })`, or per call with `session.call(operations, { additionalHeaders: { "ftrack-strict-api": "true" } })`.
 
 - Required for `group by` and aggregate functions.
 - Only projected fields are returned (no default projections).

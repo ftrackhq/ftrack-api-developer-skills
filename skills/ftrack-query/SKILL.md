@@ -10,7 +10,7 @@ The ftrack query language looks like SQL but **is not SQL**. Most SQL idioms (`*
 ```
 select <projections> from <EntityType>
   [where <criteria>]
-  [group by <attributes>]          # strict mode only, run via session.call
+  [group by <attributes>]          # strict mode + session.call only
   [order by <attribute> [asc|desc], ...]
   [offset <n>] [limit <n>]
 ```

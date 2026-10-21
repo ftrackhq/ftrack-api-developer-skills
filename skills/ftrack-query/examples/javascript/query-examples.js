@@ -55,17 +55,17 @@ export async function* iterateAll(session, baseQuery, pageSize = 200) {
   }
 }
 
-export async function taskCountsByStatus(projectId) {
-  // group by needs a strict session and session.call.
-  const strict = new Session(FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY, {
-    strictApi: true,
-  });
-  const [counts, statuses] = await strict.call([
-    operation.query(
-      expression`select count(id), status_id from Task where project_id is "${projectId}" group by status_id`
-    ),
-    operation.query("select id, name from Status"),
-  ]);
+export async function taskCountsByStatus(session, projectId) {
+  // group by needs session.call and strict mode, enabled here for this call only.
+  const [counts, statuses] = await session.call(
+    [
+      operation.query(
+        expression`select count(id), status_id from Task where project_id is "${projectId}" group by status_id`
+      ),
+      operation.query("select id, name from Status"),
+    ],
+    { additionalHeaders: { "ftrack-strict-api": "true" } }
+  );
   const names = Object.fromEntries(statuses.data.map((s) => [s.id, s.name]));
   return Object.fromEntries(counts.data.map((row) => [names[row.status_id], row.count_id]));
 }
@@ -85,7 +85,7 @@ async function main(projectId) {
     console.log(task.name);
   }
 
-  console.log(await taskCountsByStatus(projectId));
+  console.log(await taskCountsByStatus(session, projectId));
 }
 
 if (process.argv[2]) {

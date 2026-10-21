@@ -7,14 +7,14 @@ Let the server count and sum rather than downloading every entity and counting i
 ## Requirements
 
 - ftrack Studio 4.12+ (`group by` on relations such as `status.name` needs 25.9+).
-- A **strict** session: Python `strict_api=True`, JavaScript `{ strictApi: true }`.
+- **Strict mode**: Python needs a session created with `strict_api=True`. JavaScript can enable it per call with the `ftrack-strict-api: true` header (or for the whole session with `{ strictApi: true }`).
 - Run through **`session.call`**, not `session.query` - results are rows, not entities.
 - Supported on common entities such as `Task` and `Project`. The workspace API reference (Help menu) marks which entities support `group by`.
 - Functions: `count()`, `sum()`, `avg()`, `min()`, `max()`. Not on relationship attributes.
 
-Rows come back as plain dicts keyed by the grouped attributes plus `<function>_<attribute>` (e.g. `count_id`). If unsure about a key name, print one row.
+Rows come back as plain objects keyed by the grouped attributes plus `<function>_<attribute>`: `count(id)` returns `count_id`. If unsure about a key name, print one row. Aggregating an attribute the user can't read (e.g. `bid` without the permission) raises a permission error.
 
-Strict mode rejects `$custom_attribute` syntax and returns only projected fields, so keep a separate strict session for aggregation if the rest of your code relies on non-strict behaviour.
+Strict mode rejects `$custom_attribute` syntax and returns only projected fields. In Python, keep a separate strict session for aggregation if the rest of your code relies on non-strict behaviour; in JavaScript, pass the header only on the aggregation call.
 
 ## Python
 
@@ -51,19 +51,20 @@ Several dimensions: `group by project_id, status_id`.
 
 ## JavaScript
 
-Group by is only documented for Python; the JavaScript client sends the same operation through `session.call`.
+The developer hub documents group by with Python only; ftrack's own web app sends the same query from JavaScript through `session.call` with the strict header.
 
 ```javascript
-import { Session, operation, expression } from "@ftrack/api";
+import { operation, expression } from "@ftrack/api";
 
-const statsSession = new Session(serverUrl, apiUser, apiKey, { strictApi: true });
-
-const [counts, statuses] = await statsSession.call([
-  operation.query(
-    expression`select count(id), status_id from Task where project_id is "${projectId}" group by status_id`
-  ),
-  operation.query("select id, name, color, state.short from Status"),
-]);
+const [counts, statuses] = await session.call(
+  [
+    operation.query(
+      expression`select count(id), status_id from Task where project_id is "${projectId}" group by status_id`
+    ),
+    operation.query("select id, name, color, state.short from Status"),
+  ],
+  { additionalHeaders: { "ftrack-strict-api": "true" } }
+);
 
 const statusById = Object.fromEntries(statuses.data.map((s) => [s.id, s]));
 const chart = counts.data.map((row) => ({
