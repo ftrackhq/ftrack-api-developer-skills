@@ -21,7 +21,7 @@ npm install --save-dev @ftrack/ts-schema-generator
 }
 ```
 
-The generator reads `FTRACK_SERVER`, `FTRACK_API_USER` and `FTRACK_API_KEY` from the environment (there are no CLI flags for them). Arguments are an optional output directory (default `__generated__`) and filename (default `schema.ts`). Commit the output and regenerate when the workspace schema or custom attributes change. Details: [references/schema-generator.md](references/schema-generator.md).
+The generator reads `FTRACK_SERVER`, `FTRACK_API_USER` and `FTRACK_API_KEY` from the environment (there are no CLI flags for them). Arguments are an optional output directory (default `__generated__`) and filename (default `schema.ts`). Commit the output and regenerate when the workspace schema or custom attributes change. If it crashes in prettier with `Property or signature expected`, a custom attribute key contains a space - see the troubleshooting table in the reference. Details: [references/schema-generator.md](references/schema-generator.md).
 
 ## 2. Type the session
 
@@ -53,7 +53,7 @@ await session.update("Task", [task.id], { status_id: statusId });
 - `session.query<Task>(...)` (an interface) is wrong: `Type 'Task' does not satisfy the constraint 'keyof EntityTypeMap'`.
 - **The types don't know your projection.** Every attribute is typed as present (often optional), but only projected attributes are in the response. Project what you read.
 - Relationship attributes such as `status` or `priority` are typed as related entities; set them through their id attributes (`status_id`, `priority_id`).
-- Generated types declare datetimes as `string`, but the client returns dayjs objects unless you pass `{ decodeDatesAsIso: true }`. Pass it (or adjust your types) when reading date fields.
+- Generated types declare datetimes as `string`, but the client returns Moment objects in the current 1.x release (dayjs objects in the 2.0 beta) unless you pass `{ decodeDatesAsIso: true }`. Pass it (or adjust your types) when reading date fields.
 - The query string itself is not type-checked; see ftrack-query for syntax.
 
 ## Useful generated types

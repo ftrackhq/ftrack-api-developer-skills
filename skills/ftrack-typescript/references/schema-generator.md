@@ -36,9 +36,17 @@ Header comment with the generation date and server version, then:
 
 The generated header says "Not intended to modify manually" - don't edit it; regenerate instead.
 
+## Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| Crash in prettier with `SyntaxError: Property or signature expected` and a code frame like `> 1055 \| Camera Lens: number` | A custom attribute **key** contains a space or other character that isn't valid in a TypeScript identifier. 2.1.3 emits it unquoted and aborts without writing the file. Rename the attribute key (System settings > Custom attributes; the label can keep spaces) or patch the generated property name |
+| `Unexpected token '<' ... is not valid JSON` | `FTRACK_SERVER` has a trailing slash; remove it |
+| Missing custom attributes or types | The API key's role can't see them; use a key with access to the configuration |
+
 ## Notes
 
-- Datetime attributes are typed as `string`. The client returns dayjs objects unless `decodeDatesAsIso: true` is passed, so pass that option where you read dates through typed code.
+- Datetime attributes are typed as `string`. The client returns Moment objects in the current 1.x release (dayjs objects in the 2.0 beta) unless `decodeDatesAsIso: true` is passed, so pass that option where you read dates through typed code.
 - Type checking covers entity names, attribute names in `create`/`update` data, and the shape of results. It does not check query strings or projections; a typo in a query fails at runtime.
 - The `get*()` helpers are snapshots. For values that must be current (e.g. status ids, which aren't included), query the server.
 - The generator itself uses `@ftrack/api` with `Session<Schema>` for its own queries - a good reference for typed usage.

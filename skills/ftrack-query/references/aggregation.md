@@ -12,7 +12,12 @@ Let the server count and sum rather than downloading every entity and counting i
 - Supported on common entities such as `Task` and `Project`. The workspace API reference (Help menu) marks which entities support `group by`.
 - Functions: `count()`, `sum()`, `avg()`, `min()`, `max()`. Not on relationship attributes.
 
-Rows come back as plain objects keyed by the grouped attributes plus `<function>_<attribute>`: `count(id)` returns `count_id`. If unsure about a key name, print one row. Aggregating an attribute the user can't read (e.g. `bid` without the permission) raises a permission error.
+Rows come back keyed by `<function>_<attribute>` (`count(id)` -> `count_id`, `sum(bid)` -> `sum_bid`, also `avg_`, `min_`, `max_`) plus the grouped values:
+
+- Grouping by an id column (`group by status_id`) returns that column automatically.
+- Grouping by a relation (`group by status.name`) returns only the aggregate unless you also project it: `select count(id), status.name from Task group by status.name`. Python then gives the related entity under `status`.
+- Without strict mode the server raises `ValidationError: Aggregates are only supported in strict output mode.`
+- Aggregating an attribute the user can't read (e.g. `bid` without the permission) raises `PermissionError: Not allowed to read attribute`.
 
 Strict mode rejects `$custom_attribute` syntax and returns only projected fields. In Python, keep a separate strict session for aggregation if the rest of your code relies on non-strict behaviour; in JavaScript, pass the header only on the aggregation call.
 

@@ -42,6 +42,7 @@ The `ftrack-api-developer` plugin contains these skills. Claude loads them autom
 | Skill | Covers |
 |-------|--------|
 | [ftrack-api-developer](skills/ftrack-api-developer/SKILL.md) | Entry point: core concepts, routes to the skills below |
+| [ftrack-setup](skills/ftrack-setup/SKILL.md) | Install ftrack-python-api, ftrack-action-handler, @ftrack/api, schema generator, web widget; credentials; connection check |
 | [ftrack-query](skills/ftrack-query/SKILL.md) | Query syntax, projections, has/any filters, pagination, group by aggregation |
 | [ftrack-session](skills/ftrack-session/SKILL.md) | Sessions, API keys, commit/rollback, caching, errors |
 | [ftrack-events](skills/ftrack-events/SKILL.md) | Event hub listeners, ftrack.update payloads, publishing, webhooks |

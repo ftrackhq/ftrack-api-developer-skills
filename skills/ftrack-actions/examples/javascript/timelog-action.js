@@ -8,7 +8,7 @@ import { Session, operation, expression } from "@ftrack/api";
 const IDENTIFIER = "my-company.edit-timelogs";
 const { FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY } = process.env;
 
-const session = new Session(FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY, {
+const session = new Session(FTRACK_SERVER.replace(/\/+$/, ""), FTRACK_API_USER, FTRACK_API_KEY, {
   autoConnectEventHub: true,
 });
 await session.initializing;

@@ -6,7 +6,7 @@ when_to_use: "Code signals: `session.query(`, `session.call(` with a `group by` 
 
 # ftrack query language
 
-The ftrack query language looks like SQL but **is not SQL**. Most SQL idioms (`*`, `JOIN`, `AS`, `DISTINCT`, `UNION`, `count()` without `group by`) are unsupported and either error or silently return wrong results.
+The ftrack query language looks like SQL but **is not SQL**. Most SQL idioms (`*`, `JOIN`, `AS`, `DISTINCT`, `UNION`, `count()` without `group by`) are unsupported and either raise an error or return wrong results.
 
 ```
 select <projections> from <EntityType>

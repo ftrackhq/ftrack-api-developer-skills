@@ -61,7 +61,7 @@ async function uploadFile(session, path, versionId) {
 }
 
 async function main(shotId, filePath) {
-  const session = new Session(FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY);
+  const session = new Session(FTRACK_SERVER.replace(/\/+$/, ""), FTRACK_API_USER, FTRACK_API_KEY);
   await session.initializing;
 
   const task = await createTask(session, shotId, "lighting_example");

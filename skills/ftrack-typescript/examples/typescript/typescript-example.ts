@@ -13,7 +13,7 @@ export async function createSession(): Promise<Session<EntityTypeMap>> {
   if (!FTRACK_SERVER || !FTRACK_API_USER || !FTRACK_API_KEY) {
     throw new Error("Set FTRACK_SERVER, FTRACK_API_USER and FTRACK_API_KEY");
   }
-  const session = new Session<EntityTypeMap>(FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY);
+  const session = new Session<EntityTypeMap>(FTRACK_SERVER.replace(/\/+$/, ""), FTRACK_API_USER, FTRACK_API_KEY);
   await session.initializing;
   return session;
 }

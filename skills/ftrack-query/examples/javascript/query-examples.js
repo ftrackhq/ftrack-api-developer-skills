@@ -71,7 +71,7 @@ export async function taskCountsByStatus(session, projectId) {
 }
 
 async function main(projectId) {
-  const session = new Session(FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY);
+  const session = new Session(FTRACK_SERVER.replace(/\/+$/, ""), FTRACK_API_USER, FTRACK_API_KEY);
   await session.initializing;
 
   for (const task of (await tasksInProject(session, projectId)).slice(0, 10)) {

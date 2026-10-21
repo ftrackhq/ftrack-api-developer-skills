@@ -6,7 +6,7 @@ import { Session, Event, expression } from "@ftrack/api";
 
 const { FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY } = process.env;
 
-const session = new Session(FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY, {
+const session = new Session(FTRACK_SERVER.replace(/\/+$/, ""), FTRACK_API_USER, FTRACK_API_KEY, {
   autoConnectEventHub: true,
 });
 await session.initializing;

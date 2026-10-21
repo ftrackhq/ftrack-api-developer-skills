@@ -23,7 +23,7 @@ const session = new Session(serverUrl, apiUser, apiKey, {
 });
 ```
 
-All three positional arguments are required; the constructor throws if any is empty. Node.js has no built-in env loading for these, so read them yourself (e.g. `process.env.FTRACK_SERVER`).
+All three positional arguments are required; the constructor throws if any is empty. Pass the server URL **without a trailing slash**: the client appends `/api`, and `https://x.ftrackapp.com/` makes every request fail with a JSON parse error (the Python client tolerates the slash). Node.js has no built-in env loading for these, so read them yourself (e.g. `process.env.FTRACK_SERVER`).
 
 ## Initialization
 
@@ -66,7 +66,7 @@ Options accepted by `query`, `call` and the mutation methods:
 |---|---|
 | `signal` | `AbortSignal` to cancel the request (rejects with `error.AbortError`) |
 | `additionalHeaders` | Extra headers for this request, e.g. `{ "ftrack-strict-api": "true" }` for one strict call |
-| `decodeDatesAsIso` | Return datetimes as ISO 8601 strings instead of dayjs objects |
+| `decodeDatesAsIso` | Return datetimes as ISO 8601 strings instead of Moment (1.x) / dayjs (2.x) objects |
 | `ensureSerializableResponse` | Skip normalization so the response is plain, serializable JSON |
 
 ## Strict mode
@@ -75,7 +75,7 @@ Turn it on per call with `additionalHeaders: { "ftrack-strict-api": "true" }`, o
 
 ## Dates
 
-By default datetimes are decoded into dayjs objects (UTC when the server has timezone support) and date-only values into `YYYY-MM-DD` strings. Pass `decodeDatesAsIso: true` to get ISO strings, which are easier to store or send to other contexts. When sending dates, Date and dayjs values are encoded as ISO 8601 in UTC.
+By default datetimes are decoded into Moment objects in the current 1.x release (dayjs objects in the 2.0 beta), in UTC when the server has timezone support. Pass `decodeDatesAsIso: true` to get ISO strings, which are easier to store or send to other contexts. When sending dates, Date, Moment and dayjs values are encoded as ISO 8601 in UTC.
 
 ## Errors
 

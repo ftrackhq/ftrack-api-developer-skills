@@ -6,7 +6,7 @@ import { Session, operation, expression, error } from "@ftrack/api";
 
 export async function createSession() {
   const { FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY } = process.env;
-  const session = new Session(FTRACK_SERVER, FTRACK_API_USER, FTRACK_API_KEY);
+  const session = new Session(FTRACK_SERVER.replace(/\/+$/, ""), FTRACK_API_USER, FTRACK_API_KEY);
   try {
     await session.initializing;
   } catch (e) {
@@ -64,7 +64,7 @@ async function main(shotId) {
   );
   console.log(shots);
 
-  // ISO strings instead of dayjs objects, e.g. for JSON storage.
+  // ISO strings instead of Moment (1.x) / dayjs (2.x) objects, e.g. for JSON storage.
   const { data } = await session.query(
     expression`select created_at from Shot where id is "${shotId}"`,
     { decodeDatesAsIso: true }

@@ -94,4 +94,4 @@ All extend `Error`; check with `instanceof`. Network failures surface as the run
 
 ## Dates
 
-Datetimes decode to dayjs objects by default; `decodeDatesAsIso: true` returns ISO 8601 strings. Date-only values decode to `YYYY-MM-DD` strings. Outgoing `Date`/dayjs values are encoded as ISO 8601 UTC.
+Datetimes decode to Moment objects in the current 1.x release (dayjs objects in the 2.0 beta) by default; `decodeDatesAsIso: true` returns ISO 8601 strings such as `2024-11-14T15:13:55.000Z`. In the 2.0 line, date-only values decode to `YYYY-MM-DD` strings. Outgoing `Date`/Moment/dayjs values are encoded as ISO 8601 UTC. Prefer `decodeDatesAsIso: true` so code doesn't depend on the date library.

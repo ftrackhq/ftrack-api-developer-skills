@@ -85,7 +85,7 @@ Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
 | File | Read when |
 |---|---|
 | [references/python-session.md](references/python-session.md) | All Python Session arguments, environment variables, unit of work details, auto-population, caching (file cache, selective cache), plugins, schema cache, SSL/proxy, exception list |
-| [references/javascript-session.md](references/javascript-session.md) | JavaScript constructor options, initialization, batching with `session.call`, strict mode per call, dates (dayjs vs ISO), cancellation, error classes |
+| [references/javascript-session.md](references/javascript-session.md) | JavaScript constructor options, initialization, batching with `session.call`, strict mode per call, dates (Moment/dayjs vs ISO), cancellation, error classes |
 | [references/authentication.md](references/authentication.md) | Personal vs global API keys, API key roles and project access, raw HTTP authentication headers |
 | [examples/python/session_examples.py](examples/python/session_examples.py) | Runnable Python: connect, commit/rollback, retry on network errors, persistent cache, strict session |
 | [examples/javascript/session-examples.js](examples/javascript/session-examples.js) | Runnable JavaScript: connect, error classes, atomic `session.call`, cancellation, ISO dates |

@@ -25,7 +25,7 @@ const session = new Session(serverUrl, apiUser, apiKey, { autoConnectEventHub: f
 await session.initializing;   // rejects on bad URL or credentials
 ```
 
-Create one session per process or app and share it. Options, errors and strict mode: see ftrack-session.
+Create one session per process or app and share it. Strip any trailing slash from the server URL (`url.replace(/\/+$/, "")`) - with one, every request fails with a JSON parse error. Options, errors and strict mode: see ftrack-session.
 
 ## Query
 
@@ -99,7 +99,7 @@ Subscriptions only support `topic=...` (wildcards allowed, e.g. `topic=ftrack.*`
 
 ## Dates
 
-Datetimes are returned as dayjs objects by default. Pass `{ decodeDatesAsIso: true }` to `query`/`call` to get ISO strings (also what generated TypeScript types declare). Dates you send are encoded as ISO 8601 UTC.
+Datetimes are returned as Moment objects in the current 1.x release (dayjs objects in the 2.0 beta) by default. Pass `{ decodeDatesAsIso: true }` to `query`/`call` to get ISO strings (also what generated TypeScript types declare). Dates you send are encoded as ISO 8601 UTC.
 
 ## Environments
 
