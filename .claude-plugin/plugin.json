@@ -9,5 +9,15 @@
   },
   "homepage": "https://github.com/ftrackhq/ftrack-api-developer-skills",
   "repository": "https://github.com/ftrackhq/ftrack-api-developer-skills",
-  "keywords": ["ftrack", "ftrack-api", "ftrack-studio", "python", "javascript", "typescript", "pipeline", "vfx"]
+  "license": "Apache-2.0",
+  "keywords": [
+    "ftrack",
+    "ftrack-api",
+    "ftrack-studio",
+    "python",
+    "javascript",
+    "typescript",
+    "pipeline",
+    "vfx"
+  ]
 }

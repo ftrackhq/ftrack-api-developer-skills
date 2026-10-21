@@ -75,3 +75,7 @@ To test local changes, add this checkout as the marketplace (`claude plugin mark
 - [ftrack Python API](https://github.com/ftrackhq/ftrack-python) and [docs](https://developer.ftrack.com/api-clients/python/)
 - [ftrack JavaScript API](https://github.com/ftrackhq/ftrack-javascript) and [docs](https://developer.ftrack.com/api-clients/javascript/)
 - [ftrack recipes](https://github.com/ftrackhq/ftrack-recipes)
+
+## License
+
+Apache License 2.0, the same license as the ftrack Python and JavaScript API clients. See [LICENSE](LICENSE).
