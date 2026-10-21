@@ -161,7 +161,7 @@ imageElement.src = thumbnailUrl;
 - Official component schema
 
 ### Python Locations Documentation
-**URL**: `https://developer.ftrack.com/api-clients/python/locations.html`
+**URL**: `https://developer.ftrack.com/api-clients/python/locations/overview`
 **Fetch Prompt**:
 ```
 Extract ftrack Python location and component patterns. Include:
@@ -176,7 +176,7 @@ Format as markdown with code examples.
 ```
 
 ### JavaScript File Upload Documentation
-**URL**: `https://developer.ftrack.com/api-clients/javascript/uploading.html`
+**URL**: `https://developer.ftrack.com/api/uploading-files`
 **Fetch Prompt**:
 ```
 Extract ftrack JavaScript file upload patterns. Include:
@@ -190,7 +190,7 @@ Format as markdown with async/await examples.
 ```
 
 ### Component Schema Reference
-**URL**: `https://developer.ftrack.com/ftrack/api/components.html`
+**URL**: `https://developer.ftrack.com/api-clients/examples/working-with-components`
 **Fetch Prompt**:
 ```
 Extract ftrack component types and schema. Include:
@@ -234,7 +234,7 @@ trigger_phrases = [
 
 Use WebFetch tool:
 WebFetch(
-  url="https://developer.ftrack.com/api-clients/python/locations.html",
+  url="https://developer.ftrack.com/api-clients/python/locations/overview",
   prompt="Extract custom S3 location setup patterns for ftrack Python API. Include location class definition, storage accessor, S3 configuration, and registration. Format as markdown with complete code example."
 )
 

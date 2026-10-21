@@ -106,7 +106,7 @@ async function createSession() {
 - Plugin or hook configuration
 
 ### Python Documentation
-**URL**: `https://developer.ftrack.com/api-clients/python/session.html`
+**URL**: `https://developer.ftrack.com/api-clients/python/understanding-sessions`
 **Fetch Prompt**:
 ```
 Extract ftrack Python session management patterns. Include:
@@ -120,7 +120,7 @@ Format as markdown with code examples.
 ```
 
 ### JavaScript Documentation
-**URL**: `https://developer.ftrack.com/api-clients/javascript/session.html`
+**URL**: `https://developer.ftrack.com/api-clients/javascript/tutorial`
 **Fetch Prompt**:
 ```
 Extract ftrack JavaScript session patterns. Include:
@@ -133,7 +133,7 @@ Format as markdown with async/await examples.
 ```
 
 ### Authentication Guide
-**URL**: `https://developer.ftrack.com/ftrack/api/authentication.html`
+**URL**: `https://developer.ftrack.com/api/authentication`
 **Fetch Prompt**:
 ```
 Extract ftrack authentication methods and best practices. Include:
@@ -177,7 +177,7 @@ trigger_phrases = [
 
 Use WebFetch tool:
 WebFetch(
-  url="https://developer.ftrack.com/api-clients/python/session.html",
+  url="https://developer.ftrack.com/api-clients/python/understanding-sessions",
   prompt="Extract ftrack Python Session initialization parameters. Include all __init__ arguments, cache options, plugin configuration, and connection settings. Format as markdown with examples."
 )
 
@@ -288,7 +288,7 @@ but it's currently unavailable. I'll use local examples instead.
 [Proceed to load relevant local example file]
 
 Note: For current documentation, visit:
-https://developer.ftrack.com/api-clients/python/session.html
+https://developer.ftrack.com/api-clients/python/understanding-sessions
 ```
 
 ### If Local Files Missing

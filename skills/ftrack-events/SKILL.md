@@ -233,7 +233,7 @@ session.eventHub.on('disconnect', () => {
 - Performance optimization for high-volume events
 
 ### Python Events Documentation
-**URL**: `https://developer.ftrack.com/api-clients/python/event_hub.html`
+**URL**: `https://developer.ftrack.com/api-clients/python/handling-events`
 **Fetch Prompt**:
 ```
 Extract ftrack Python event hub patterns and reference. Include:
@@ -248,7 +248,7 @@ Format as markdown with code examples.
 ```
 
 ### JavaScript Events Documentation
-**URL**: `https://developer.ftrack.com/api-clients/javascript/event_hub.html`
+**URL**: `https://developer.ftrack.com/api-clients/javascript/handling-events`
 **Fetch Prompt**:
 ```
 Extract ftrack JavaScript event hub patterns. Include:
@@ -263,7 +263,7 @@ Format as markdown with async/await examples.
 ```
 
 ### Event Topics Reference
-**URL**: `https://developer.ftrack.com/ftrack/api/events.html`
+**URL**: `https://developer.ftrack.com/websocket-events/event-list`
 **Fetch Prompt**:
 ```
 Extract ftrack event topics and data structures. Include:
@@ -307,7 +307,7 @@ trigger_phrases = [
 
 Use WebFetch tool:
 WebFetch(
-  url="https://developer.ftrack.com/ftrack/api/events.html",
+  url="https://developer.ftrack.com/websocket-events/event-list",
   prompt="Extract all ftrack event topics with descriptions. Include ftrack.update, create, delete, action, location, and other event types. Show event payload structure. Format as markdown."
 )
 

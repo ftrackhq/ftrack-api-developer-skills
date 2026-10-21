@@ -394,7 +394,7 @@ function Dashboard() {
 - Performance optimization for large datasets
 
 ### ftrack Web Widget Documentation
-**URL**: `https://developer.ftrack.com/ftrack/widgets/`
+**URL**: `https://developer.ftrack.com/extending-ftrack/widgets`
 **Fetch Prompt**:
 ```
 Extract ftrack web widget development patterns. Include:
@@ -463,7 +463,7 @@ trigger_phrases = [
 
 Use WebFetch tool:
 WebFetch(
-  url="https://developer.ftrack.com/ftrack/widgets/",
+  url="https://developer.ftrack.com/extending-ftrack/widgets",
   prompt="Extract complete ftrack web widget API reference. Include lifecycle hooks, theme management, event handling, session integration, and deployment. Format as markdown."
 )
 

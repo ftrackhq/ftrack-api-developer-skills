@@ -306,7 +306,7 @@ def launch(self, event):
 - Official action examples or best practices
 
 ### Actions Documentation
-**URL**: `https://developer.ftrack.com/ftrack/actions/index.html`
+**URL**: `https://developer.ftrack.com/extending-ftrack/actions`
 **Fetch Prompt**:
 ```
 Extract ftrack action handler patterns and API reference. Include:
@@ -365,7 +365,7 @@ trigger_phrases = [
 
 Use WebFetch tool:
 WebFetch(
-  url="https://developer.ftrack.com/ftrack/actions/index.html",
+  url="https://developer.ftrack.com/extending-ftrack/actions",
   prompt="Extract all ftrack action form field types and widgets. Include text, textarea, number, boolean, enumerator, date, entity, and any other available types. Show configuration options and examples. Format as markdown."
 )
 

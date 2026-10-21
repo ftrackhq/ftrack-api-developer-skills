@@ -129,7 +129,7 @@ Before delegating, detect user's language:
 - **Developer Hub**: https://developer.ftrack.com/
 - **Python API**: https://developer.ftrack.com/api-clients/python/
 - **JavaScript API**: https://developer.ftrack.com/api-clients/javascript/
-- **API Reference**: https://ftrack-python-api.readthedocs.io/en/stable/api_reference/
+- **API Reference**: https://developer.ftrack.com/api-clients/python/
 - **Python GitHub**: https://github.com/ftrackhq/ftrack-python
 - **Recipes**: https://github.com/ftrackhq/ftrack-recipes
 
@@ -295,31 +295,31 @@ User Question
 ### Official Resources for WebFetch
 
 **Python Query Docs:**
-- URL: `https://developer.ftrack.com/api-clients/python/querying.html`
+- URL: `https://developer.ftrack.com/api-clients/python/querying`
 - Fetch prompt: "Extract ftrack Python query patterns. Include select/where syntax, projections, filtering, pagination examples. Format as markdown."
 
 **JavaScript Query Docs:**
-- URL: `https://developer.ftrack.com/api-clients/javascript/querying.html`
+- URL: `https://developer.ftrack.com/api/query-language`
 - Fetch prompt: "Extract ftrack JavaScript query patterns. Include async/await examples, error handling. Format as markdown."
 
 **Python Events:**
-- URL: `https://developer.ftrack.com/api-clients/python/event_hub.html`
+- URL: `https://developer.ftrack.com/api-clients/python/handling-events`
 - Fetch prompt: "Extract Python event hub patterns. Include subscription syntax, event topics, handler patterns. Format as markdown."
 
 **JavaScript Events:**
-- URL: `https://developer.ftrack.com/api-clients/javascript/event_hub.html`
+- URL: `https://developer.ftrack.com/api-clients/javascript/handling-events`
 - Fetch prompt: "Extract JavaScript event hub patterns. Include WebSocket handling, subscriptions. Format as markdown."
 
 **Python Actions:**
-- URL: `https://developer.ftrack.com/ftrack/actions/index.html`
+- URL: `https://developer.ftrack.com/extending-ftrack/actions`
 - Fetch prompt: "Extract action handler patterns. Include BaseAction usage, discovery/launch, UI forms. Format as markdown."
 
 **Locations (Files):**
-- URL: `https://developer.ftrack.com/api-clients/python/locations.html`
+- URL: `https://developer.ftrack.com/api-clients/python/locations/overview`
 - Fetch prompt: "Extract location and file component patterns. Include upload/download, custom locations. Format as markdown."
 
 **Session Management:**
-- URL: `https://developer.ftrack.com/api-clients/python/session.html`
+- URL: `https://developer.ftrack.com/api-clients/python/understanding-sessions`
 - Fetch prompt: "Extract session initialization and management patterns. Include authentication, caching. Format as markdown."
 
 **Example Repositories:**
@@ -358,6 +358,6 @@ User: "Show me all query operators for Python"
 → Detect trigger: "show all operators"
 → Detect language: "Python"
 → Invoke: /ftrack-query "Fetch online docs for query operators (Python)"
-→ Subskill fetches: https://developer.ftrack.com/api-clients/python/querying.html
+→ Subskill fetches: https://developer.ftrack.com/api-clients/python/querying
 → If fails: ftrack-query loads its examples/python/performance_optimization.py
 ```

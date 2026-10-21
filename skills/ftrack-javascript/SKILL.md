@@ -260,7 +260,7 @@ async function processBatch(taskIds) {
 ### When to Fetch
 - User asks for "complete JavaScript API reference"
 - Needs browser vs Node.js differences
-- Questions about bundling, webpack configuration
+- Installation and getting-started steps
 - Advanced async patterns or performance optimization
 - Official module imports and exports
 
@@ -282,7 +282,7 @@ Format as markdown with ES6+ async/await examples.
 ```
 
 ### JavaScript Query Documentation
-**URL**: `https://developer.ftrack.com/api-clients/javascript/querying.html`
+**URL**: `https://developer.ftrack.com/api/query-language`
 **Fetch Prompt**:
 ```
 Extract ftrack JavaScript query patterns. Include:
@@ -295,18 +295,14 @@ Extract ftrack JavaScript query patterns. Include:
 Format as markdown with modern ES6+ examples.
 ```
 
-### Module Bundling Guide
-**URL**: `https://developer.ftrack.com/api-clients/javascript/bundling.html`
+### Installation & Tutorial
+**URLs**: `https://developer.ftrack.com/api-clients/javascript/installing`, `https://developer.ftrack.com/api-clients/javascript/tutorial`
 **Fetch Prompt**:
 ```
-Extract ftrack JavaScript bundling and build configuration. Include:
-- Webpack configuration
-- Rollup setup
-- ES6 module usage
-- Browser vs Node.js builds
-- Tree shaking considerations
-Format as markdown with configuration examples.
+Extract ftrack JavaScript API installation and getting-started steps. Include package install, session creation, first query, create/update/delete. Format as markdown.
 ```
+
+**Note**: ftrack has no official bundling guide. `@ftrack/api` is a standard npm ES module, so answer webpack/Vite/Rollup questions with general bundler knowledge rather than fetching.
 
 ### WebFetch Decision Tree
 
@@ -318,8 +314,7 @@ trigger_phrases = [
     "complete javascript api",
     "official javascript docs",
     "browser vs node.js",
-    "webpack configuration",
-    "bundling ftrack",
+    "getting started javascript",
     "all javascript methods",
     "es6 module setup",
     "performance optimization javascript"
@@ -328,24 +323,22 @@ trigger_phrases = [
 
 **Action when trigger detected:**
 1. **Detect environment**: Browser, Node.js, or React
-2. **Detect topic**: API reference, bundling, or patterns
+2. **Detect topic**: API reference, installation, or patterns
 3. **Use WebFetch** with appropriate URL above
 4. **If fetch succeeds**: Return formatted docs to user
 5. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
 
 **WebFetch Example:**
 ```markdown
-# User asks: "Show me how to configure webpack for ftrack JavaScript"
-# Trigger detected: "webpack" + "ftrack"
+# User asks: "Show me the official getting started for ftrack JavaScript"
 
-Use WebFetch tool:
 WebFetch(
-  url="https://developer.ftrack.com/api-clients/javascript/bundling.html",
-  prompt="Extract webpack configuration for ftrack JavaScript API. Include entry points, module rules, externals, and optimization settings. Format as markdown with webpack.config.js example."
+  url="https://developer.ftrack.com/api-clients/javascript/tutorial",
+  prompt="Extract the ftrack JavaScript tutorial steps: session setup, querying, creating and updating entities. Format as markdown with code examples."
 )
 
 If successful: Present docs
-If fails: Provide a basic webpack config from the quick reference
+If fails: Load examples/javascript/session-management.js
 ```
 
 ---
@@ -420,8 +413,7 @@ User asks about ftrack JavaScript
   │   └→ If fails: Load session-management.js
   │
   ├─ Webpack/bundling configuration?
-  │   ├→ WebFetch bundling guide
-  │   └→ If fails: Provide basic config
+  │   └→ Answer from general bundler knowledge (no official guide)
   │
   └─ Production-ready examples?
       └→ Load specific example file (crud, query, session, etc.)
@@ -446,14 +438,14 @@ User asks about ftrack JavaScript
 
 ### For Advanced Questions (Bundling, Performance)
 1. Check if Quick Reference covers it
-2. If not: WebFetch JavaScript docs or bundling guide
+2. If not: WebFetch JavaScript docs (bundling: general knowledge)
 3. If insufficient or fails: Load local example file
 4. Provide production-ready code
 5. Cite all sources used
 
 ### Progressive Disclosure
 - Start minimal (quick reference - session + query)
-- Offer more: "Need webpack config or complete API reference? I can fetch official docs"
+- Offer more: "Need the complete API reference? I can fetch official docs"
 - Load comprehensive examples only if requested or if WebFetch fails
 
 ---

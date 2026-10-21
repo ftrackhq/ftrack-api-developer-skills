@@ -234,7 +234,7 @@ const chartData = Object.entries(userCounts).map(([name, value]) => ({
 - Unclear about specific query functionality
 
 ### Python Documentation
-**URL**: `https://developer.ftrack.com/api-clients/python/querying.html`
+**URL**: `https://developer.ftrack.com/api-clients/python/querying`
 **Fetch Prompt**: 
 ```
 Extract ftrack Python query patterns and syntax. Include:
@@ -247,7 +247,7 @@ Format as markdown with code examples.
 ```
 
 ### JavaScript Documentation
-**URL**: `https://developer.ftrack.com/api-clients/javascript/querying.html`
+**URL**: `https://developer.ftrack.com/api/query-language`
 **Fetch Prompt**:
 ```
 Extract ftrack JavaScript query patterns. Include:
@@ -259,7 +259,7 @@ Format as markdown with async/await code examples.
 ```
 
 ### Query Language Reference
-**URL**: `https://developer.ftrack.com/ftrack/api/query_syntax.html`
+**URL**: `https://developer.ftrack.com/api/query-language`
 **Fetch Prompt**:
 ```
 Extract ftrack query language operators and syntax. Include:
@@ -303,7 +303,7 @@ trigger_phrases = [
 
 Use WebFetch tool:
 WebFetch(
-  url="https://developer.ftrack.com/api-clients/python/querying.html",
+  url="https://developer.ftrack.com/api-clients/python/querying",
   prompt="Extract ftrack Python query patterns and complete operator syntax. Include comparison, logical, and collection operators with examples. Format as markdown."
 )
 
@@ -421,7 +421,7 @@ but it's currently unavailable. I'll use local examples instead.
 [Proceed to load relevant local example file]
 
 Note: For the most current documentation, visit:
-https://developer.ftrack.com/api-clients/python/querying.html
+https://developer.ftrack.com/api-clients/python/querying
 ```
 
 ### If Local Files Missing
