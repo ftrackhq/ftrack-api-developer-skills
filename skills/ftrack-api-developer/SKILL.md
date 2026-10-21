@@ -75,7 +75,7 @@ Analyze user's question for keywords and invoke relevant subskills:
 ### Query Keywords
 `query`, `search`, `filter`, `find`, `select`, `where`, `projection`, `pagination`, `aggregate`, `group by`, `count`, `sum`
 → Invoke `/ftrack-query`
-**Note**: ftrack-query now includes comprehensive dashboard aggregation patterns (status counts, completion %, time series, user workload, multi-dimensional grouping)
+**Note**: ftrack-query covers server-side aggregation (`group by` with counts/sums) for dashboard numbers
 
 ### Event Keywords
 `event`, `webhook`, `real-time`, `subscribe`, `listen`, `event hub`, `WebSocket`
@@ -356,5 +356,5 @@ User: "Show me all query operators for Python"
 → Detect language: "Python"
 → Invoke: /ftrack-query "Fetch online docs for query operators (Python)"
 → Subskill fetches: https://developer.ftrack.com/api-clients/python/querying
-→ If fails: ftrack-query loads its examples/python/performance_optimization.py
+→ If fails: ftrack-query reads its local references/query-language.md
 ```

@@ -1,452 +1,105 @@
 ---
 name: ftrack-query
-description: ftrack query language for Python and JavaScript - select/where syntax, projections, filtering, pagination, performance, and aggregation for dashboards. Use when code calls `session.query()` or contains ftrack query strings, or the user asks how to search, filter or count ftrack entities (tasks, assets, versions, projects). Not for SQL or non-ftrack databases.
+description: ftrack query language for Python and JavaScript - select/where syntax, projections, has/any relationship filters, ordering, pagination, performance, and server-side aggregation with group by. Use when code calls `session.query()` or contains ftrack query strings, or the user asks how to search, filter, count or aggregate ftrack entities (tasks, assets, versions, projects, notes). Not for SQL or non-ftrack databases.
 ---
 
-# ftrack Query Optimization Expert
+# ftrack query language
 
-**Strategy**: Quick reference first → Fetch online docs if needed → Load local examples as fallback
+The ftrack query language looks like SQL but **is not SQL**. Most SQL idioms (`*`, `JOIN`, `AS`, `DISTINCT`, `UNION`, `count()` without `group by`) are unsupported and either error or silently return wrong results.
 
-## Language Detection
-- **Python**: `.py`, `session.query()`, `import ftrack_api`
-- **JavaScript**: `.js`, `.ts`, `await session.query()`, `import ftrack`
+```
+select <projections> from <EntityType>
+  [where <criteria>]
+  [group by <attributes>]          # strict mode only, run via session.call
+  [order by <attribute> [asc|desc], ...]
+  [offset <n>] [limit <n>]
+```
 
----
+Clauses must appear in this order. One entity type per query (PascalCase, case-sensitive: `Task`, `Project`, `AssetVersion`, `TypedContext`, ...).
 
-## Quick Reference (Use First - 70% of Queries)
+## Rules that matter most
 
-### Core Principles
-✓ **Always use projections**: `select name, status.name from Task`
-✓ **Filter at database**: `where project.id is "uuid"`
-✓ **Use IDs over names**: `where project.id is "abc"` (faster than `project.name`)
-✗ Avoid `select *` or no projection
-✗ Never fetch all then filter in code
+1. **Project what you need.** Accessing an unprojected attribute triggers an extra request per entity (Python auto-populates on access). `select name, status.name from Task` loads both in one round trip. Don't over-project either.
+2. **Filter on the server**, never fetch-all-then-filter in code.
+3. **Prefer native id columns**: `project_id is "..."` is faster than `project.id is "..."` (no join).
+4. **Use `ancestors any (id is "...")`** instead of `parent.parent.parent.id`, and `descendants` instead of `children`.
+5. **Batch by id**: one `where id in ("a", "b", "c")` query instead of a query per id.
+6. **Multiple conditions on one related entity need `any` (collection) or `has` (scalar).** Without them each condition can match a different related row - no error, wrong results:
+   ```
+   # wrong: key and value may match two different metadata rows
+   Project where metadata.key is "color" and metadata.value is "red"
+   # right
+   Project where metadata any (key is "color" and value is "red")
+   Note where author has (first_name is "Jane" and last_name is "Doe")
+   ```
+7. **Status state is an entity.** Compare `status.state.short` (`NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `DONE`), not `status.state`.
+8. **Aggregate on the server** with `group by` instead of counting in client code - see [references/aggregation.md](references/aggregation.md).
+9. Avoid leading wildcards (`like "%foo"`) on large tables - they are full scans. `like "foo%"` can use an index.
 
-### Python Quick Patterns
+## Python (`ftrack_api`)
+
 ```python
-# Basic query with projection
+# Lazy result; the request is sent when iterated, indexed, or .all() is called
 tasks = session.query(
-    'select name, status.name from Task where project.id is "{}"'.format(pid)
+    'select name, status.name from Task where project_id is "{0}"'.format(project_id)
 ).all()
 
-# Single result
-task = session.query('select name from Task where id is "{}"'.format(tid)).one()
+task = session.query('select name from Task where id is "{0}"'.format(task_id)).one()
+# .one() raises NoResultFoundError / MultipleResultsFoundError
+latest = session.query(
+    'select version from AssetVersion where asset_id is "{0}" order by version desc'.format(asset_id)
+).first()   # None if no match; .one()/.first() fail if the expression already has a limit
 
-# Count without fetching
-count = session.query('Task where project.id is "{}"'.format(pid)).count()
-
-# Multiple conditions
-tasks = session.query(
-    'select name from Task where project.id is "{}" and status.name is "Active"'
-).format(pid).all()
-
-# Pagination
-query = session.query('select name from Task order by created_at desc')
-query.page_size = 200
-results = query.all()
+# Paging is automatic; page_size is an argument (default 500), not an attribute
+for version in session.query('select id from AssetVersion', page_size=200):
+    ...
 ```
 
-### JavaScript Quick Patterns
+The Python client accepts a bare `Task where ...` (it injects default projections), but an explicit `select` is clearer and cheaper.
+
+There is no escaping helper in Python: when interpolating user-supplied strings, escape `"` as `\"`. IDs are safe.
+
+## JavaScript (`@ftrack/api`)
+
 ```javascript
-// Basic query with projection
+import { Session, expression } from "@ftrack/api";
+
+// expression`...` escapes quotes in interpolated values (prevents query injection)
 const response = await session.query(
-  'select name, status.name from Task where project.id is "' + projectId + '"'
+  expression`select name, status.name from Task where project_id is "${projectId}"`
 );
-const tasks = response.data;
-
-// Async/await with error handling
-try {
-  const result = await session.query('select name from Task where id is "task-id"');
-  console.log(result.data);
-} catch (error) {
-  console.error('Query failed:', error);
-}
-
-// Multiple results iteration
-const response = await session.query('select name from Task');
-response.data.forEach(task => console.log(task.name));
+const tasks = response.data;               // array of plain objects
+const nextOffset = response.metadata.next.offset;   // null when there are no more pages
 ```
 
-### Common Query Operators
-```python
-# Comparison
-'where status.name is "Active"'
-'where priority > 50'
-'where created_at >= "2026-01-01"'
+JavaScript does not page automatically. Use `offset`/`limit` and loop on `metadata.next.offset` (see [examples/javascript/query-examples.js](examples/javascript/query-examples.js)).
 
-# Multiple conditions
-'where project.id is "..." and status.name is "Active"'
-'where name like "%render%"'
+## Operators (cheat sheet)
 
-# Collections
-'where status.name in ("Active", "Review")'
-'where ancestors any (id is "parent-id")'
+| Operator | Example |
+|---|---|
+| `is` / `=`, `is_not` / `!=` | `status.name is "In Progress"` |
+| `<` `<=` `>` `>=` (also `before`, `after`) | `end_date before "2026-01-01"` |
+| `in`, `not_in` | `status.name in ("Review", "Approved")` |
+| `like`, `not_like` (case-insensitive, `%` wildcard) | `name like "sh010%"` |
+| `has (...)` / `any (...)` | `metadata any (key is "color" and value is "red")` |
+| `not`, `and`, `or`, parentheses | `not status is active` |
+| `none` (null) | `thumbnail_id is_not none` |
+| `attr[Type]` cast | `parent[Project].status is "hidden"` |
 
-# Relationships
-'select name, parent.name, project.name from Task'
-```
+Dates are quoted ISO 8601 without timezone (`"2026-04-20T09:00:00"`), interpreted in the server's timezone. Custom attributes use a `$` prefix (`select $deadline from Task`) and are rejected in strict mode.
 
-### Aggregation Patterns for Dashboards
+## Reference files
 
-**Python - Group by Status**
-```python
-# Query all tasks with status info
-tasks = session.query(
-    'select status.name, status.color from Task where project.id is "{}"'.format(pid)
-).all()
+Paths are relative to this skill's directory. Read only what the question needs.
 
-# Aggregate in Python
-status_counts = {}
-for task in tasks:
-    status = task['status']['name']
-    status_counts[status] = status_counts.get(status, 0) + 1
+| File | Read when |
+|---|---|
+| [references/query-language.md](references/query-language.md) | Full grammar: all operators, has/any semantics, casting, subqueries and their limits, ordering, paging metadata, literals, strict mode |
+| [references/aggregation.md](references/aggregation.md) | Counts, sums, averages, dashboard numbers: `group by` with `session.call` in Python and JavaScript, strict mode, mapping ids to names |
+| [examples/python/query_examples.py](examples/python/query_examples.py) | Runnable Python: projections, one/first, paging, batching, has/any, group by |
+| [examples/javascript/query-examples.js](examples/javascript/query-examples.js) | Runnable JavaScript: `expression`, manual paging, batching, `session.call` with group by |
 
-# Format for charts: [{'name': 'Active', 'value': 10, 'color': '#00ff00'}, ...]
-chart_data = [
-    {'name': status, 'value': count, 'color': tasks[0]['status']['color']}
-    for status, count in status_counts.items()
-]
-```
+Online source of truth if something isn't covered: https://developer.ftrack.com/api/query-language, https://developer.ftrack.com/api-clients/python/querying, https://developer.ftrack.com/api/performance.
 
-**JavaScript - Group by Status**
-```javascript
-// Query all tasks
-const response = await session.query(
-  `select status.name, status.color from Task where project.id is "${projectId}"`
-);
-
-// Aggregate with reduce
-const statusCounts = response.data.reduce((acc, task) => {
-  const status = task.status.name;
-  if (!acc[status]) {
-    acc[status] = { name: status, value: 0, color: task.status.color };
-  }
-  acc[status].value += 1;
-  return acc;
-}, {});
-
-// Format for charts
-const chartData = Object.values(statusCounts);
-```
-
-**Python - Calculate Completion Percentage**
-```python
-# Query with state information
-tasks = session.query(
-    'select status.state from Task where project.id is "{}"'.format(pid)
-).all()
-
-total = len(tasks)
-done = sum(1 for t in tasks if t['status']['state'] == 'DONE')
-percentage = (done / total * 100) if total > 0 else 0
-
-print(f"Completion: {percentage:.1f}% ({done}/{total})")
-```
-
-**JavaScript - Progress by Type**
-```javascript
-// Query tasks by type and state
-const response = await session.query(
-  `select type.name, status.state from Task where project.id is "${projectId}"`
-);
-
-// Group by type and state
-const typeData = {};
-response.data.forEach(task => {
-  const type = task.type.name;
-  const state = task.status.state;
-  
-  if (!typeData[type]) {
-    typeData[type] = { name: type, done: 0, inProgress: 0, notStarted: 0 };
-  }
-  
-  if (state === 'DONE') typeData[type].done += 1;
-  else if (state === 'IN_PROGRESS') typeData[type].inProgress += 1;
-  else typeData[type].notStarted += 1;
-});
-
-// Format for stacked bar charts
-const chartData = Object.values(typeData);
-```
-
-**Python - Time Series Aggregation**
-```python
-from datetime import datetime
-
-# Query tasks with timestamps
-tasks = session.query(
-    'select name, status.state, updated_at from Task where project.id is "{}"'
-).format(pid).all()
-
-# Group by month
-monthly_data = {}
-for task in tasks:
-    month = task['updated_at'].strftime('%Y-%m')
-    if month not in monthly_data:
-        monthly_data[month] = {'month': month, 'completed': 0, 'total': 0}
-    
-    monthly_data[month]['total'] += 1
-    if task['status']['state'] == 'DONE':
-        monthly_data[month]['completed'] += 1
-
-# Calculate completion rate
-for month_data in monthly_data.values():
-    rate = (month_data['completed'] / month_data['total'] * 100)
-    month_data['completionRate'] = round(rate, 1)
-```
-
-**JavaScript - User Workload Aggregation**
-```javascript
-// Query tasks with assignments
-const response = await session.query(
-  `select assignments.resource.name from Task where project.id is "${projectId}"`
-);
-
-// Count tasks per user
-const userCounts = {};
-response.data.forEach(task => {
-  task.assignments?.forEach(assignment => {
-    const userName = assignment.resource.name;
-    userCounts[userName] = (userCounts[userName] || 0) + 1;
-  });
-});
-
-// Format for bar charts
-const chartData = Object.entries(userCounts).map(([name, value]) => ({
-  name,
-  value
-}));
-```
-
-**→ This quick reference handles most common queries including dashboard aggregations. For advanced usage, continue below.**
-
----
-
-## Online Resources (Fetch for Detailed Info)
-
-### When to Fetch
-- User asks for "all operators" or "complete syntax"
-- Needs edge cases or advanced features
-- Wants official examples or API reference
-- Unclear about specific query functionality
-
-### Python Documentation
-**URL**: `https://developer.ftrack.com/api-clients/python/querying`
-**Fetch Prompt**: 
-```
-Extract ftrack Python query patterns and syntax. Include:
-- Complete operator list (comparison, logical, collection)
-- Projection syntax and examples
-- Filtering with where clauses
-- Pagination strategies
-- Performance optimization tips
-Format as markdown with code examples.
-```
-
-### JavaScript Documentation
-**URL**: `https://developer.ftrack.com/api/query-language`
-**Fetch Prompt**:
-```
-Extract ftrack JavaScript query patterns. Include:
-- Async/await query examples
-- Error handling patterns
-- Pagination with promises
-- Response data access
-Format as markdown with async/await code examples.
-```
-
-### Query Language Reference
-**URL**: `https://developer.ftrack.com/api/query-language`
-**Fetch Prompt**:
-```
-Extract ftrack query language operators and syntax. Include:
-- All comparison operators
-- Logical operators (and, or, not)
-- Collection operators (any, in)
-- String operations (like, matches)
-- Date/time filtering
-Format as markdown with examples.
-```
-
-### WebFetch Decision Tree
-
-**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
-
-**Trigger detection** (check user's exact query):
-```python
-trigger_phrases = [
-    "show all operators",
-    "complete query syntax", 
-    "official query docs",
-    "full operator list",
-    "edge cases",
-    "advanced filtering patterns",
-    "all query operators",
-    "query language reference"
-]
-```
-
-**Action when trigger detected:**
-1. **Detect language**: Python (`.py`, `ftrack_api`) or JavaScript (`.js`, `await`, `ftrack`)
-2. **Use WebFetch** with appropriate URL above
-3. **If fetch succeeds**: Return formatted docs to user
-4. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
-
-**WebFetch Example:**
-```markdown
-# User asks: "Show me all query operators for Python"
-# Trigger detected: "show all operators"
-# Language detected: "Python"
-
-Use WebFetch tool:
-WebFetch(
-  url="https://developer.ftrack.com/api-clients/python/querying",
-  prompt="Extract ftrack Python query patterns and complete operator syntax. Include comparison, logical, and collection operators with examples. Format as markdown."
-)
-
-If successful: Present docs
-If fails: Load examples/python/performance_optimization.py (lines 1-100)
-```
-
----
-
-## Local Examples (Fallback - Load Only When Needed)
-
-### When to Load Local
-1. WebFetch fails or times out
-2. User explicitly requests "local examples" or "show me the code file"
-3. Online docs don't cover the specific use case
-4. User needs complete runnable code
-
-### Available Local Files
-
-**Python Comprehensive Examples**
-- **File**: `examples/python/performance_optimization.py`
-- **Contains**: 
-  - Query optimization patterns (projections, filtering, pagination)
-  - **Dashboard aggregations** (status counts, completion %, time series, user workload, multi-dimensional)
-  - Batch operations and caching
-  - Performance profiling
-- **Load when**: Need Python production patterns, dashboard data aggregation, performance tuning
-- **Size**: ~500 lines
-- **Key sections**:
-  - Lines 22-98: Query optimization
-  - Lines 100-287: Dashboard aggregation patterns (NEW - 6 aggregation types)
-  - Lines 288+: Batch operations and caching
-
-**JavaScript Comprehensive Examples**
-- **File**: `examples/javascript/query-operations.js`
-- **Contains**: 
-  - Async patterns with await/promises
-  - Error handling and pagination
-  - **Dashboard aggregations** (status, completion, type progress, trends, workload, multi-dimensional)
-  - Query builder utility
-- **Load when**: Need JavaScript production patterns, dashboard data processing, complex async flows
-- **Size**: ~600 lines
-- **Key sections**:
-  - Lines 1-230: Basic patterns and pagination
-  - Lines 232-420: Dashboard aggregation functions (NEW - 6 aggregation types)
-  - Lines 422+: Query utilities
-
-### How to Load
-Paths are relative to this skill's directory (the folder containing this SKILL.md). Read only the file you need, then extract the sections relevant to the user's question.
-
----
-
-## Decision Tree
-
-```
-User asks about ftrack queries
-  │
-  ├─ Simple query pattern (how to query X)?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ Needs complete operator list?
-  │   ├→ WebFetch query language reference
-  │   └→ If fails: Load local examples
-  │
-  ├─ Needs language-specific details?
-  │   ├→ WebFetch Python or JavaScript docs
-  │   └→ If fails: Load local examples
-  │
-  ├─ Needs production/performance patterns?
-  │   ├→ WebFetch ftrack-recipes repo
-  │   └→ If fails: Load local examples
-  │
-  └─ Needs runnable code file?
-      └→ Load specific example file directly
-```
-
----
-
-## Response Strategy
-
-### For Simple Questions
-1. Answer using Quick Reference
-2. Keep response concise (2-3 examples)
-3. Cite source: "From core query patterns"
-
-### For Detailed Questions
-1. Start with Quick Reference summary
-2. WebFetch relevant documentation
-3. Synthesize fetch results
-4. Cite source: "From [URL]"
-5. If fetch fails: Load local examples + cite filename
-
-### For Complex Questions
-1. Assess if multiple resources needed
-2. WebFetch primary docs first
-3. If insufficient, load local examples
-4. Provide complete working code
-5. Cite all sources used
-
-### Progressive Disclosure
-Don't overwhelm the user:
-- Start minimal (quick reference)
-- Offer more: "Need advanced patterns? I can fetch detailed docs"
-- Load comprehensive examples only if requested
-
----
-
-## Error Handling
-
-### If WebFetch Fails
-```markdown
-I attempted to fetch the latest documentation from ftrack's official site, 
-but it's currently unavailable. I'll use local examples instead.
-
-[Proceed to load relevant local example file]
-
-Note: For the most current documentation, visit:
-https://developer.ftrack.com/api-clients/python/querying
-```
-
-### If Local Files Missing
-```markdown
-I don't have access to the comprehensive example files. 
-Let me provide a solution based on the quick reference patterns...
-
-[Use quick reference + known patterns]
-```
-
----
-
-## Testing Examples
-
-### Should Use Quick Reference Only
-Q: "How do I query tasks in ftrack?"
-Q: "Show me a basic query with projection"
-Q: "What's the syntax for filtering by project ID?"
-Q: "How do I count results without fetching?"
-
-### Should Trigger WebFetch
-Q: "Show me all available query operators"
-Q: "What are the advanced filtering options in ftrack?"
-Q: "How does pagination work in detail?"
-Q: "Official documentation for ftrack query language"
-
-### Should Load Local Examples
-Q: "Show me the performance_optimization.py file"
-Q: "I need the complete Python query examples"
-Q: WebFetch fails
-Q: "Use local examples"
+Never invent entity types or attribute names. If unsure, inspect the schema (`session.types` / `session.schemas` in Python, `session.schemas` in JavaScript) or probe with `select id from <Type> limit 1`.
