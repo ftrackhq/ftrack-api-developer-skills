@@ -1,409 +1,86 @@
 ---
 name: ftrack-files
-description: "ftrack file handling for Python and JavaScript - components, asset versions, locations (including custom S3 locations), upload, download, thumbnails, resource transformers."
-when_to_use: "Code signals: `create_component(`, `session.createComponent(`, `encode_media(`, `get_filesystem_path(`, `component_locations`, `Location`, `ftrack.server`, `ftrack.unmanaged`, `session.pick_location(`, `ftrack_api.accessor`, `ftrack_api.structure`, `FileComponent`, `SequenceComponent`, `ContainerComponent`, `AssetVersion` publishing, `create_thumbnail(`, `thumbnail_id`. Requests like \"publish a file to ftrack\", \"upload media\", \"download a component\", \"custom S3 location\", \"set a thumbnail\", \"image sequence in ftrack\"."
+description: ftrack files - publishing Asset/AssetVersion/components, image sequences, locations (ftrack.server, unmanaged, custom disk/cloud via accessors and structures), thumbnails, encode_media and web review, downloads and paths, in Python and JavaScript.
+when_to_use: "Code: `create_component(`, `createComponent(`, `encode_media(`, `create_thumbnail(`, `get_filesystem_path(`, `get_url(`, `add_component(`, `configure-location`, `ftrack_api.accessor`, `ftrack_api.structure`, `ftr_meta`. Asks: publish/upload/download files, image sequences, storage locations, S3, thumbnails, web review media."
 ---
 
-# ftrack File Operations Expert
+# ftrack files
 
-**Strategy**: Quick reference first → Fetch online docs if needed → Load local examples as fallback
+**Model:** a `Component` is file metadata (name, type, size). Where the data actually is, is a `ComponentLocation` linking it to a `Location`. Published files hang off `AssetVersion` (`Asset` -> versions -> components). The `Asset`'s parent is the task's **parent** (shot, asset build, folder, project); the task itself goes on the version.
 
-## Language Detection
-- **Python**: `create_component()`, `Location`, `ftrack_api.structure`
-- **JavaScript**: `session.upload()`, browser `File` API, Node.js `fs`
+## Publish (Python)
 
----
-
-## Quick Reference (Use First - 70% of Queries)
-
-### Core Principles
-✓ **Upload components to locations**: `AssetVersion.create_component()`
-✓ **Download from locations**: `Location.get_component()`
-✓ **Use appropriate location**: `ftrack.server` for cloud, custom for S3/disk
-✗ Avoid uploading without specifying location
-✗ Never assume default location structure
-
-### Core Concepts
-- **Components**: Files attached to asset versions (FileComponent, SequenceComponent)
-- **Locations**: Storage backends (ftrack.server, ftrack.unmanaged, custom S3/disk)
-- **Asset Versions**: Container for components
-
-### Python Quick Patterns
-
-**Upload File**
 ```python
-import ftrack_api
-session = ftrack_api.Session()
-
-# Get location
-location = session.query('Location where name is "ftrack.server"').one()
-
-# Create component
-component = asset_version.create_component(
-    path='/path/to/file.ma',
-    data={'name': 'main'},
-    location=location
-)
+task = session.get("Task", task_id)
+asset_type = session.query('AssetType where name is "Geometry"').one()
+asset = session.query(
+    'Asset where name is "hero" and parent.id is "{0}"'.format(task["parent"]["id"])
+).first() or session.create("Asset", {"name": "hero", "type": asset_type, "parent": task["parent"]})
+version = session.create("AssetVersion", {"asset": asset, "task": task})
 session.commit()
-```
 
-**Download File**
-```python
-# Query component
-component = session.query('Component where id is "{}"'.format(comp_id)).one()
-
-# Get location and download
-location = session.query('Location where name is "ftrack.server"').one()
-local_path = location.get_component(component, '/download/path/')
-```
-
-**Upload Image Sequence**
-```python
-component = asset_version.create_component(
-    path='/path/to/render.%04d.exr',
-    data={
-        'name': 'render',
-        'frame_padding': 4,
-        'frame_start': 1001,
-        'frame_end': 1100
-    },
-    location=location
-)
-```
-
-**Upload Thumbnail**
-```python
-asset_version.create_thumbnail('/path/to/thumb.jpg')
+version.create_component("/renders/hero.mov", data={"name": "main"}, location="auto")
+version.create_component("/renders/hero.%04d.exr [1001-1100]", data={"name": "frames"}, location="auto")
 session.commit()
+
+version.encode_media("/renders/hero.mov")          # web-playable review media (server job)
+version.create_thumbnail("/renders/hero_thumb.jpg")
 ```
 
-**List Components**
+- `location="auto"` picks the highest-priority configured location; pass a `Location` entity to choose (`session.query('Location where name is "my.location"').one()`), or `None` to only track it in `ftrack.origin` for this session.
+- Sequences use clique notation: `/path/file.%04d.ext [1-5, 7, 10-20]` -> a `SequenceComponent` with one child per frame.
+- `session.create_component(path, data=None, location="auto")` creates an unattached component.
+
+## Built-in locations
+
+| Name | Use |
+|---|---|
+| `ftrack.server` | ftrack cloud storage; needed for thumbnails, review and browser downloads (`ftrack_api.symbol.SERVER_LOCATION_ID`) |
+| `ftrack.unmanaged` | Track files at their current path without copying |
+| `ftrack.origin` | Temporary source location used while adding components |
+| `ftrack.connect`, `ftrack.review` | Used by ftrack Connect and legacy review |
+
+Custom locations need a name (not starting with `ftrack.`), an **accessor** (how to read/write: `DiskAccessor(prefix=...)` or your own `ftrack_api.accessor.base.Accessor` subclass), a **structure** (where files go: `StandardStructure()`, `IdStructure()`, or your own) and a **priority** (lower wins). Configure them for every session from a plugin on `topic=ftrack.api.session.configure-location`. See [references/locations.md](references/locations.md).
+
+## Reading files
+
 ```python
-components = session.query(
-    'Component where version.id is "{}"'.format(version_id)
-).all()
+component = session.query('select name from Component where version_id is "{0}"'.format(version_id)).first()
+location = session.pick_location(component)                 # best available location
+path = location.get_filesystem_path(component)              # disk-backed locations
+server = session.get("Location", ftrack_api.symbol.SERVER_LOCATION_ID)
+url = server.get_url(component)                              # download URL (ftrack.server)
+availability = session.get_component_availability(component) # {location_id: 0-100}
 ```
 
-### JavaScript Quick Patterns
+## JavaScript
 
-**Browser Upload**
-```javascript
-// HTML: <input type="file" id="fileInput">
-const file = document.getElementById('fileInput').files[0];
-
-// Create component
-const component = await session.create('FileComponent', {
-  name: file.name,
-  file_type: file.type,
-  size: file.size,
-  version_id: assetVersionId
-});
-
-// Upload
-await session.upload(component.id, file);
-```
-
-**Upload with Progress**
-```javascript
-await session.upload(component.id, file, {
-  onProgress: (progress) => {
-    const percent = Math.round((progress.loaded / progress.total) * 100);
-    console.log(`Progress: ${percent}%`);
-  }
-});
-```
-
-**Download File (Browser)**
-```javascript
-const downloadUrl = await session.getDownloadUrl(componentId);
-window.open(downloadUrl, '_blank');
-```
-
-**Node.js Upload**
-```javascript
-import fs from 'fs';
-import { Blob } from 'buffer';
-
-const buffer = fs.readFileSync('/path/to/file.ma');
-const blob = new Blob([buffer]);
-
-const component = await session.create('FileComponent', {
-  name: 'file.ma',
-  size: buffer.length,
-  version_id: assetVersionId
-});
-
-await session.upload(component.id, blob);
-```
-
-**Get Thumbnail**
-```javascript
-const thumbnailUrl = await session.getThumbnailUrl(
-  assetVersion.thumbnail_id,
-  { size: 300 }
-);
-imageElement.src = thumbnailUrl;
-```
-
-**→ This quick reference handles most file operations. For custom locations or advanced patterns, continue below.**
-
----
-
-## Online Resources (Fetch for Detailed Info)
-
-### When to Fetch
-- User asks for "all location types" or "complete component API"
-- Needs custom S3 location setup
-- Questions about advanced file handling patterns
-- Storage accessor or resource transformer details
-- Official component schema
-
-### Python Locations Documentation
-**URL**: `https://developer.ftrack.com/api-clients/python/locations/overview`
-**Fetch Prompt**:
-```
-Extract ftrack Python location and component patterns. Include:
-- Location types and configuration
-- Component creation and management
-- Custom location setup (S3, disk)
-- Storage accessor patterns
-- Resource transformers for file paths
-- Availability tracking
-- Performance optimization
-Format as markdown with code examples.
-```
-
-### JavaScript File Upload Documentation
-**URL**: `https://developer.ftrack.com/api/uploading-files`
-**Fetch Prompt**:
-```
-Extract ftrack JavaScript file upload patterns. Include:
-- Browser file upload with File API
-- Node.js file operations
-- Progress tracking implementation
-- Error handling patterns
-- Thumbnail operations
-- Component querying
-Format as markdown with async/await examples.
-```
-
-### Component Schema Reference
-**URL**: `https://developer.ftrack.com/api-clients/examples/working-with-components`
-**Fetch Prompt**:
-```
-Extract ftrack component types and schema. Include:
-- FileComponent vs SequenceComponent vs ContainerComponent
-- Component attributes and metadata
-- Relationship to AssetVersions and Locations
-- Component querying patterns
-Format as markdown.
-```
-
-### WebFetch Decision Tree
-
-**IMPORTANT**: Actively check user query for trigger phrases, then use WebFetch.
-
-**Trigger detection** (check user's exact query):
-```python
-trigger_phrases = [
-    "show all location types",
-    "complete component API",
-    "custom location patterns",
-    "S3 location setup",
-    "storage accessor",
-    "resource transformer",
-    "all component types",
-    "official file docs"
-]
-```
-
-**Action when trigger detected:**
-1. **Detect language**: Python (`ftrack_api`) or JavaScript (`@ftrack/api`)
-2. **Detect topic**: Locations, uploads, downloads, or components
-3. **Use WebFetch** with appropriate URL above
-4. **If fetch succeeds**: Return formatted docs to user
-5. **If fetch fails**: Gracefully fallback to local example (see "Local Examples" section)
-
-**WebFetch Example:**
-```markdown
-# User asks: "Show me how to setup custom S3 location in Python"
-# Trigger detected: "custom location"
-# Language detected: "Python"
-
-Use WebFetch tool:
-WebFetch(
-  url="https://developer.ftrack.com/api-clients/python/locations/overview",
-  prompt="Extract custom S3 location setup patterns for ftrack Python API. Include location class definition, storage accessor, S3 configuration, and registration. Format as markdown with complete code example."
-)
-
-If successful: Present docs
-If fails: Load examples/python/custom_location_s3.py
-```
-
----
-
-## Local Examples (Fallback - Load Only When Needed)
-
-### When to Load Local
-1. WebFetch fails or times out
-2. User explicitly requests "show me the example file" or "local examples"
-3. Need complete runnable custom location implementation
-4. Advanced S3/disk location patterns not in quick reference
-
-### Available Local Files
-
-**Python S3 Location Example**
-- **File**: `examples/python/custom_location_s3.py`
-- **Contains**: Complete custom S3 location implementation with storage accessor, resource transformers
-- **Load when**: User needs full custom S3 location setup, advanced patterns
-- **Size**: ~300 lines
-
-**Python Resource Transformers Example**
-- **File**: `examples/python/resource_transformers.py`
-- **Contains**: Custom path transformers, file organization patterns
-- **Load when**: User needs custom file path generation
-- **Size**: ~200 lines
-
-**JavaScript File Operations Example**
-- **File**: `examples/javascript/file-operations.js`
-- **Contains**: Browser upload, Node.js operations, progress tracking, error handling
-- **Load when**: User needs production JavaScript file handling patterns
-- **Size**: ~400 lines
-
-### How to Load
-Files are under `${CLAUDE_SKILL_DIR}`. Read only the file you need, then extract the sections relevant to the user's question.
-
----
-
-## Decision Tree
-
-```
-User asks about ftrack file operations
-  │
-  ├─ Basic upload/download (how do I...)?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ Thumbnail operations?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ Image sequence upload?
-  │   └→ Use Quick Reference above ✓
-  │
-  ├─ Custom S3 or disk location?
-  │   ├→ WebFetch locations documentation
-  │   └→ If fails: Load custom_location_s3.py
-  │
-  ├─ Storage accessor or resource transformer?
-  │   ├→ WebFetch locations documentation
-  │   └→ If fails: Load local examples
-  │
-  ├─ Complete component API reference?
-  │   ├→ WebFetch component schema docs
-  │   └→ If fails: Use quick reference + guidance
-  │
-  └─ Production-ready example code?
-      └→ Load specific example file directly
-```
-
----
-
-## Response Strategy
-
-### For Simple Questions
-1. Answer using Quick Reference patterns
-2. Show appropriate code (Python or JavaScript)
-3. Keep concise (1-2 examples max)
-4. Cite: "From file operations quick reference"
-
-### For Detailed Questions
-1. Start with Quick Reference context
-2. If trigger detected: WebFetch relevant documentation
-3. Provide specific configuration examples
-4. Cite: "From [URL]"
-5. If fetch fails: Load local example + cite filename
-
-### For Advanced Questions (Custom Locations)
-1. Assess complexity (S3, custom transformers, etc.)
-2. WebFetch locations documentation first
-3. If insufficient or fails: Load local example files
-4. Provide production-ready code with explanation
-5. Cite all sources used
-
-### Progressive Disclosure
-- Start minimal (quick reference - upload/download pattern)
-- Offer more: "Need custom S3 location setup? I can fetch detailed docs"
-- Load comprehensive examples only if requested or if WebFetch fails
-
----
-
-## Custom Location Snippet (Quick Reference Extension)
-
-**Python Custom S3 Location (Minimal)**
-```python
-import ftrack_api.structure.standard
-import ftrack_api.accessor.disk
-
-class S3Location(ftrack_api.entity.location.Location):
-    """Custom S3-backed location."""
-    
-    def __init__(self, session, **kwargs):
-        super(S3Location, self).__init__(session, **kwargs)
-        
-        # Use S3 accessor (simplified - see full example for boto3 integration)
-        self.accessor = CustomS3Accessor(bucket='your-bucket')
-        
-        # Standard structure
-        self.structure = ftrack_api.structure.standard.StandardStructure()
-
-# Register location
-def configure_location(session):
-    location = session.query('Location where name is "my-s3-location"').one()
-    location.__class__ = S3Location
-```
-
-**For complete S3 setup**: Request WebFetch or load `custom_location_s3.py`
-
----
-
-## Common Patterns
-
-### Error Handling
-```python
-# Python
-try:
-    component = asset_version.create_component(path, location=location)
-    session.commit()
-except Exception as e:
-    print(f"Upload failed: {e}")
-    session.rollback()
-```
+Only the `ftrack.server` location is available. `session.createComponent(file, { data: { version_id } })` uploads and attaches a file; `getComponentUrl` / `thumbnailUrl` build download and thumbnail URLs (they contain the API key). Encode for review with a raw operation:
 
 ```javascript
-// JavaScript
-try {
-  await session.upload(component.id, file);
-} catch (error) {
-  console.error('Upload failed:', error);
-  throw error;
-}
+await session.call([{ action: "encode_media", component_id: componentId, version_id: versionId, keep_original: true }]);
 ```
 
-### Query Components by Type
-```python
-# Python
-file_components = session.query(
-    'FileComponent where version.id is "{}"'.format(version_id)
-).all()
+Set a thumbnail with `session.update("AssetVersion", [versionId], { thumbnail_id: componentId })` (the component must be in `ftrack.server`). See ftrack-javascript.
 
-sequence_components = session.query(
-    'SequenceComponent where version.id is "{}"'.format(version_id)
-).all()
-```
+## Rules
 
-### Check Component Availability
-```python
-# Python
-location = session.query('Location where name is "ftrack.server"').one()
-is_available = location.get_component_availability(component)
-print(f"Available: {is_available}")
-```
+1. Put the `Asset` on the task's parent, link the task on the version, and reuse an existing `Asset` for new versions.
+2. Thumbnails must be `FileComponent`s in `ftrack.server` with a valid image type.
+3. `encode_media` is asynchronous: it returns a `Job`; outputs appear as components when it finishes.
+4. Commit after creating versions and before adding components that reference them.
+5. Don't hand-build server upload URLs; use `create_component`/`createComponent` (raw protocol in the reference if you must).
+
+## Reference files
+
+Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+
+| File | Read when |
+|---|---|
+| [references/locations.md](references/locations.md) | Creating/configuring locations, accessor/structure/transformer interfaces, custom cloud (S3) storage, per-project roots, location events |
+| [references/review-and-media.md](references/review-and-media.md) | encode_media jobs, `ftr_meta` review metadata, thumbnails and URLs, raw upload protocol |
+| [examples/python/publish.py](examples/python/publish.py) | Runnable publish: asset, version, file and sequence components, thumbnail, encode |
+| [examples/python/custom_location.py](examples/python/custom_location.py) | Location plugin: disk location with project-based structure (based on ftrack-recipes) |
+| [examples/javascript/upload.js](examples/javascript/upload.js) | Node.js: upload to a version, encode for review, set thumbnail |
+
+More: https://github.com/ftrackhq/ftrack-recipes (plugins/per-project-location, events/customise-structure, actions/multi-site-location). Docs: https://developer.ftrack.com/publishing-files/publish, https://developer.ftrack.com/api-clients/python/locations/tutorial.
