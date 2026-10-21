@@ -40,7 +40,7 @@ The generated header says "Not intended to modify manually" - don't edit it; reg
 
 | Symptom | Cause / fix |
 |---|---|
-| Crash in prettier with `SyntaxError: Property or signature expected` and a code frame like `> 1055 \| Camera Lens: number` | A custom attribute **key** contains a space or other character that isn't valid in a TypeScript identifier. 2.1.3 emits it unquoted and aborts without writing the file. Rename the attribute key (System settings > Custom attributes; the label can keep spaces) or patch the generated property name |
+| Crash in prettier with `SyntaxError: Property or signature expected` and a code frame like `> 1055 \| Camera Lens: number` | A custom attribute **key** contains a space or other character that isn't valid in a TypeScript identifier. 2.1.3 emits it unquoted in `TypedCustomAttributeValueMap` and aborts without writing the file. Fix: the key must be quoted (`"Camera Lens": number`). Patch the installed generator - in `node_modules/@ftrack/ts-schema-generator/dist/ftrack-ts-schema-generator.js` replace `${x[0].key}:` with `${JSON.stringify(x[0].key)}:` (source: `emitCustomAttributes.ts`) - and rerun; tested on a workspace with such a key. Alternatively rename the attribute key |
 | `Unexpected token '<' ... is not valid JSON` | `FTRACK_SERVER` has a trailing slash; remove it |
 | Missing custom attributes or types | The API key's role can't see them; use a key with access to the configuration |
 

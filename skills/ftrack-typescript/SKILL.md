@@ -21,7 +21,7 @@ npm install --save-dev @ftrack/ts-schema-generator
 }
 ```
 
-The generator reads `FTRACK_SERVER`, `FTRACK_API_USER` and `FTRACK_API_KEY` from the environment (there are no CLI flags for them). Arguments are an optional output directory (default `__generated__`) and filename (default `schema.ts`). Commit the output and regenerate when the workspace schema or custom attributes change. If it crashes in prettier with `Property or signature expected`, a custom attribute key contains a space - see the troubleshooting table in the reference. Details: [references/schema-generator.md](references/schema-generator.md).
+The generator reads `FTRACK_SERVER`, `FTRACK_API_USER` and `FTRACK_API_KEY` from the environment (there are no CLI flags for them). Arguments are an optional output directory (default `__generated__`) and filename (default `schema.ts`). Commit the output and regenerate when the workspace schema or custom attributes change. If it crashes in prettier with `Property or signature expected`, a custom attribute key contains a space and the generator (2.1.3) doesn't quote it - see the reference for the one-line patch. Details: [references/schema-generator.md](references/schema-generator.md).
 
 ## 2. Type the session
 

@@ -88,7 +88,7 @@ Typical failures:
 | `EventHubConnectionError` on `wait()` | Create the session with `auto_connect_event_hub=True` |
 | `Cannot find package 'ws'` when using the event hub in Node.js | `npm install ws` or use Node.js 22+ |
 | `SyntaxError: Cannot use import statement outside a module` | Add `"type": "module"` or use `.mjs` |
-| `ftrack-ts-schema-generator` crashes with `Property or signature expected` | A custom attribute key contains a space; see ftrack-typescript |
+| `ftrack-ts-schema-generator` crashes with `Property or signature expected` | A custom attribute key contains a space and isn't quoted by the generator; one-line patch in ftrack-typescript |
 | Dependency conflict on `arrow` | Install ftrack-python-api in its own virtual environment |
 
 Package sources: https://pypi.org/project/ftrack-python-api/, https://pypi.org/project/ftrack-action-handler/, https://www.npmjs.com/package/@ftrack/api, https://www.npmjs.com/package/@ftrack/ts-schema-generator, https://www.npmjs.com/package/@ftrack/web-widget.
