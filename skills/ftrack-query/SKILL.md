@@ -1,6 +1,6 @@
 ---
 name: ftrack-query
-description: ftrack query language for Python and JavaScript - select/where syntax, projections, has/any relationship filters, ordering, pagination, performance, and server-side aggregation with group by. Use when code calls `session.query()` or contains ftrack query strings, or the user asks how to search, filter, count or aggregate ftrack entities (tasks, assets, versions, projects, notes). Not for SQL or non-ftrack databases.
+description: "ftrack query language for Python and JavaScript - select/where syntax, projections, has/any relationship filters, ordering, pagination, performance, and server-side aggregation with group by. Not for SQL or non-ftrack databases."
 when_to_use: "Code signals: `session.query(`, `session.call(` with a `group by` expression, `operation.query(`, query strings such as `select ... from Task where ...`, `project_id is \"`, `ancestors any (`, `has (`, `order by`, `offset ... limit`, `count(id)`, or server errors mentioning ParseError or subqueries. Requests like \"find all tasks with status X\", \"filter shots\", \"get versions for an asset\", \"count tasks per status\", \"ftrack query is slow\", \"paginate ftrack results\", \"numbers for a dashboard\"."
 ---
 

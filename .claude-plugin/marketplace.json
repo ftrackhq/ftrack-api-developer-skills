@@ -1,30 +1,15 @@
 {
   "name": "ftrack-skills",
+  "description": "Agent skills for ftrack API development",
   "owner": {
     "name": "ftrack",
-    "email": "support@ftrack.com"
-  },
-  "metadata": {
-    "description": "Agent skills for ftrack API development",
-    "version": "0.1.0"
+    "email": "support@ftrack.com",
+    "url": "https://www.ftrack.com"
   },
   "plugins": [
     {
       "name": "ftrack-api-developer",
-      "description": "ftrack API development - orchestrator plus subskills for queries, events, actions, files, sessions, JavaScript, TypeScript and dashboards",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./skills/ftrack-api-developer",
-        "./skills/ftrack-query",
-        "./skills/ftrack-events",
-        "./skills/ftrack-actions",
-        "./skills/ftrack-files",
-        "./skills/ftrack-session",
-        "./skills/ftrack-javascript",
-        "./skills/ftrack-typescript",
-        "./skills/ftrack-dashboards"
-      ]
+      "source": "./"
     }
   ]
 }

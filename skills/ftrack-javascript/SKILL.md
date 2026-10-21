@@ -1,6 +1,6 @@
 ---
 name: ftrack-javascript
-description: ftrack JavaScript client `@ftrack/api` - Session, query, create/update/delete/ensure, atomic session.call batches, createComponent uploads, eventHub, dates, cancellation, and usage in Node.js, browsers and React. Use when JavaScript code imports `@ftrack/api` or calls `session.query`, `session.create`, `session.update`, `session.call`, `session.createComponent` or `session.eventHub`, or the user asks how to use ftrack from JavaScript, Node.js, the browser or React. For TypeScript also use ftrack-typescript. Not for Python ftrack code.
+description: "ftrack JavaScript client @ftrack/api - Session, queries, create/update/delete/ensure, atomic session.call batches, createComponent uploads, eventHub, dates and cancellation in Node.js, browsers and React. Not for Python ftrack code."
 when_to_use: "Code signals: `from \"@ftrack/api\"` or `require(\"@ftrack/api\")`, `@ftrack/api` in package.json, `session.initializing`, `session.create(`, `session.update(`, `session.delete(`, `session.ensure(`, `session.call(`, `operation.create(`, the `expression` template tag, `session.createComponent(`, `session.eventHub`, `getComponentUrl`, `thumbnailUrl`, React components or Node.js scripts talking to ftrack. Requests like \"ftrack in JavaScript\", \"Node.js ftrack script\", \"ftrack React app\", \"upload a file to ftrack from the browser\"."
 ---
 

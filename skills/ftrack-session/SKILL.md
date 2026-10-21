@@ -1,6 +1,6 @@
 ---
 name: ftrack-session
-description: ftrack session setup for Python and JavaScript - creating a Session, API keys and environment variables, Python unit of work (commit/rollback), auto-population, caching, plugins, strict mode, and handling ftrack API errors. Use when code creates `ftrack_api.Session()` or `new Session()` from `@ftrack/api`, or the user asks about connecting or authenticating to ftrack, committing changes, session caching or ftrack API exceptions. Not for generic HTTP sessions or non-ftrack authentication.
+description: "ftrack session setup for Python and JavaScript - credentials and API keys, Python unit of work (commit/rollback), auto-population, caching, plugins, strict mode, and ftrack API errors. Not for generic HTTP sessions."
 when_to_use: "Code signals: `ftrack_api.Session(`, `new Session(` from `@ftrack/api`, `session.initializing`, `session.commit()`, `session.rollback()`, `session.reset()`, `auto_populating`, `strict_api` / `strictApi`, `ftrack_api.cache`, `ftrack_api.exception`, `ServerError`, `ServerPermissionDeniedError`, `FTRACK_SERVER`, `FTRACK_API_USER`, `FTRACK_API_KEY`, `FTRACK_API_SCHEMA_CACHE_PATH`. Requests like \"connect to ftrack\", \"ftrack API key\", \"authentication failed\", \"commit failed\", \"retry ftrack requests\", \"cache ftrack data\", \"global API key permissions\"."
 ---
 

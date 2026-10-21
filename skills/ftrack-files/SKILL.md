@@ -1,6 +1,6 @@
 ---
 name: ftrack-files
-description: ftrack file handling for Python and JavaScript - components, asset versions, locations (including custom S3 locations), upload, download, thumbnails, resource transformers. Use when code calls `create_component()`, `session.upload()`, or works with `Location`, `FileComponent` or `AssetVersion` files, or the user asks about publishing or retrieving files in ftrack. Not for general OS file handling or non-ftrack storage.
+description: "ftrack file handling for Python and JavaScript - components, asset versions, locations (including custom S3 locations), upload, download, thumbnails, resource transformers."
 when_to_use: "Code signals: `create_component(`, `session.createComponent(`, `encode_media(`, `get_filesystem_path(`, `component_locations`, `Location`, `ftrack.server`, `ftrack.unmanaged`, `session.pick_location(`, `ftrack_api.accessor`, `ftrack_api.structure`, `FileComponent`, `SequenceComponent`, `ContainerComponent`, `AssetVersion` publishing, `create_thumbnail(`, `thumbnail_id`. Requests like \"publish a file to ftrack\", \"upload media\", \"download a component\", \"custom S3 location\", \"set a thumbnail\", \"image sequence in ftrack\"."
 ---
 

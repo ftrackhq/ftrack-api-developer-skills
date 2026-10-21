@@ -1,6 +1,6 @@
 ---
 name: ftrack-events
-description: ftrack event hub and webhooks for Python and JavaScript - subscribing to ftrack.update and other topics, the update payload (legacy entityType/keys names, changes), event listener plugins with register(session), replies, publishing, targeting, priorities, pushToken loop prevention, user notifications, and server-side webhooks/automations as an alternative to a listener.
+description: "ftrack event hub and webhooks for Python and JavaScript - ftrack.update payloads, listener plugins, subscriptions, replies, publishing, loop prevention, user notifications, and server-side webhooks as an alternative to a listener."
 when_to_use: "Code signals: `session.event_hub`, `session.eventHub`, `event_hub.subscribe(`, `event_hub.wait()`, `event_hub.publish(`, `ftrack_api.event.base.Event`, `new Event(` from `@ftrack/api`, `topic=ftrack.update`, `topic=ftrack.*`, `event['data']['entities']`, `entityType`, `statusid` keys, `auto_connect_event_hub=True`, `FTRACK_EVENT_PLUGIN_PATH`, plugin files with `def register(session, **kw)`, `Automation` / `Trigger` / `WebhookAction` entities. Requests like \"listen for status changes in ftrack\", \"react when a version is published\", \"ftrack event listener\", \"cascade status to the shot\", \"ftrack webhook\", \"notify the user in ftrack\". For custom actions use ftrack-actions."
 ---
 

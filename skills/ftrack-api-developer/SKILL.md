@@ -1,6 +1,6 @@
 ---
 name: ftrack-api-developer
-description: Entry point for ftrack API development in Python and JavaScript/TypeScript; routes to the focused ftrack-* subskills (query, events, actions, files, session, javascript, typescript, dashboards). Use when code imports `ftrack_api`, `@ftrack/api` or `@ftrack/web-widget`, uses an ftrack Session or entities, or the user asks about the ftrack API or building an ftrack integration and the topic spans several areas or is unclear. Not for non-ftrack code or other media asset management systems.
+description: "Entry point for ftrack Studio API development in Python and JavaScript/TypeScript. Gives core concepts and routes to the focused ftrack-* skills (query, session, events, actions, files, javascript, typescript, dashboards)."
 when_to_use: "Use for general ftrack Studio API questions or when it is unclear which ftrack-* skill applies: code that imports `ftrack_api` (Python) or `@ftrack/api` (JavaScript), uses `ftrack_api.Session` or `new Session(` from `@ftrack/api`, ftrack event plugins with `register(session)`, `FTRACK_SERVER` / `FTRACK_API_USER` / `FTRACK_API_KEY` environment variables, `*.ftrackapp.com` URLs, or requests like \"write an ftrack script\", \"build an ftrack integration\", \"automate ftrack\", \"ftrack API\"."
 ---
 
