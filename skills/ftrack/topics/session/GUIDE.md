@@ -78,7 +78,7 @@ Files are under `${CLAUDE_SKILL_DIR}/topics/session`. Read only what the questio
 
 | File | Read when |
 |---|---|
-| [references/python-session.md](references/python-session.md) | All Python Session arguments, environment variables, unit of work details, auto-population, caching (file cache, selective cache), plugins, schema cache, SSL/proxy, exception list |
+| [references/python-session.md](references/python-session.md) | All Python Session arguments, environment variables, unit of work details, notes (`create_note`), auto-population, caching (file cache, selective cache), plugins, schema cache, SSL/proxy, exception list |
 | [references/javascript-session.md](references/javascript-session.md) | JavaScript constructor options, initialization, batching with `session.call`, strict mode per call, dates (Moment/dayjs vs ISO), cancellation, error classes |
 | [references/authentication.md](references/authentication.md) | Personal vs global API keys, API key roles and project access, raw HTTP authentication headers |
 | [examples/python/session_examples.py](examples/python/session_examples.py) | Runnable Python: connect, commit/rollback, retry on network errors, persistent cache, strict session |

@@ -6,8 +6,8 @@ This repo is a Claude Code plugin marketplace (`ftrack-skills`) containing one p
 
 - `.claude-plugin/marketplace.json` - marketplace with one entry, `source: "./"`. Skills are found by the default `skills/` scan; don't add a `skills` list or `strict` (they conflict with `plugin.json`).
 - `.claude-plugin/plugin.json` - listing metadata, `license: Apache-2.0`, and the plugin **`version`** (semver). Set it only here, never also on the marketplace entry. Users only get changes when this version changes: `claude plugin update` reports "already at the latest version" otherwise.
-- `skills/ftrack-api-developer/SKILL.md` - the only registered skill (data model, rules, router table). It must stay the single entry: don't add other `skills/*/SKILL.md` files, or they show up as separate skills again.
-- `skills/ftrack-api-developer/topics/<topic>/GUIDE.md` + `references/*.md` + `examples/` (+ `scripts/` in setup). Guides have no frontmatter and are read on demand via the router. Keep each topic's examples inside its own folder, even if that means small duplication.
+- `skills/ftrack/SKILL.md` - the only registered skill (data model, rules, router table). It must stay the single entry: don't add other `skills/*/SKILL.md` files, or they show up as separate skills again.
+- `skills/ftrack/topics/<topic>/GUIDE.md` + `references/*.md` + `examples/` (+ `scripts/` in setup). Guides have no frontmatter and are read on demand via the router. Keep each topic's examples inside its own folder, even if that means small duplication.
 - No per-skill `plugin.json`, no root `CLAUDE.md` (plugins don't load it and the validator warns).
 
 ## Writing skills

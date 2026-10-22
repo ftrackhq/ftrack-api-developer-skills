@@ -1,5 +1,5 @@
 ---
-name: ftrack-api-developer
+name: ftrack
 description: "ftrack Studio API development in Python and JavaScript/TypeScript - data model, sessions and API keys, queries and group-by aggregation, event hub and webhooks, custom actions, files/components/locations/review media, @ftrack/api, generated TypeScript types, dashboard widgets and dependency setup. Routes to topic guides bundled in this skill."
 when_to_use: "Code: `ftrack_api`, `ftrack_action_handler`, `@ftrack/api`, `@ftrack/web-widget`, `@ftrack/ts-schema-generator`, `session.query(`, `session.commit()`, `event_hub.subscribe(`, `create_component(`, `FTRACK_API_KEY`, `*.ftrackapp.com`. Asks: write, fix or explain ftrack scripts, queries, listeners, actions, publishes, widgets, types; install ftrack packages; connect or authenticate. Errors: `No module named 'ftrack_api'`, `Cannot find module '@ftrack/api'`."
 ---
@@ -34,7 +34,7 @@ This is the only ftrack skill; each topic is a guide inside it. **Before writing
 |---|---|
 | [setup](topics/setup/GUIDE.md) | pip/npm install of ftrack packages, `FTRACK_*` variables, connection check; `No module named 'ftrack_api'`, `Cannot find module '@ftrack/api'` |
 | [query](topics/query/GUIDE.md) | `session.query(`, `select ... from ... where`, `has`/`any`, `limit`/`offset`, `group by`, `count(id)`, slow queries |
-| [session](topics/session/GUIDE.md) | `ftrack_api.Session(`, `new Session(`, `commit()`/`rollback()`, `strict_api`, API keys, `ftrack_api.exception.*`, caching, plugins |
+| [session](topics/session/GUIDE.md) | `ftrack_api.Session(`, `new Session(`, `commit()`/`rollback()`, `strict_api`, API keys, `create_note(`, `ftrack_api.exception.*`, caching, plugins |
 | [events](topics/events/GUIDE.md) | `event_hub.subscribe(`, `eventHub.subscribe(`, `ftrack.update`, `event['data']['entities']`, `register(session)`, webhooks |
 | [actions](topics/actions/GUIDE.md) | `ftrack_action_handler`, `BaseAction`, `discover`/`launch`, `ftrack.action.launch`, form `items`, action servers |
 | [files](topics/files/GUIDE.md) | `create_component(`, `createComponent(`, `AssetVersion`, `encode_media`, `create_thumbnail(`, `get_filesystem_path(`, locations, accessors, S3, sequences |

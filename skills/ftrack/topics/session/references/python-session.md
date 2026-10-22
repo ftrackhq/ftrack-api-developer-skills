@@ -56,6 +56,22 @@ session.commit()
 - Queries are always sent immediately and don't see uncommitted creates. Results are merged with local changes, so a modified-but-uncommitted value stays visible on the entity.
 - Relationship attributes take entity objects: `task['status'] = status` (or set the `*_id` attribute to an id).
 
+## Notes
+
+Entities with a `notes` relation (tasks, versions, ...) have `create_note(content, author, recipients=None, category=None, labels=None)`:
+
+```python
+user = session.query('User where username is "{0}"'.format(session.api_user)).one()
+note = task.create_note("Looks good", author=user, recipients=[reviewer])   # users or groups
+session.commit()
+```
+
+- Stages the Note and its `Recipient` links; nothing is saved until `commit()`.
+- `labels` takes `NoteLabel` entities (servers with NoteLabel support); `category` is the older single-category form, deprecated where NoteLabel exists. Passing both raises `ValueError`.
+- Reply to a note with `note.create_reply(content, author)`.
+
+Source: `ftrack_api/entity/note.py` (ftrack-python-api 3.1.0).
+
 ## Auto-population
 
 Accessing an attribute that isn't loaded sends a request to fetch it. Convenient in small scripts, slow in loops: project attributes in the query instead (see the `query` topic).
