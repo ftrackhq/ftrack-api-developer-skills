@@ -22,7 +22,7 @@ Frontmatter of the root `SKILL.md`: `name` (= folder name), `description`, `when
 
 Budgets (check with `claude plugin details ftrack-api-developer@ftrack-skills`):
 
-- Always-on total under ~1,500 tokens (currently ~1,250).
+- Always-on total under ~1,500 tokens (currently ~210, since there's a single registered skill).
 - Root `SKILL.md` body stays short (router + essentials); each `GUIDE.md` 80-150 lines, ~0.7-1.7k tokens. Put detail in `references/` and list each file in the guide's "Reference files" table with when to read it.
 - Refer to bundled files under `${CLAUDE_SKILL_DIR}`.
 - Leave out generic knowledge (React, charting, bundlers); keep only ftrack-specific behaviour.
