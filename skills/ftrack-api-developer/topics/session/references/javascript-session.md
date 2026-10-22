@@ -48,7 +48,7 @@ Requests made before initialization finishes wait for it. There is no `close()` 
 | `delete(entityType, keys, options?)` | |
 | `ensure(entityType, data, identifyingKeys?)` | Get or create; resolves to the entity, throws a plain `Error` if several match |
 | `call(operations, options?)` | Several operations in one request and one transaction |
-| `createComponent(file, options?)` | Upload a file - browsers only (see ftrack-files for Node.js) |
+| `createComponent(file, options?)` | Upload a file - browsers only (see the `files` topic for Node.js) |
 | `getSchemas()`, `getServerInformation()`, `getServerVersion()` | |
 
 There is no unit of work: every `create`/`update`/`delete` is its own request. For changes that must succeed or fail together, use `call`:
@@ -94,4 +94,4 @@ Network failures surface as the `fetch` error of your runtime (e.g. `TypeError: 
 
 ## Browser use
 
-Never embed an API key in code served to browsers. ftrack dashboard widgets receive the current user's server URL, username and API key from ftrack at runtime (see ftrack-dashboards); other browser apps should call your own backend, which holds the key.
+Never embed an API key in code served to browsers. ftrack dashboard widgets receive the current user's server URL, username and API key from ftrack at runtime (see the `dashboards` topic); other browser apps should call your own backend, which holds the key.

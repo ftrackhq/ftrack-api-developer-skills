@@ -35,26 +35,25 @@ claude plugin update ftrack-api-developer@ftrack-skills
 
 Then run `/reload-plugins` in an open session, or start a new one.
 
-## Skills
+## Skill
 
-The `ftrack-api-developer` plugin contains these skills. Claude loads them automatically when your question or code matches - for example when a file imports `ftrack_api` or `@ftrack/api`, or calls `session.query()`:
+The plugin registers a single skill, `ftrack-api-developer`. Claude loads it when your question or code matches - for example a file that imports `ftrack_api` or `@ftrack/api`, or calls `session.query()` - and it then reads only the topic guide(s) the task needs:
 
-| Skill | Covers |
-|-------|--------|
-| [ftrack-overview](skills/ftrack-overview/SKILL.md) | Entry point: data model, Python vs JavaScript, which skill covers what |
-| [ftrack-setup](skills/ftrack-setup/SKILL.md) | Install ftrack-python-api, ftrack-action-handler, @ftrack/api, schema generator, web widget; credentials; connection check |
-| [ftrack-query](skills/ftrack-query/SKILL.md) | Query syntax, projections, has/any filters, pagination, group by aggregation |
-| [ftrack-session](skills/ftrack-session/SKILL.md) | Sessions, API keys, commit/rollback, caching, errors |
-| [ftrack-events](skills/ftrack-events/SKILL.md) | Event hub listeners, ftrack.update payloads, publishing, webhooks |
-| [ftrack-actions](skills/ftrack-actions/SKILL.md) | Custom actions with UI forms (Python and JavaScript) |
-| [ftrack-files](skills/ftrack-files/SKILL.md) | Publishing versions, components and sequences, locations, thumbnails, review media, uploads |
-| [ftrack-javascript](skills/ftrack-javascript/SKILL.md) | `@ftrack/api` in Node.js, browsers and React |
-| [ftrack-typescript](skills/ftrack-typescript/SKILL.md) | Typed sessions and generated workspace types |
-| [ftrack-dashboards](skills/ftrack-dashboards/SKILL.md) | Custom dashboard widgets: credentials, entity context, theme, chart data |
+| Topic guide | Covers |
+|-------------|--------|
+| [setup](skills/ftrack-api-developer/topics/setup/GUIDE.md) | Install ftrack-python-api, ftrack-action-handler, @ftrack/api, schema generator, web widget; credentials; connection check |
+| [query](skills/ftrack-api-developer/topics/query/GUIDE.md) | Query syntax, projections, has/any filters, pagination, group by aggregation |
+| [session](skills/ftrack-api-developer/topics/session/GUIDE.md) | Sessions, API keys, commit/rollback, caching, errors |
+| [events](skills/ftrack-api-developer/topics/events/GUIDE.md) | Event hub listeners, ftrack.update payloads, publishing, webhooks |
+| [actions](skills/ftrack-api-developer/topics/actions/GUIDE.md) | Custom actions with UI forms (Python and JavaScript) |
+| [files](skills/ftrack-api-developer/topics/files/GUIDE.md) | Publishing versions, components and sequences, locations, thumbnails, review media, uploads |
+| [javascript](skills/ftrack-api-developer/topics/javascript/GUIDE.md) | `@ftrack/api` in Node.js, browsers and React |
+| [typescript](skills/ftrack-api-developer/topics/typescript/GUIDE.md) | Typed sessions and generated workspace types |
+| [dashboards](skills/ftrack-api-developer/topics/dashboards/GUIDE.md) | Custom dashboard widgets: credentials, entity context, theme, chart data |
 
-Each skill keeps its reference docs and runnable examples in its own `references/` and `examples/` folders, so it works on its own and offline.
+Each topic keeps its reference docs and runnable examples in its own `references/` and `examples/` folders, so the skill works offline.
 
-To invoke a skill explicitly, type `/ftrack-api-developer:<skill>`, e.g. `/ftrack-api-developer:ftrack-query`.
+To invoke it explicitly, type `/ftrack-api-developer:ftrack-api-developer`.
 
 **Prerequisites**: an ftrack server URL, username and API key (`FTRACK_SERVER`, `FTRACK_API_USER`, `FTRACK_API_KEY`).
 
@@ -64,10 +63,12 @@ To invoke a skill explicitly, type `/ftrack-api-developer:<skill>`, e.g. `/ftrac
 .claude-plugin/
   marketplace.json      # marketplace "ftrack-skills" with one plugin entry (source "./")
   plugin.json           # plugin metadata and semver version (bump it to release)
-skills/<skill>/
-  SKILL.md              # frontmatter (name, description, when_to_use) + short body
-  references/*.md       # detail loaded on demand
-  examples/             # runnable examples (and scripts/ for ftrack-setup)
+skills/ftrack-api-developer/
+  SKILL.md              # the only registered skill: frontmatter + data model + topic router
+  topics/<topic>/
+    GUIDE.md            # topic guide, read on demand (no frontmatter, not a registered skill)
+    references/*.md     # detail loaded on demand
+    examples/           # runnable examples (and scripts/ in setup)
 AGENTS.md               # conventions and checks for anyone (human or agent) editing skills
 ```
 

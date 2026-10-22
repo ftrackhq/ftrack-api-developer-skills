@@ -1,9 +1,3 @@
----
-name: ftrack-files
-description: ftrack files - publishing Asset/AssetVersion/components, image sequences, locations (ftrack.server, unmanaged, custom disk/cloud via accessors and structures), thumbnails, encode_media and web review, downloads and paths, in Python and JavaScript.
-when_to_use: "Code: `create_component(`, `createComponent(`, `encode_media(`, `create_thumbnail(`, `get_filesystem_path(`, `get_url(`, `add_component(`, `configure-location`, `ftrack_api.accessor`, `ftrack_api.structure`, `ftr_meta`. Asks: publish/upload/download files, image sequences, storage locations, S3, thumbnails, web review media."
----
-
 # ftrack files
 
 **Model:** a `Component` is file metadata (name, type, size). Where the data actually is, is a `ComponentLocation` linking it to a `Location`. Published files hang off `AssetVersion` (`Asset` -> versions -> components). The `Asset`'s parent is the task's **parent** (shot, asset build, folder, project); the task itself goes on the version.
@@ -61,7 +55,7 @@ Only the `ftrack.server` location is available. In browsers `session.createCompo
 await session.call([{ action: "encode_media", component_id: componentId, version_id: versionId, keep_original: true }]);
 ```
 
-Set a thumbnail with `session.update("AssetVersion", [versionId], { thumbnail_id: componentId })` (the component must be in `ftrack.server`). See ftrack-javascript.
+Set a thumbnail with `session.update("AssetVersion", [versionId], { thumbnail_id: componentId })` (the component must be in `ftrack.server`). See the `javascript` topic.
 
 ## Rules
 
@@ -73,7 +67,7 @@ Set a thumbnail with `session.update("AssetVersion", [versionId], { thumbnail_id
 
 ## Reference files
 
-Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+Files are under `${CLAUDE_SKILL_DIR}/topics/files`. Read only what the question needs.
 
 | File | Read when |
 |---|---|

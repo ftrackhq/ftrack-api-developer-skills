@@ -1,8 +1,9 @@
 ---
-name: ftrack-overview
-description: "Entry point for ftrack Studio API work in Python and JavaScript/TypeScript: core data model, client differences, and which ftrack-* skill covers each task."
-when_to_use: "General or mixed ftrack API questions where no single ftrack-* skill fits: \"write an ftrack script\", \"build an ftrack integration\", \"automate ftrack\", code importing `ftrack_api` or `@ftrack/api`, `*.ftrackapp.com` URLs."
+name: ftrack-api-developer
+description: "ftrack Studio API development in Python and JavaScript/TypeScript - data model, sessions and API keys, queries and group-by aggregation, event hub and webhooks, custom actions, files/components/locations/review media, @ftrack/api, generated TypeScript types, dashboard widgets and dependency setup. Routes to topic guides bundled in this skill."
+when_to_use: "Code: `ftrack_api`, `ftrack_action_handler`, `@ftrack/api`, `@ftrack/web-widget`, `@ftrack/ts-schema-generator`, `session.query(`, `session.commit()`, `event_hub.subscribe(`, `create_component(`, `FTRACK_API_KEY`, `*.ftrackapp.com`. Asks: write, fix or explain ftrack scripts, queries, listeners, actions, publishes, widgets, types; install ftrack packages; connect or authenticate. Errors: `No module named 'ftrack_api'`, `Cannot find module '@ftrack/api'`."
 ---
+
 
 # ftrack API development
 
@@ -25,21 +26,21 @@ ftrack Studio exposes one HTTP API (`POST https://<workspace>.ftrackapp.com/api`
 | Events | Full expressions, priorities, plugins | `topic=` subscriptions only |
 | Actions | `ftrack-action-handler` | Raw event hub subscriptions |
 
-## Which skill
+## Topic guides
 
-| Task | Skill |
+This is the only ftrack skill; each topic is a guide inside it. Read the guide(s) the task needs (most tasks need `query` plus one other) - they list their own reference and example files. Paths are under `${CLAUDE_SKILL_DIR}/topics/`.
+
+| Task | Read |
 |---|---|
-| Install packages, credentials, connection check | ftrack-setup |
-| Query syntax, filters, paging, counts/aggregation | ftrack-query |
-| Sessions, API keys, commit/rollback, caching, errors | ftrack-session |
-| Event listeners, `ftrack.update`, webhooks | ftrack-events |
-| Custom actions and forms | ftrack-actions |
-| Publishing, components, locations, thumbnails, review | ftrack-files |
-| `@ftrack/api` usage in Node.js/browser/React | ftrack-javascript |
-| Typed sessions, generated workspace types | ftrack-typescript |
-| Dashboard widgets | ftrack-dashboards |
-
-Load the specific skill(s) for the task; most tasks need ftrack-query plus one other.
+| Install packages, credentials, connection check | [setup/GUIDE.md](topics/setup/GUIDE.md) |
+| Query syntax, filters, paging, counts/aggregation | [query/GUIDE.md](topics/query/GUIDE.md) |
+| Sessions, API keys, commit/rollback, caching, errors | [session/GUIDE.md](topics/session/GUIDE.md) |
+| Event listeners, `ftrack.update`, webhooks | [events/GUIDE.md](topics/events/GUIDE.md) |
+| Custom actions and forms | [actions/GUIDE.md](topics/actions/GUIDE.md) |
+| Publishing, components, locations, thumbnails, review | [files/GUIDE.md](topics/files/GUIDE.md) |
+| `@ftrack/api` in Node.js/browser/React | [javascript/GUIDE.md](topics/javascript/GUIDE.md) |
+| Typed sessions, generated workspace types | [typescript/GUIDE.md](topics/typescript/GUIDE.md) |
+| Dashboard widgets | [dashboards/GUIDE.md](topics/dashboards/GUIDE.md) |
 
 ## Rules that apply everywhere
 

@@ -1,12 +1,6 @@
----
-name: ftrack-events
-description: "ftrack event hub and webhooks for Python and JavaScript - ftrack.update payloads, listener plugins, subscriptions, replies, publishing, loop prevention, user notifications, and server-side webhooks as an alternative to a listener."
-when_to_use: "Code: `event_hub.subscribe(`, `eventHub.subscribe(`, `topic=ftrack.update`, `event['data']['entities']`, `register(session)` plugins, `WebhookAction`. Asks: react to ftrack changes, event listener, webhook, notify users."
----
-
 # ftrack events
 
-Events are published when things change in ftrack (`ftrack.update`), when the UI asks for actions (`ftrack.action.*`, see ftrack-actions), when paths need resolving (`ftrack.location.*`), and by your own code. Clients connect to the event server over WebSocket through `session.event_hub` (Python) / `session.eventHub` (JavaScript).
+Events are published when things change in ftrack (`ftrack.update`), when the UI asks for actions (`ftrack.action.*`, see the `actions` topic), when paths need resolving (`ftrack.location.*`), and by your own code. Clients connect to the event server over WebSocket through `session.event_hub` (Python) / `session.eventHub` (JavaScript).
 
 ## Python listener (canonical layout)
 
@@ -101,7 +95,7 @@ session.event_hub.publish(
 )
 ```
 
-JavaScript equivalents (`subscribe`, `publish`, `publishAndWaitForReply`, `new Event(topic, data)`) are in ftrack-javascript.
+JavaScript equivalents (`subscribe`, `publish`, `publishAndWaitForReply`, `new Event(topic, data)`) are in the `javascript` topic.
 
 ## Webhooks instead of a listener
 
@@ -109,7 +103,7 @@ ftrack 24.6+ (cloud only) can POST entity events to an `https://` URL - no long-
 
 ## Reference files
 
-Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+Files are under `${CLAUDE_SKILL_DIR}/topics/events`. Read only what the question needs.
 
 | File | Read when |
 |---|---|

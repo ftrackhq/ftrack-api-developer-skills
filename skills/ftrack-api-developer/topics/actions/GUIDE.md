@@ -1,9 +1,3 @@
----
-name: ftrack-actions
-description: ftrack custom actions - Python BaseAction/AdvancedBaseAction from ftrack-action-handler, discover and launch, UI responses (message, form, widget), form field types, action servers, and JavaScript actions via the event hub.
-when_to_use: "Code: `ftrack_action_handler`, `BaseAction`, `discover`/`launch`/`interface` methods, `ftrack.action.launch`, form `items`. Asks: custom ftrack action, actions menu, action with a form, action server."
----
-
 # ftrack actions
 
 An action appears in the ftrack web UI's actions menu for a selection. When the UI opens the menu it publishes `ftrack.action.discover`; every running action server replies with the actions it offers. When the user clicks one, the UI publishes `ftrack.action.launch` and the server runs it and replies with a message, a form, or a widget.
@@ -109,7 +103,7 @@ Selections arrive as `event.data.selection` with legacy `entityType` names (`tas
 
 ## Reference files
 
-Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+Files are under `${CLAUDE_SKILL_DIR}/topics/actions`. Read only what the question needs.
 
 | File | Read when |
 |---|---|

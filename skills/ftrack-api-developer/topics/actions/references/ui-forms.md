@@ -75,7 +75,7 @@ The page receives an `ftrack.widget.load` message with the selection, the curren
 }
 ```
 
-Serve widgets over HTTPS (same protocol as ftrack). See ftrack-dashboards for building widget pages with `@ftrack/web-widget`.
+Serve widgets over HTTPS (same protocol as ftrack). See the `dashboards` topic for building widget pages with `@ftrack/web-widget`.
 
 ## Triggering a UI without a launch
 

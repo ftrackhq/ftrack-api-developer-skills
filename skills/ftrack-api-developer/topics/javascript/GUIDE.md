@@ -1,9 +1,3 @@
----
-name: ftrack-javascript
-description: "ftrack JavaScript client @ftrack/api - Session, queries, create/update/delete/ensure, atomic session.call batches, createComponent uploads, eventHub, dates and cancellation in Node.js, browsers and React. Not for Python ftrack code."
-when_to_use: "Code: imports from `@ftrack/api`, `session.create(`/`update(`/`call(`, `createComponent(`, `session.eventHub`, the `expression` tag. Asks: ftrack from JavaScript, Node.js, browser or React."
----
-
 # ftrack JavaScript client (`@ftrack/api`)
 
 ```bash
@@ -25,7 +19,7 @@ const session = new Session(serverUrl, apiUser, apiKey, { autoConnectEventHub: f
 await session.initializing;   // rejects on bad URL or credentials
 ```
 
-Create one session per process or app and share it. Strip any trailing slash from the server URL (`url.replace(/\/+$/, "")`) - with one, every request fails with a JSON parse error. Options, errors and strict mode: see ftrack-session.
+Create one session per process or app and share it. Strip any trailing slash from the server URL (`url.replace(/\/+$/, "")`) - with one, every request fails with a JSON parse error. Options, errors and strict mode: see the `session` topic.
 
 ## Query
 
@@ -38,7 +32,7 @@ const { data, metadata } = await session.query(
 - `data` is an array of plain objects with only the projected attributes (plus ids).
 - Use the `expression` tag for interpolated values - it escapes quotes.
 - Paging is manual: loop with `offset`/`limit` until `metadata.next.offset` is `null`.
-- Query syntax and `group by`: see ftrack-query.
+- Query syntax and `group by`: see the `query` topic.
 
 ## Create, update, delete
 
@@ -82,7 +76,7 @@ const downloadUrl = session.getComponentUrl(componentId);
 const thumbUrl = session.thumbnailUrl(componentId, { size: 300 });
 ```
 
-`createComponent` uploads to the `ftrack.server` location and **only works in browsers** (it uses `XMLHttpRequest`; in Node.js it creates the component and then stalls). In Node.js use the `uploadFileNode()` helper in [examples/javascript/crud-examples.js](examples/javascript/crud-examples.js) (get_upload_metadata + `fetch` PUT + `ComponentLocation`). Attaching to a version, encoding and other locations: see ftrack-files. `getComponentUrl` and `thumbnailUrl` embed the API key in the URL - don't log or share them.
+`createComponent` uploads to the `ftrack.server` location and **only works in browsers** (it uses `XMLHttpRequest`; in Node.js it creates the component and then stalls). In Node.js use the `uploadFileNode()` helper in [examples/javascript/crud-examples.js](examples/javascript/crud-examples.js) (get_upload_metadata + `fetch` PUT + `ComponentLocation`). Attaching to a version, encoding and other locations: see the `files` topic. `getComponentUrl` and `thumbnailUrl` embed the API key in the URL - don't log or share them.
 
 ## Events
 
@@ -95,7 +89,7 @@ session.eventHub.unsubscribe(id);
 await session.eventHub.publish(new Event("my-company.some-topic", { key: "value" }));
 ```
 
-Subscriptions only support `topic=...` (wildcards allowed, e.g. `topic=ftrack.*`). Details: see ftrack-events.
+Subscriptions only support `topic=...` (wildcards allowed, e.g. `topic=ftrack.*`). Details: see the `events` topic.
 
 ## Dates
 
@@ -104,12 +98,12 @@ Datetimes are returned as Moment objects in the current 1.x release (dayjs objec
 ## Environments
 
 - **Node.js**: read `FTRACK_SERVER`, `FTRACK_API_USER`, `FTRACK_API_KEY` from `process.env` and pass them to the constructor - the client doesn't read them itself.
-- **Browser**: never ship an API key. ftrack dashboard widgets get the current user's credentials from ftrack at runtime (see ftrack-dashboards); other web apps should go through their own backend.
+- **Browser**: never ship an API key. ftrack dashboard widgets get the current user's credentials from ftrack at runtime (see the `dashboards` topic); other web apps should go through their own backend.
 - **React**: keep the session in a module or context (not per component); pass an `AbortController` signal to requests in `useEffect` and abort in the cleanup.
 
 ## Reference files
 
-Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+Files are under `${CLAUDE_SKILL_DIR}/topics/javascript`. Read only what the question needs.
 
 | File | Read when |
 |---|---|

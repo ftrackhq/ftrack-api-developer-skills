@@ -63,7 +63,7 @@ const [{ data: component }] = await session.createComponent(file, {
 });
 ```
 
-See ftrack-files for attaching components to asset versions and for encoding media.
+See the `files` topic for attaching components to asset versions and for encoding media.
 
 ## Event hub (`session.eventHub`)
 

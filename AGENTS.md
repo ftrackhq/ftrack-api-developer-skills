@@ -1,17 +1,18 @@
 # Working on ftrack-api-developer-skills
 
-This repo is a Claude Code plugin marketplace (`ftrack-skills`) containing one plugin, `ftrack-api-developer`, made of skills under `skills/`. These instructions are for anyone - human or coding agent - changing the skills. They are not loaded for people who install the plugin.
+This repo is a Claude Code plugin marketplace (`ftrack-skills`) containing one plugin, `ftrack-api-developer`, made of one skill under `skills/` with topic guides. These instructions are for anyone - human or coding agent - changing the skills. They are not loaded for people who install the plugin.
 
 ## Layout
 
 - `.claude-plugin/marketplace.json` - marketplace with one entry, `source: "./"`. Skills are found by the default `skills/` scan; don't add a `skills` list or `strict` (they conflict with `plugin.json`).
 - `.claude-plugin/plugin.json` - listing metadata, `license: Apache-2.0`, and the plugin **`version`** (semver). Set it only here, never also on the marketplace entry. Users only get changes when this version changes: `claude plugin update` reports "already at the latest version" otherwise.
-- `skills/<name>/SKILL.md` + `references/*.md` + `examples/` (+ `scripts/` in ftrack-setup). Each skill must work on its own: keep its examples inside its own folder, even if that means small duplication.
+- `skills/ftrack-api-developer/SKILL.md` - the only registered skill (data model, rules, router table). It must stay the single entry: don't add other `skills/*/SKILL.md` files, or they show up as separate skills again.
+- `skills/ftrack-api-developer/topics/<topic>/GUIDE.md` + `references/*.md` + `examples/` (+ `scripts/` in setup). Guides have no frontmatter and are read on demand via the router. Keep each topic's examples inside its own folder, even if that means small duplication.
 - No per-skill `plugin.json`, no root `CLAUDE.md` (plugins don't load it and the validator warns).
 
 ## Writing skills
 
-Frontmatter: `name` (= folder name), `description`, `when_to_use`. Nothing else.
+Frontmatter of the root `SKILL.md`: `name` (= folder name), `description`, `when_to_use`. Nothing else.
 
 - `description`: what the skill covers, one or two sentences. No trigger lists.
 - `when_to_use`: the signals that should load it - `Code:` imports, method calls, env vars, file names; `Asks:` typical requests; errors. Short and specific.
@@ -22,7 +23,7 @@ Frontmatter: `name` (= folder name), `description`, `when_to_use`. Nothing else.
 Budgets (check with `claude plugin details ftrack-api-developer@ftrack-skills`):
 
 - Always-on total under ~1,500 tokens (currently ~1,250).
-- `SKILL.md` body 80-150 lines, ~0.7-1.7k tokens on invoke. Put detail in `references/` and list each file in the skill's "Reference files" table with when to read it.
+- Root `SKILL.md` body stays short (router + essentials); each `GUIDE.md` 80-150 lines, ~0.7-1.7k tokens. Put detail in `references/` and list each file in the guide's "Reference files" table with when to read it.
 - Refer to bundled files under `${CLAUDE_SKILL_DIR}`.
 - Leave out generic knowledge (React, charting, bundlers); keep only ftrack-specific behaviour.
 

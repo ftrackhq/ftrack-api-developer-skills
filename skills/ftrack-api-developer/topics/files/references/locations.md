@@ -89,6 +89,6 @@ session.get_component_availability(component)             # {location_id: percen
 session.pick_location(component)                          # highest-priority location holding it
 ```
 
-Events: the API publishes `ftrack.location.component-added` / `-removed` (`ftrack_api.symbol.COMPONENT_ADDED_TO_LOCATION_TOPIC`, `COMPONENT_REMOVED_FROM_LOCATION_TOPIC`) when components change location, and the server publishes `ftrack.location.request-resolve` when it needs a path for a component (reply `{"path": ...}`; see ftrack-events).
+Events: the API publishes `ftrack.location.component-added` / `-removed` (`ftrack_api.symbol.COMPONENT_ADDED_TO_LOCATION_TOPIC`, `COMPONENT_REMOVED_FROM_LOCATION_TOPIC`) when components change location, and the server publishes `ftrack.location.request-resolve` when it needs a path for a component (reply `{"path": ...}`; see the `events` topic).
 
 Built-in ids (`ftrack_api.symbol`): `SERVER_LOCATION_ID`, `UNMANAGED_LOCATION_ID`, `ORIGIN_LOCATION_ID`, `CONNECT_LOCATION_ID`, `REVIEW_LOCATION_ID`.

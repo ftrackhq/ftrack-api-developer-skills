@@ -58,7 +58,7 @@ session.commit()
 
 ## Auto-population
 
-Accessing an attribute that isn't loaded sends a request to fetch it. Convenient in small scripts, slow in loops: project attributes in the query instead (see ftrack-query).
+Accessing an attribute that isn't loaded sends a request to fetch it. Convenient in small scripts, slow in loops: project attributes in the query instead (see the `query` topic).
 
 ```python
 with session.auto_populating(False):
@@ -137,6 +137,6 @@ From `ftrack_api.exception` (all subclass `ftrack_api.exception.Error`):
 | `ImmutableAttributeError` | Assigning to an immutable attribute such as `id` |
 | `OperationError`, `InvalidStateError` | Invalid local operation |
 | `EventHubConnectionError` | Event hub connection failed |
-| `LocationError` and subclasses | Component/location problems (see ftrack-files) |
+| `LocationError` and subclasses | Component/location problems (see the `files` topic) |
 
 Not wrapped by the client: `requests.exceptions.ConnectionError` and `requests.exceptions.Timeout` for network failures. Retry these (with backoff) and transient 5xx errors; don't retry errors caused by bad queries, permissions or validation.

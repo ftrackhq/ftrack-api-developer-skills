@@ -1,9 +1,3 @@
----
-name: ftrack-query
-description: "ftrack query language for Python and JavaScript - select/where syntax, projections, has/any relationship filters, ordering, pagination, performance, and server-side aggregation with group by. Not for SQL or non-ftrack databases."
-when_to_use: "Code: `session.query(`, query strings like `select ... from Task where`, `group by`, `count(id)`, `ancestors any (`. Asks: find/filter/count ftrack entities, slow queries, pagination, dashboard numbers."
----
-
 # ftrack query language
 
 The ftrack query language looks like SQL but **is not SQL**. Most SQL idioms (`*`, `JOIN`, `AS`, `DISTINCT`, `UNION`, `count()` without `group by`) are unsupported and either raise an error or return wrong results.
@@ -92,7 +86,7 @@ Dates are quoted ISO 8601 without timezone (`"2026-04-20T09:00:00"`), interprete
 
 ## Reference files
 
-Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+Files are under `${CLAUDE_SKILL_DIR}/topics/query`. Read only what the question needs.
 
 | File | Read when |
 |---|---|

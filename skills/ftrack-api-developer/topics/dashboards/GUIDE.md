@@ -1,19 +1,13 @@
----
-name: ftrack-dashboards
-description: ftrack custom dashboard widgets - web pages embedded in ftrack (Web view / Custom widget / action widgets) using @ftrack/web-widget for credentials, entity context, theme and navigation, with @ftrack/api for data and server-side aggregation for charts.
-when_to_use: "Code: `@ftrack/web-widget`, `ftrackWidget.initialize(`, `getCredentials()`, `getEntity()`, `getActiveTheme()`, `ftrackWidgetLoad`/`ftrackWidgetUpdate`, `ftrack.widget.load`. Asks: ftrack dashboard, custom widget, web view widget, charts or reports inside ftrack."
----
-
 # ftrack dashboard widgets
 
-A widget is your own web page shown in an iframe by ftrack: the **Web view** dashboard widget, the **Custom widget** on Overview, or an action that returns `{"type": "widget", "url": ...}` (see ftrack-actions). ftrack passes the current user's credentials and entity to the page via `postMessage`; `@ftrack/web-widget` handles that.
+A widget is your own web page shown in an iframe by ftrack: the **Web view** dashboard widget, the **Custom widget** on Overview, or an action that returns `{"type": "widget", "url": ...}` (see the `actions` topic). ftrack passes the current user's credentials and entity to the page via `postMessage`; `@ftrack/web-widget` handles that.
 
 ## Prerequisites
 
 - Enable Custom widgets and add your URL under **System settings > Advanced > Custom widgets > Allowed widget URLs**. Creating a dashboard with a custom widget needs the "Manage custom widget" permission.
 - Serve over **HTTPS** (same protocol as ftrack) or the browser blocks it. For local development tunnel your dev server (e.g. ngrok) and use that URL.
 - Tick **Inject API credentials** on the widget so the page receives them.
-- `npm install @ftrack/api @ftrack/web-widget` (see ftrack-setup).
+- `npm install @ftrack/api @ftrack/web-widget` (see the `setup` topic).
 
 ## Bootstrapping
 
@@ -55,7 +49,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 ## Data for charts
 
-Let the server aggregate - one `group by` call instead of downloading every task (details in ftrack-query):
+Let the server aggregate - one `group by` call instead of downloading every task (details in the `query` topic):
 
 ```javascript
 const [counts, statuses] = await session.call(
@@ -71,7 +65,7 @@ Use `decodeDatesAsIso: true` for date fields, pass an `AbortController` signal f
 
 ## Reference files
 
-Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+Files are under `${CLAUDE_SKILL_DIR}/topics/dashboards`. Read only what the question needs.
 
 | File | Read when |
 |---|---|

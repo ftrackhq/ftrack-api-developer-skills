@@ -34,7 +34,7 @@ data = {"context": {"selection": [{"entityId": "...", "entityType": "task"}]}}
 
 ### `ftrack.action.launch`
 
-A user ran an action. `data` holds `actionIdentifier`, `actionData`, `context.selection` and, after a form, `values`. Reply with `{"success": True, "message": "..."}` or a form (`{"items": [...]}`). See ftrack-actions.
+A user ran an action. `data` holds `actionIdentifier`, `actionData`, `context.selection` and, after a form, `values`. Reply with `{"success": True, "message": "..."}` or a form (`{"items": [...]}`). See the `actions` topic.
 
 ### `ftrack.action.trigger-user-interface`
 
@@ -84,7 +84,7 @@ Subscribe to these in plugins loaded by the session. Return values are passed ba
 
 | Topic | `data` | Expected return |
 |---|---|---|
-| `ftrack.api.session.configure-location` | `{"session": session}` | Nothing; configure location accessors/structures (see ftrack-files) |
+| `ftrack.api.session.configure-location` | `{"session": session}` | Nothing; configure location accessors/structures (see the `files` topic) |
 | `ftrack.api.session.construct-entity-type` | `{"schema": ..., "schemas": ...}` | A Python class for the entity type |
 | `ftrack.api.session.get-file-type-from-string` | `{"file_path": ...}` | File extension string, e.g. for `a_file.geo.bz` |
 | `ftrack.api.session.ready` | `{"session": session}` | Nothing; runs during initialization, keep it fast |

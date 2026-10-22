@@ -1,9 +1,3 @@
----
-name: ftrack-session
-description: "ftrack session setup for Python and JavaScript - credentials and API keys, Python unit of work (commit/rollback), auto-population, caching, plugins, strict mode, and ftrack API errors. Not for generic HTTP sessions."
-when_to_use: "Code: `ftrack_api.Session(`, `new Session(` from `@ftrack/api`, `session.commit()`/`rollback()`, `strict_api`, `ftrack_api.exception`, `FTRACK_API_KEY`. Asks: connect/authenticate, API keys, commit failures, caching, errors."
----
-
 # ftrack sessions
 
 All communication with ftrack goes through a `Session`. The two official clients behave differently:
@@ -70,17 +64,17 @@ Each `create`/`update`/`delete` is its own request. For atomic multi-step change
 
 ## Rules
 
-1. **Never hard-code API keys.** Read them from the environment or a secret store. Never ship a key in browser code - dashboard widgets receive the current user's credentials from ftrack (see ftrack-dashboards).
+1. **Never hard-code API keys.** Read them from the environment or a secret store. Never ship a key in browser code - dashboard widgets receive the current user's credentials from ftrack (see the `dashboards` topic).
 2. **Don't connect the event hub unless you subscribe or publish** - it costs server resources even when idle.
 3. **Reuse one session** per script, process or web app. Creating one downloads server information and schemas.
-4. **Python: project what you read** to avoid one auto-populate request per attribute (see ftrack-query).
+4. **Python: project what you read** to avoid one auto-populate request per attribute (see the `query` topic).
 5. **Python: commit in batches**, not once per entity in a loop.
 6. **Python: `session.reset()`** clears the local cache in long-running processes that need fresh data. Entities obtained before the reset must not be reused.
 7. **Use a global API key with a restricted role** for scripts and services instead of a personal key.
 
 ## Reference files
 
-Files are under `${CLAUDE_SKILL_DIR}`. Read only what the question needs.
+Files are under `${CLAUDE_SKILL_DIR}/topics/session`. Read only what the question needs.
 
 | File | Read when |
 |---|---|
