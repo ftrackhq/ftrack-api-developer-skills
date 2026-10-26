@@ -1,119 +1,106 @@
 # ftrack Skills
 
-Agent skills for ftrack development workflows.
+A [Claude Code](https://code.claude.com) plugin marketplace with skills for ftrack Studio API development.
 
 ## Installation
 
-### Quick Install from Marketplace
+In a Claude Code session:
 
-**Step 1: Add repository to marketplace**:
+```text
+/plugin marketplace add ftrackhq/ftrack-api-developer-skills
+/plugin install ftrack-api-developer@ftrack-skills
+```
+
+`/plugin install` opens the plugin's details so you can review it and pick an install scope.
+
+From a shell:
 
 ```bash
-/plugin marketplace add https://github.com/ftrackhq/ftrack-skills
+claude plugin marketplace add ftrackhq/ftrack-api-developer-skills
+claude plugin install ftrack-api-developer@ftrack-skills
 ```
 
-**Step 2: Install skills**:
+### Access
+
+The repository is private: you need read access to `ftrackhq/ftrack-api-developer-skills` and git credentials Claude Code can use without prompting - an SSH key loaded in your agent, or `gh auth login` followed by `gh auth setup-git`. Without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`.
+
+### Updates
+
+Releases are versioned (semver `version` in `.claude-plugin/plugin.json`); users receive an update when that version changes on the default branch. Auto-update is off by default for this marketplace; enable it under `/plugin` → Marketplaces → ftrack-skills, or update manually:
 
 ```bash
-# Install main orchestrator skill
-/install ftrack-api-developer
-
-# Install PR automation skill
-/install ftrack-create-pull-request
+claude plugin marketplace update ftrack-skills
+claude plugin update ftrack-api-developer@ftrack-skills
 ```
 
-### Alternative: Direct Install
+Then run `/reload-plugins` in an open session, or start a new one.
+
+## Skill
+
+The plugin registers a single skill, `ftrack`. Claude loads it when your question or code matches - for example a file that imports `ftrack_api` or `@ftrack/api`, or calls `session.query()` - and it then reads only the topic guide(s) the task needs:
+
+| Topic guide | Covers |
+|-------------|--------|
+| [setup](skills/ftrack/topics/setup/GUIDE.md) | Install ftrack-python-api, ftrack-action-handler, @ftrack/api, schema generator, web widget; credentials; connection check |
+| [query](skills/ftrack/topics/query/GUIDE.md) | Query syntax, projections, has/any filters, pagination, group by aggregation |
+| [session](skills/ftrack/topics/session/GUIDE.md) | Sessions, API keys, commit/rollback, caching, errors |
+| [events](skills/ftrack/topics/events/GUIDE.md) | Event hub listeners, ftrack.update payloads, publishing, webhooks |
+| [actions](skills/ftrack/topics/actions/GUIDE.md) | Custom actions with UI forms (Python and JavaScript) |
+| [files](skills/ftrack/topics/files/GUIDE.md) | Publishing versions, components and sequences, locations, thumbnails, review media, uploads |
+| [javascript](skills/ftrack/topics/javascript/GUIDE.md) | `@ftrack/api` in Node.js, browsers and React |
+| [typescript](skills/ftrack/topics/typescript/GUIDE.md) | Typed sessions and generated workspace types |
+| [dashboards](skills/ftrack/topics/dashboards/GUIDE.md) | Custom dashboard widgets: credentials, entity context, theme, chart data |
+
+Each topic keeps its reference docs and runnable examples in its own `references/` and `examples/` folders, so the skill works offline.
+
+To invoke it explicitly, type `/ftrack-api-developer:ftrack`.
+
+**Prerequisites**: an ftrack server URL, username and API key (`FTRACK_SERVER`, `FTRACK_API_USER`, `FTRACK_API_KEY`).
+
+## Development
+
+```text
+.claude-plugin/
+  marketplace.json      # marketplace "ftrack-skills" with one plugin entry (source "./")
+  plugin.json           # plugin metadata and semver version (bump it to release)
+skills/ftrack/
+  SKILL.md              # the only registered skill: frontmatter + data model + topic router
+  topics/<topic>/
+    GUIDE.md            # topic guide, read on demand (no frontmatter, not a registered skill)
+    references/*.md     # detail loaded on demand
+    examples/           # runnable examples (and scripts/ in setup)
+AGENTS.md               # conventions and checks for anyone (human or agent) editing skills
+```
+
+Read [AGENTS.md](AGENTS.md) before changing a skill: it covers the writing conventions, size budgets, sources of truth and how to verify changes.
+
+Validate before pushing:
 
 ```bash
-# Install all skills directly from GitHub
-/install https://github.com/ftrackhq/ftrack-skills
+claude plugin validate .
+claude plugin details ftrack-api-developer@ftrack-skills   # token cost per skill
 ```
 
-## Available Plugins
-
-| Plugin | Version | Description | Documentation |
-|--------|---------|-------------|---------------|
-| **[ftrack-api-developer](skills/ftrack-api-developer/)** | 2.0.0 | ftrack API development orchestrator with 8 specialized subskills | [Full Documentation](skills/ftrack-api-developer/README.md) |
-| **[ftrack-create-pull-request](skills/ftrack-create-pull-request/)** | 1.0.0 | Create GitHub PRs with org template and linked Linear tickets | [Full Documentation](skills/ftrack-create-pull-request/README.md) |
-
-## Plugin Categories
-
-### API Development Skills
-
-The **ftrack-api-developer** plugin provides comprehensive ftrack API development support through specialized subskills. See [API_SKILLS.md](API_SKILLS.md) for details.
-
-**Subskills included**:
-- **ftrack-query** - Query optimization, projections, filtering, pagination
-- **ftrack-events** - Real-time event handling, WebSocket subscriptions
-- **ftrack-actions** - Custom action handlers with UI forms (Python only)
-- **ftrack-files** - File upload/download, components, storage locations
-- **ftrack-session** - Session management, authentication, caching
-- **ftrack-typescript** - TypeScript integration, schema generation, type safety
-- **ftrack-javascript** - JavaScript integration, async patterns, bundling
-- **ftrack-dashboards** - Dashboard widgets, data visualization, charts, PDF export
-
-[→ Read Full Documentation](skills/ftrack-api-developer/README.md)
-
-### Automation Skills
-
-The **ftrack-create-pull-request** plugin automates GitHub pull request creation with Linear integration. See [AUTOMATION.md](AUTOMATION.md) for details.
-
-[→ Read Automation Documentation](AUTOMATION.md)
-
-## Usage
-
-### Automatic Invocation
-
-Skills trigger automatically when you mention ftrack:
-
-```
-"How do I query tasks in ftrack?"           → Auto-loads ftrack-query
-"Setup an event listener for ftrack"        → Auto-loads ftrack-events
-"Create a custom ftrack action with UI"     → Auto-loads ftrack-actions
-```
-
-### Manual Invocation
+To test local changes, register this checkout as the marketplace instead of the GitHub repository (the two can't share the name `ftrack-skills` at once):
 
 ```bash
-# Invoke orchestrator
-/ftrack-api-developer "your question"
-
-# Invoke specific subskills
-/ftrack-query "optimize this query"
-/ftrack-events "setup event handler"
-/ftrack-actions "create custom action"
-
-# Invoke automation
-/ftrack-create-pull-request
+claude plugin marketplace remove ftrack-skills
+claude plugin marketplace add /path/to/checkout
+claude plugin install ftrack-api-developer@ftrack-skills
+# after each commit (update only picks up a new version, so reinstall):
+claude plugin marketplace update ftrack-skills
+claude plugin uninstall ftrack-api-developer@ftrack-skills && claude plugin install ftrack-api-developer@ftrack-skills
 ```
 
-## Prerequisites
-
-**For ftrack-api-developer**:
-- ftrack account and API credentials
-
-**For ftrack-create-pull-request**:
-- `gh` CLI authenticated with ftrackhq GitHub org
-- Linear MCP server connected
-- Git repository with feature branch
-
-## Update
-
-```bash
-# Update specific skill
-/skills update ftrack-api-developer
-
-# Update all skills
-/skills update --all
-
-# Check for updates
-/skills list
-```
+Switch back with `claude plugin marketplace remove ftrack-skills` followed by the installation steps above.
 
 ## Links
 
-- [ftrack](https://www.ftrack.com)
-- [ftrackhq on GitHub](https://github.com/ftrackhq)
 - [ftrack Developer Hub](https://developer.ftrack.com/)
-- [ftrack Python API](https://developer.ftrack.com/api-clients/python/)
-- [ftrack JavaScript API](https://developer.ftrack.com/api-clients/javascript/)
+- [ftrack Python API](https://github.com/ftrackhq/ftrack-python) and [docs](https://developer.ftrack.com/api-clients/python/)
+- [ftrack JavaScript API](https://github.com/ftrackhq/ftrack-javascript) and [docs](https://developer.ftrack.com/api-clients/javascript/)
+- [ftrack recipes](https://github.com/ftrackhq/ftrack-recipes)
+
+## License
+
+Apache License 2.0, the same license as the ftrack Python and JavaScript API clients. See [LICENSE](LICENSE).

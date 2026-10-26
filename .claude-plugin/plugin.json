@@ -1,0 +1,24 @@
+{
+  "name": "ftrack-api-developer",
+  "displayName": "ftrack API Developer",
+  "version": "2.1.0",
+  "description": "ftrack Studio API development for Python, JavaScript and TypeScript: queries, sessions, events and webhooks, custom actions, files and locations, dashboard widgets",
+  "author": {
+    "name": "ftrack",
+    "email": "support@ftrack.com",
+    "url": "https://www.ftrack.com"
+  },
+  "homepage": "https://github.com/ftrackhq/ftrack-api-developer-skills",
+  "repository": "https://github.com/ftrackhq/ftrack-api-developer-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "ftrack",
+    "ftrack-api",
+    "ftrack-studio",
+    "python",
+    "javascript",
+    "typescript",
+    "pipeline",
+    "vfx"
+  ]
+}

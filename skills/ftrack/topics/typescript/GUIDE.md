@@ -1,0 +1,91 @@
+# ftrack with TypeScript
+
+`@ftrack/api` is written in TypeScript. Out of the box every entity is loosely typed (`Record<string, any>`). Generate types for your workspace to get real ones. Client usage itself (CRUD, uploads, events) is in the `javascript` topic.
+
+## 1. Generate workspace types
+
+```bash
+npm install @ftrack/api
+npm install --save-dev @ftrack/ts-schema-generator
+```
+
+```json
+"scripts": {
+  "generate-ts-schema": "ftrack-ts-schema-generator ./src/__generated__ schema.ts"
+}
+```
+
+The generator reads `FTRACK_SERVER`, `FTRACK_API_USER` and `FTRACK_API_KEY` from the environment (there are no CLI flags for them). Arguments are an optional output directory (default `__generated__`) and filename (default `schema.ts`). Commit the output and regenerate when the workspace schema or custom attributes change. If it crashes in prettier with `Property or signature expected`, a custom attribute key contains a space and the generator (2.1.3) doesn't quote it - see the reference for the one-line patch. Details: [references/schema-generator.md](references/schema-generator.md).
+
+## 2. Type the session
+
+```typescript
+import { Session } from "@ftrack/api";
+import type { EntityTypeMap } from "./__generated__/schema.js";
+
+const session = new Session<EntityTypeMap>(serverUrl, apiUser, apiKey);
+await session.initializing;
+```
+
+## 3. Typed calls
+
+The type parameter is the **entity type name**, not an interface:
+
+```typescript
+const { data: tasks } = await session.query<"Task">(
+  'select name, status.name, end_date from Task where project_id is "..."'
+);
+// tasks: Task[]
+
+const { data: task } = await session.create("Task", {   // inferred from "Task"
+  name: "comp", parent_id: shotId, type_id: typeId,     // checked against Task
+});
+await session.update("Task", [task.id], { status_id: statusId });
+```
+
+- `query` can't infer the type from the string - always pass `<"EntityType">`. `create`, `update`, `delete`, `ensure` and `search` infer it from their first argument.
+- `session.query<Task>(...)` (an interface) is wrong: `Type 'Task' does not satisfy the constraint 'keyof EntityTypeMap'`.
+- **The types don't know your projection.** Every attribute is typed as present (often optional), but only projected attributes are in the response. Project what you read.
+- Relationship attributes such as `status` or `priority` are typed as related entities; set them through their id attributes (`status_id`, `priority_id`).
+- Generated types declare datetimes as `string`, but the client returns Moment objects in the current 1.x release (dayjs objects in the 2.0 beta) unless you pass `{ decodeDatesAsIso: true }`. Pass it (or adjust your types) when reading date fields.
+- The query string itself is not type-checked; see the `query` topic for syntax.
+
+## Useful generated types
+
+| Type | Use |
+|---|---|
+| `EntityTypeMap` | Pass to `Session<EntityTypeMap>` |
+| `EntityType` | Union of all entity type names |
+| `EntityData<"Task">` | Interface for one entity type |
+| `TypedContextSubtype`, `TypedContextSubtypeMap` | Project hierarchy types (`Task`, `Shot`, `Sequence`, `Milestone`, ...) |
+| `TypedCustomAttributeValue<"key">` | Custom attribute entry whose `value` type follows its configuration |
+
+```typescript
+import type { EntityData } from "./__generated__/schema.js";
+
+function label(task: EntityData<"Task">) {
+  return `${task.name} (${task.status?.name ?? "no status"})`;
+}
+
+// custom_attributes is a union keyed by attribute name: checking key narrows value,
+// and comparing against a key that doesn't exist in the workspace is a compile error
+const { data } = await session.query<"Task">(
+  'select custom_attributes from Task where id is "..."'
+);
+const deadline = data[0].custom_attributes?.find((a) => a.key === "deadline")?.value;
+```
+
+## Without generated types
+
+`new Session(...)` without a type parameter still works; entities are `Record<string, any>`. Write small local interfaces for the fields you project rather than casting to `any` everywhere.
+
+## Reference files
+
+Files are under `${CLAUDE_SKILL_DIR}/topics/typescript`. Read only what the question needs.
+
+| File | Read when |
+|---|---|
+| [references/schema-generator.md](references/schema-generator.md) | Generator setup, output contents, custom attributes, regenerating in CI |
+| [examples/typescript/typescript-example.ts](examples/typescript/typescript-example.ts) | Runnable typed session, queries, create/update, custom attributes, date handling |
+
+Sources: https://github.com/ftrackhq/ftrack-javascript (README "TypeScript: Generated Schema Types", `source/session.ts`), https://github.com/ftrackhq/ftrack-ts-schema-generator.

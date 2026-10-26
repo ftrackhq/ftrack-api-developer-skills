@@ -1,0 +1,24 @@
+{
+  "name": "ftrack-javascript-examples",
+  "version": "1.0.0",
+  "description": "ftrack JavaScript API examples",
+  "type": "module",
+  "scripts": {
+    "example:crud": "node crud-examples.js"
+  },
+  "keywords": [
+    "ftrack",
+    "api",
+    "examples",
+    "javascript"
+  ],
+  "dependencies": {
+    "@ftrack/api": "^1.11.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}
