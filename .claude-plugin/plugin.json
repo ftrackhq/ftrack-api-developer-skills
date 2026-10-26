@@ -11,6 +11,7 @@
   "homepage": "https://github.com/ftrackhq/ftrack-api-developer-skills",
   "repository": "https://github.com/ftrackhq/ftrack-api-developer-skills",
   "license": "Apache-2.0",
+  "icon": "./.claude-plugin/icon.png",
   "keywords": [
     "ftrack",
     "ftrack-api",
