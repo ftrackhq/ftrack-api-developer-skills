@@ -55,7 +55,7 @@ Check the published package version when documenting behaviour - the GitHub defa
 1. `claude plugin validate .` - must pass. Expected warning: no icon.
 2. Frontmatter parses and stays within the caps:
    `python -c "import yaml,pathlib;[print(p.parent.name,len((f:=yaml.safe_load(p.read_text(encoding='utf-8').split('---')[1]))['description'])+len(f['when_to_use'])) for p in pathlib.Path('skills').glob('*/SKILL.md')]"`
-3. Examples: `python -m py_compile` / `node --check`; type-check TypeScript under `strict` against `@ftrack/api` and a generated schema.
+3. Examples: `python -m py_compile` / `node --check`; type-check TypeScript with `cd skills/ftrack/topics/typescript/examples/typescript && npm install && npm run generate-ts-schema && npm run typecheck` (requires `FTRACK_*` env vars for schema generation).
 4. Run examples against a real workspace when possible. Read-only checks are fine; anything that creates data goes in a throwaway project that you delete afterwards, and only with the workspace owner's agreement. Workspaces with a storage scenario copy published files to local disk - remove them through the location before deleting the project.
 5. Install from the checkout (see README "Development"), start a new session and confirm the skill triggers on a typical question and on code containing its signals.
 

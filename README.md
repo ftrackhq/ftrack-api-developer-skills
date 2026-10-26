@@ -22,7 +22,7 @@ claude plugin install ftrack-api-developer@ftrack-skills
 
 ### Access
 
-The repository is private: you need read access to `ftrackhq/ftrack-api-developer-skills` and git credentials Claude Code can use without prompting - an SSH key loaded in your agent, or `gh auth login` followed by `gh auth setup-git`. Without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`.
+No authentication is needed: the repository is public. Claude Code installs it over HTTPS by default.
 
 ### Updates
 
