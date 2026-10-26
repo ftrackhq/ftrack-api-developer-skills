@@ -52,10 +52,10 @@ Check the published package version when documenting behaviour - the GitHub defa
 
 ## Verifying a change
 
-1. `claude plugin validate .` - must pass. Expected warning: no icon.
+1. `claude plugin validate --strict .` - must pass. The "no icon" plugin-directory note is expected and doesn't affect the result.
 2. Frontmatter parses and stays within the caps:
    `python -c "import yaml,pathlib;[print(p.parent.name,len((f:=yaml.safe_load(p.read_text(encoding='utf-8').split('---')[1]))['description'])+len(f['when_to_use'])) for p in pathlib.Path('skills').glob('*/SKILL.md')]"`
-3. Examples: `python -m py_compile` / `node --check`; type-check TypeScript with `cd skills/ftrack/topics/typescript/examples/typescript && npm install && npm run generate-ts-schema && npm run typecheck` (requires `FTRACK_*` env vars for schema generation).
+3. Examples: `python -m py_compile` / `node --check`; type-check TypeScript with `cd skills/ftrack/topics/typescript/examples/typescript && npm install && npm run generate-ts-schema && npm run typecheck` (requires `FTRACK_*` env vars, with no trailing slash on `FTRACK_SERVER`; if the generator fails with `Property or signature expected`, apply the patch in `topics/typescript/references/schema-generator.md`). JSX examples: `npx esbuild <file> --loader:.jsx=jsx`.
 4. Run examples against a real workspace when possible. Read-only checks are fine; anything that creates data goes in a throwaway project that you delete afterwards, and only with the workspace owner's agreement. Workspaces with a storage scenario copy published files to local disk - remove them through the location before deleting the project.
 5. Install from the checkout (see README "Development"), start a new session and confirm the skill triggers on a typical question and on code containing its signals.
 

@@ -20,9 +20,11 @@ claude plugin marketplace add ftrackhq/ftrack-api-developer-skills
 claude plugin install ftrack-api-developer@ftrack-skills
 ```
 
+With Claude Code v2.1.275 or later you can do both in one step: `/plugin install ftrack-api-developer --marketplace ftrackhq/ftrack-api-developer-skills`.
+
 ### Access
 
-No authentication is needed: the repository is public. Claude Code installs it over HTTPS by default.
+The repository is public, so no GitHub account is needed. For `owner/repo` sources Claude Code tries SSH first; if you have no GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` so installs and updates from inside a session clone over HTTPS.
 
 ### Updates
 
@@ -57,6 +59,10 @@ To invoke it explicitly, type `/ftrack-api-developer:ftrack`.
 
 **Prerequisites**: an ftrack server URL, username and API key (`FTRACK_SERVER`, `FTRACK_API_USER`, `FTRACK_API_KEY`).
 
+### What the plugin runs
+
+The plugin contains only Markdown guidance and example code: no hooks, MCP servers, commands or background processes, and it sends nothing anywhere by itself. Claude may suggest running the bundled connection checks (`topics/setup/scripts/`) or installing ftrack packages from PyPI/npm; both go through your normal Claude Code permission settings like any other command. The checks read the `FTRACK_*` variables, connect only to your `FTRACK_SERVER`, and never print the API key.
+
 ## Development
 
 ```text
@@ -77,7 +83,7 @@ Read [AGENTS.md](AGENTS.md) before changing a skill: it covers the writing conve
 Validate before pushing:
 
 ```bash
-claude plugin validate .
+claude plugin validate --strict .
 claude plugin details ftrack-api-developer@ftrack-skills   # token cost per skill
 ```
 
