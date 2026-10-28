@@ -45,7 +45,7 @@ The plugin registers a single skill, `ftrack`. Claude loads it when your questio
 |-------------|--------|
 | [setup](skills/ftrack/topics/setup/GUIDE.md) | Install ftrack-python-api, ftrack-action-handler, @ftrack/api, schema generator, web widget; credentials; connection check |
 | [query](skills/ftrack/topics/query/GUIDE.md) | Query syntax, projections, has/any filters, pagination, group by aggregation |
-| [session](skills/ftrack/topics/session/GUIDE.md) | Sessions, API keys, commit/rollback, caching, errors |
+| [session](skills/ftrack/topics/session/GUIDE.md) | Sessions, API keys, commit/rollback, caching, errors; the raw HTTP operations endpoint and `session.call()` (batching many actions and results in one transaction); how to write a client or wrapper for another language |
 | [events](skills/ftrack/topics/events/GUIDE.md) | Event hub listeners, ftrack.update payloads, publishing, webhooks |
 | [actions](skills/ftrack/topics/actions/GUIDE.md) | Custom actions with UI forms (Python and JavaScript) |
 | [files](skills/ftrack/topics/files/GUIDE.md) | Publishing versions, components and sequences, locations, thumbnails, review media, uploads |
