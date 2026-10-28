@@ -2,7 +2,7 @@
 
 Sources: https://developer.ftrack.com/api/endpoint, https://developer.ftrack.com/api/operations/ (per-operation pages), `ftrack_api.session.Session.call`/`encode`/`decode` in `ftrack-python-api` 3.1.0, and `source/operation.ts` + `source/session.ts` in `ftrackhq/ftrack-javascript`. Batching, encoding and error shapes below were run against a live workspace.
 
-Use this when working without an official client (Go, C#, PHP, shell) or when sending an action the clients don't wrap.
+Use this when working without an official client (Go, C#, PHP, shell) or when sending an action the clients don't wrap. If you're building a reusable wrapper rather than making a few calls, read [writing-a-client.md](writing-a-client.md) as well - it covers the bootstrap order, schema interpretation and response decoding a client library needs on top of this protocol.
 
 ## The envelope
 
@@ -71,7 +71,7 @@ The official clients expose this as `session.call(operations)`: Python `session.
 
 Only top-level entities are encoded for an operation - a `create` does not recursively create nested entities, so give each entity in a tree its own `create` operation (they can all go in the same request).
 
-When decoding, the fully encoded copy of an entity may sit at any nesting depth with all other mentions as references. Walk the response recursively and expand references so they point at the same object; `Session.merge` in the Python client is the reference implementation.
+When decoding, the fully encoded copy of an entity may sit at any nesting depth with all other mentions as references. Walk the response recursively and expand references so they point at the same object; `Session.merge` in the Python client is the reference implementation, and [writing-a-client.md](writing-a-client.md) spells out the identity-map algorithm.
 
 ## Operation payloads
 
