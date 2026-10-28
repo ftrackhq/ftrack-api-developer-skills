@@ -33,6 +33,8 @@ Invalid credentials return an HTTP error status with details in the body and in 
 
 Optional header `ftrack-strict-api: true` enables strict mode for that request.
 
+See [raw-http.md](raw-http.md) for the operation payloads, batching several actions in one call, and value encoding.
+
 ## Handling keys
 
 - Load keys from environment variables (`FTRACK_SERVER`, `FTRACK_API_USER`, `FTRACK_API_KEY`) or a secret manager; never commit them.

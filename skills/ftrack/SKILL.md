@@ -1,7 +1,7 @@
 ---
 name: ftrack
-description: "ftrack Studio API development in Python and JavaScript/TypeScript - data model, sessions and API keys, queries and group-by aggregation, event hub and webhooks, custom actions, files/components/locations/review media, @ftrack/api, generated TypeScript types, dashboard widgets and dependency setup. Routes to topic guides bundled in this skill."
-when_to_use: "Code: `ftrack_api`, `ftrack_action_handler`, `@ftrack/api`, `@ftrack/web-widget`, `@ftrack/ts-schema-generator`, `session.query(`, `session.commit()`, `event_hub.subscribe(`, `create_component(`, `FTRACK_API_KEY`, `*.ftrackapp.com`. Asks: write, fix or explain ftrack scripts, queries, listeners, actions, publishes, widgets, types; install ftrack packages; connect or authenticate. Errors: `No module named 'ftrack_api'`, `Cannot find module '@ftrack/api'`."
+description: "ftrack Studio API development in Python and JavaScript/TypeScript - data model, sessions and API keys, queries and group-by aggregation, event hub and webhooks, custom actions, files/components/locations/review media, @ftrack/api, generated TypeScript types, dashboard widgets, dependency setup, and the raw HTTP operations endpoint for other languages. Routes to topic guides bundled in this skill."
+when_to_use: "Code: `ftrack_api`, `ftrack_action_handler`, `@ftrack/api`, `@ftrack/web-widget`, `@ftrack/ts-schema-generator`, `session.query(`, `session.commit()`, `session.call(`, `event_hub.subscribe(`, `create_component(`, `FTRACK_API_KEY`, `*.ftrackapp.com`, `POST /api` with `ftrack-api-key:` header, `{\"action\": \"query\"}` payloads. Asks: write, fix or explain ftrack scripts, queries, listeners, actions, publishes, widgets, types; call the ftrack API by raw HTTP/curl or from a language without an official client; install ftrack packages; connect or authenticate. Errors: `No module named 'ftrack_api'`, `Cannot find module '@ftrack/api'`."
 ---
 
 
@@ -35,6 +35,7 @@ This is the only ftrack skill; each topic is a guide inside it. **Before writing
 | [setup](topics/setup/GUIDE.md) | pip/npm install of ftrack packages, `FTRACK_*` variables, connection check; `No module named 'ftrack_api'`, `Cannot find module '@ftrack/api'` |
 | [query](topics/query/GUIDE.md) | `session.query(`, `select ... from ... where`, `has`/`any`, `limit`/`offset`, `group by`, `count(id)`, slow queries |
 | [session](topics/session/GUIDE.md) | `ftrack_api.Session(`, `new Session(`, `commit()`/`rollback()`, `strict_api`, API keys, `create_note(`, `ftrack_api.exception.*`, caching, plugins |
+| [session](topics/session/GUIDE.md) -> [raw-http](topics/session/references/raw-http.md) | Calling `POST /api` directly: `session.call(`, `{"action": ...}` payloads, batching several operations in one request, `curl`, no client library (Go/C#/PHP/shell), `__entity_type__`/`__type__` encoding, `FTRACK_ERROR` |
 | [events](topics/events/GUIDE.md) | `event_hub.subscribe(`, `eventHub.subscribe(`, `ftrack.update`, `event['data']['entities']`, `register(session)`, webhooks |
 | [actions](topics/actions/GUIDE.md) | `ftrack_action_handler`, `BaseAction`, `discover`/`launch`, `ftrack.action.launch`, form `items`, action servers |
 | [files](topics/files/GUIDE.md) | `create_component(`, `createComponent(`, `AssetVersion`, `encode_media`, `create_thumbnail(`, `get_filesystem_path(`, locations, accessors, S3, sequences |
