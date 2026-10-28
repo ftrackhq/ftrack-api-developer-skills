@@ -1,6 +1,6 @@
 # Writing an ftrack API client
 
-Sources: `ftrack-python-api` 3.1.0 (`session.py`, `entity/factory.py`, `event/hub.py`), `ftrackhq/ftrack-javascript` (`source/session.ts`, `source/operation.ts`), https://developer.ftrack.com/api/endpoint and https://developer.ftrack.com/api/schemas. The bootstrap sequence, schema shape and event-hub handshake below were run against a live workspace (server 26.8.2).
+Sources: `ftrack-python-api` 3.1.0 (`session.py`, `entity/factory.py`, `event/hub.py`), `@ftrack/api` 1.11.2 (`source/session.ts`, `source/operation.ts`), https://developer.ftrack.com/api/endpoint and https://developer.ftrack.com/api/schemas. The bootstrap sequence, schema shape, decoding behaviour and event-hub handshake below were run against a live workspace (server 26.8.2).
 
 For the wire protocol itself - request envelope, operation payloads, batching, errors - see [raw-http.md](raw-http.md). This file covers what a *client library* has to do on top of it, in the order it has to do it.
 
@@ -75,7 +75,7 @@ The algorithm (Python `Session.merge` / `_merge_recursive`, JavaScript `decode` 
 4. Otherwise create (or look up in a longer-lived cache) the instance, put it in the map, then recurse into its attributes - single relations, collections and mapped collections alike - merging each.
 5. Convert `{"__type__": "datetime"|"date", "value": ...}` leaves to the language's date type. Respect `is_timezone_support_enabled` from server information when deciding whether values are UTC.
 
-Getting step 3 wrong is the most common way a new client ends up with entities whose relations are empty.
+Getting step 3 wrong is the most common way a new client ends up with entities whose relations are empty. This is not a rare edge case: one `select name, parent.name, parent.children.name from Task limit 5` against a live workspace returned 1,435 entity objects, 6 of which were reference-only - and those 6 are exactly the ones a naive decoder leaves as stubs holding nothing but `__entity_type__` and `id`.
 
 ## Optional: a unit of work
 
@@ -91,7 +91,9 @@ Then send the whole batch as one request. On failure the server rolls everything
 
 ## Paging
 
-A `query` result's `metadata.next.offset` is the offset to request next; stop when it is `null`. Don't compute `offset + limit` - the server prunes rows the user can't see after applying the range, so the two differ. Independent paged queries can each advance inside one batched request.
+A `query` result's `metadata.next.offset` is the offset to request next; stop when it is `null`. Don't compute `offset + limit` - the server prunes rows the user can't see after applying the range, so the two can differ. Independent paged queries can each advance inside one batched request.
+
+When building expressions, emit `offset` **before** `limit`: `select ... offset 0 limit 3` parses, `limit 3 offset 0` is rejected with `UnexpectedToken`.
 
 ## Uploads
 
@@ -102,12 +104,14 @@ Components are a three-step dance (`create` the component, `get_upload_metadata`
 A legacy Socket.IO **protocol 1** connection, not plain WebSocket and not modern Socket.IO:
 
 1. `GET https://<server>/socket.io/1/` with the `ftrack-user`/`ftrack-api-key` headers and the HTTP session cookies. The body is colon-separated - `<session-id>:60:60:websocket` on the workspace tested, i.e. session id, heartbeat timeout, close timeout, comma-separated transports. Fail if `websocket` isn't offered.
-2. Open `wss://<server>/socket.io/1/websocket/<session-id>`, passing the same headers and cookies.
-3. Frame packets as `<code>:<packet-id>:<path>:<data>`, where `path` is empty and `packet-id` is only set when you want an acknowledgement. Codes: `0` disconnect, `1` connect, `2` heartbeat, `3` message, `4` json, `5` event, `6` acknowledge, `7` error. Reply to heartbeats or the server drops you.
-4. Events travel as code `5` under the namespace `ftrack.event`.
-5. **Subscribing is itself an event**: publish `ftrack.meta.subscribe` with `{"subscriber": <subscriber metadata>, "subscription": "<expression string>"}` and wait for the acknowledgement.
+2. Open `wss://<server>/socket.io/1/websocket/<session-id>`, passing the same headers and cookies. The server opens with `1::` (connect) and then sends `3::Welcome from the ftrack server.` as a plain message packet - don't treat that as an event.
+3. Frame packets as `<code>:<packet-id>:<path>:<data>`, where `path` is empty and `packet-id` is only set when you want an acknowledgement (suffix it with `+`). Codes: `0` disconnect, `1` connect, `2` heartbeat, `3` message, `4` json, `5` event, `6` acknowledge, `7` error. Reply to a `2::` heartbeat with `2::` or the server drops you.
+4. Events travel as code `5` under the namespace `ftrack.event`, i.e. `5:<id>+::{"name": "ftrack.event", "args": [<event>]}`.
+5. **Subscribing is itself an event**: publish `ftrack.meta.subscribe` with `{"subscriber": <subscriber metadata>, "subscription": "<expression string>"}` and wait for the acknowledgement, which arrives as `6:::<packet-id>+[{"message":"","success":true}]`.
 6. Stamp outgoing events with `source.id` (the hub's own id), `source.user.username` and `source.host`.
 7. Reconnect on unintentional disconnect - the Python client retries 30 times at 10-second intervals.
+
+A full handshake, subscribe and heartbeat exchange was run against a live server to confirm all of the above.
 
 Server-side filtering of subscription expressions is richer than `topic=...`; see the `events` topic for the expression syntax and topic list.
 
@@ -122,4 +126,5 @@ Server-side filtering of subscription expressions is richer than `topic=...`; se
 | Strip trailing `/` before `/api` | `//api` returns an HTML 404 |
 | Check for an `exception` key before treating a response as a list | Operational errors arrive with HTTP 200 by default |
 | Never send `computed` or `immutable` attributes | Server-side validation errors |
+| Validate attribute names yourself | The server silently ignores unknown keys in `entity_data`, so a typo looks like a successful write |
 | One batch = one transaction | Both the way to get atomicity and the reason unrelated work shouldn't share a request |
