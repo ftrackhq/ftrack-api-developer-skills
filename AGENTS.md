@@ -22,7 +22,7 @@ Frontmatter of the root `SKILL.md`: `name` (= folder name), `description`, `when
 
 Budgets (check with `claude plugin details ftrack-api-developer@ftrack-skills`):
 
-- Always-on total under ~1,500 tokens (currently ~210, since there's a single registered skill).
+- Always-on total under ~1,500 tokens (currently ~280, since there's a single registered skill).
 - Root `SKILL.md` body stays short (router + essentials); each `GUIDE.md` 80-150 lines, ~0.7-1.7k tokens. Put detail in `references/` and list each file in the guide's "Reference files" table with when to read it.
 - Refer to bundled files under `${CLAUDE_SKILL_DIR}`.
 - Leave out generic knowledge (React, charting, bundlers); keep only ftrack-specific behaviour.
@@ -39,7 +39,7 @@ Content rules:
 
 | What | Where |
 |---|---|
-| Docs | https://developer.ftrack.com/ (page list: `/sitemap.xml`; old `.html` URLs are dead) |
+| Docs | https://developer.ftrack.com/ (page list: `/sitemap.xml`; old `.html` URLs are dead). Raw HTTP: `/api/endpoint` and `/api/operations/` (client-rendered, so payloads are not in the fetched HTML - take them from client source and confirm live) |
 | Python client | https://github.com/ftrackhq/ftrack-python, PyPI `ftrack-python-api` |
 | JavaScript client | https://github.com/ftrackhq/ftrack-javascript, npm `@ftrack/api` (published 1.x differs from `main`/2.0 beta: e.g. Moment vs dayjs) |
 | Actions | https://github.com/ftrackhq/ftrack-action-handler, PyPI `ftrack-action-handler` |
@@ -56,7 +56,7 @@ Check the published package version when documenting behaviour - the GitHub defa
 2. Frontmatter parses and stays within the caps:
    `python -c "import yaml,pathlib;[print(p.parent.name,len((f:=yaml.safe_load(p.read_text(encoding='utf-8').split('---')[1]))['description'])+len(f['when_to_use'])) for p in pathlib.Path('skills').glob('*/SKILL.md')]"`
 3. Examples: `python -m py_compile` / `node --check`; type-check TypeScript with `cd skills/ftrack/topics/typescript/examples/typescript && npm install && npm run generate-ts-schema && npm run typecheck` (requires `FTRACK_*` env vars, with no trailing slash on `FTRACK_SERVER`; if the generator fails with `Property or signature expected`, apply the patch in `topics/typescript/references/schema-generator.md`). JSX examples: `npx esbuild <file> --loader:.jsx=jsx`.
-4. Run examples against a real workspace when possible. Read-only checks are fine; anything that creates data goes in a throwaway project that you delete afterwards, and only with the workspace owner's agreement. Workspaces with a storage scenario copy published files to local disk - remove them through the location before deleting the project.
+4. Run examples against a real workspace when possible. Read-only checks are fine (the raw-HTTP references in `topics/session/references/` - `raw-http.md`, `writing-a-client.md` - were verified this way: batching, rollback, schemas, event hub handshake); anything that creates data goes in a throwaway project that you delete afterwards, and only with the workspace owner's agreement. Workspaces with a storage scenario copy published files to local disk - remove them through the location before deleting the project.
 5. Install from the checkout (see README "Development"), start a new session and confirm the skill triggers on a typical question and on code containing its signals.
 
 ## Commits and releases

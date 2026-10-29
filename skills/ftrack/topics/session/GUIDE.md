@@ -62,6 +62,10 @@ The package has **named exports only** - `import ftrack from "@ftrack/api"` does
 
 Each `create`/`update`/`delete` is its own request. For atomic multi-step changes, send them together with `session.call([operation.create(...), operation.update(...)])` - one transaction, all or nothing.
 
+## Without a client library
+
+Both clients are wrappers over one batch endpoint: `POST <server>/api` takes a JSON array of operations and returns a JSON array of results at matching indices, in one transaction. `session.call(operations)` is the direct way in, and also how to send actions neither client wraps. See [references/raw-http.md](references/raw-http.md) for the protocol, and [references/writing-a-client.md](references/writing-a-client.md) for the whole flow a new wrapper or client library has to implement.
+
 ## Rules
 
 1. **Never hard-code API keys.** Read them from the environment or a secret store. Never ship a key in browser code - dashboard widgets receive the current user's credentials from ftrack (see the `dashboards` topic).
@@ -81,7 +85,9 @@ Files are under `${CLAUDE_SKILL_DIR}/topics/session`. Read only what the questio
 | [references/python-session.md](references/python-session.md) | All Python Session arguments, environment variables, unit of work details, notes (`create_note`), auto-population, caching (file cache, selective cache), plugins, schema cache, SSL/proxy, exception list |
 | [references/javascript-session.md](references/javascript-session.md) | JavaScript constructor options, initialization, batching with `session.call`, strict mode per call, dates (Moment/dayjs vs ISO), cancellation, error classes |
 | [references/authentication.md](references/authentication.md) | Personal vs global API keys, API key roles and project access, raw HTTP authentication headers |
+| [references/raw-http.md](references/raw-http.md) | Calling `POST /api` directly (no client library): request/response array, batching many actions and reading many results in one call, transactions, value and entity encoding, per-action payloads, error shapes |
+| [references/writing-a-client.md](references/writing-a-client.md) | Implementing a wrapper or API client for another language: bootstrap order, schema document and what each key means, encoding strategies, the identity map needed to decode responses, unit-of-work batch optimisations, paging, event hub handshake |
 | [examples/python/session_examples.py](examples/python/session_examples.py) | Runnable Python: connect, commit/rollback, retry on network errors, persistent cache, strict session |
 | [examples/javascript/session-examples.js](examples/javascript/session-examples.js) | Runnable JavaScript: connect, error classes, atomic `session.call`, cancellation, ISO dates |
 
-Online source of truth: https://developer.ftrack.com/api-clients/python/understanding-sessions, https://developer.ftrack.com/api-clients/python/caching, https://developer.ftrack.com/api-clients/client-comparison, https://developer.ftrack.com/api/authentication.
+Online source of truth: https://developer.ftrack.com/api-clients/python/understanding-sessions, https://developer.ftrack.com/api-clients/python/caching, https://developer.ftrack.com/api-clients/client-comparison, https://developer.ftrack.com/api/authentication, https://developer.ftrack.com/api/endpoint, https://developer.ftrack.com/api/operations/.

@@ -1,7 +1,7 @@
 {
   "name": "ftrack-api-developer",
   "displayName": "ftrack API Developer",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "ftrack Studio API development for Python, JavaScript and TypeScript: queries, sessions, events and webhooks, custom actions, files and locations, dashboard widgets",
   "author": {
     "name": "ftrack",
